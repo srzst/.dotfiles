@@ -1,0 +1,119 @@
+{
+  "workbench.startupEditor": "none",
+  "ahk++.file.executePath": "C:/Program Files/AutoHotkey/AutohotkeyU32.exe",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "security.workspace.trust.untrustedFiles": "open",
+  "files.autoSave": "onFocusChange",
+  "vscode-edge-devtools.webhint": false,
+  "remote.SSH.remotePlatform": {
+    "U_W02": "linux",
+    "U_W03": "linux"
+  },
+  "editor.fontFamily": "Hack Nerd Font Mono",
+  "editor.fontWeight": 500,
+  "terminal.integrated.fontSize": 15,
+  "files.exclude": {
+    "**/.git": false
+  },
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "git.autofetch": true,
+  "editor.wordWrap": "on",
+  "emmet.optimizeStylesheetParsing": false,
+  "workbench.editor.enablePreview": false,
+  "editor.fontVariations": false,
+  "standard.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "javascript.validate.enable": false,
+  "git.openRepositoryInParentFolders": "never",
+  "copyMarkdownAsHtml.linkify": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
+  },
+  "python.formatting.provider": "none",
+  "workbench.iconTheme": "material-icon-theme",
+  "glassit.alpha": 20,
+  "glassit.step": 2,
+  "window.autoDetectColorScheme": true,
+  "window.autoDetectHighContrast": false,
+  "material-icon-theme.activeIconPack": "nest",
+  "markdown.extension.tableFormatter.normalizeIndentation": true,
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.rightClickBehavior": "paste",
+  "editor.codeActionsOnSave": {},
+  "terminal.integrated.enableMultiLinePasteWarning": false,
+  "material-icon-theme.folders.associations": {},
+  "explorer.compactFolders": false,
+  "[typescript]": {},
+  "workbench.editor.empty.hint": "hidden",
+  "remote.SSH.defaultForwardedPorts": [],
+  "http.proxyAuthorization": null,
+  "editor.wordWrap": "on",
+  "workbench.colorTheme": "Monokai Dimmed",
+  "[typescriptreact]": {},
+  "files.associations": {
+    "*.ahk": "ahk",
+    "*.py": "python"
+  },
+  "terminal.integrated.autoReplies": {},
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell"
+    },
+    "Command Prompt": {
+      "path": [
+        "${env:windir}\\Sysnative\\cmd.exe",
+        "${env:windir}\\System32\\cmd.exe"
+      ],
+      "args": [],
+      "icon": "terminal-cmd"
+    },
+    "Git Bash": {
+      "source": "Git Bash"
+    },
+    "Windows PowerShell": {
+      "path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "Windows PowerShell",
+  "[markdown]": {
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+  "workbench.preferredLightColorTheme": "Monokai Dimmed",
+  "javascript.updateImportsOnFileMove.enabled": "never",
+  "python.createEnvironment.trigger": "off",
+  "python.globalModuleInstallation": true,
+  "editor.dropIntoEditor.preferences": [],
+  "python.defaultInterpreterPath": "c:\\Python314\\python.exe",
+  "explorer.confirmDelete": false,
+  "terminal.integrated.initialHint": false,
+  "vim.autoindent": false,
+  "editor.lineNumbers": "on",
+  "terminal.integrated.cwd": "${fileDirname}",
+  "vim.useSystemClipboard": true,
+  "vim.camelCaseMotion.enable": true,
+  "vim.highlightedyank.enable": true,
+  "vim.enableNeovim": true,
+  "vim.foldfix": true,
+  "vim.commandLineModeKeyBindings": [],
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["g", "g", "d", "G"],
+      "after": ["g", "g", "\"", "_", "d", "G"]
+    }
+  ]
+}

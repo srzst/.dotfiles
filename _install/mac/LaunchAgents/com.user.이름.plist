@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.이름</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/python3</string>
+        <string>/Users/xx/script/py_script/clip_history/파일.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/xx/script/py_script/경로/</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StartInterval</key>
+    <integer>3600</integer> <!-- 1 hour interval, adjust as needed -->
+</dict>
+</plist>

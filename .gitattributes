@@ -1,0 +1,36 @@
+# 1. 기본 설정 (기본적으로 모든 텍스트 파일은 LF 사용)
+* text=auto eol=lf
+
+# 2. Windows 전용 스크립트 (CRLF 사용)
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.ahk text eol=crlf
+
+# 3. 쉘 및 설정 파일 (LF 사용)
+.bashrc text eol=lf
+.zshrc text eol=lf
+.vimrc text eol=lf
+.zsh.rc text eol=lf
+*.sh text eol=lf
+*.alias text eol=lf
+
+# 4. 에디터 및 데이터 형식 (LF 사용)
+*.lua text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# 5. 인증 및 보안 파일 (LF 사용)
+id_ed25519 text eol=lf
+config text eol=lf
+credentials text eol=lf
+
+# 6. 바이너리 파일 (줄 바꿈 변환 안 함)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.exe binary
+*.ico binary
+*.zip binary

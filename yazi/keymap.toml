@@ -1,0 +1,4 @@
+[[manager.prepend_keymap]]
+on = "F"
+run = "shell 'fd --type f | fzf | xargs -I{} yazi {}' --block"
+desc = "Find file globally with fzf"

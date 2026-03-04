@@ -1,0 +1,49 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "session": {
+    "trust_all_worktrees": true
+  },
+  "vim_mode": true,
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "One Dark",
+  },
+
+  // 폰트
+  "buffer_font_family": "Hack Nerd Font Mono",
+  "buffer_font_weight": 500,
+
+  // 에디터
+  "word_wrap": "on",
+  "show_whitespaces": "selection",
+  "indent_guides": {
+    "enabled": true
+  },
+
+  // 저장
+  "autosave": "on_focus_change",
+  "format_on_save": "on",
+
+  // 터미널
+  "terminal": {
+    "font_family": "Hack Nerd Font Mono",
+    "font_size": 15
+  },
+
+  // 파일 탐색기
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/node_modules",
+    "**/.DS_Store"
+  ]
+}
