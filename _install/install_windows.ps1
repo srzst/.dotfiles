@@ -236,6 +236,12 @@ python -m pip install "urllib3<2.0.0"  # Cloudinary 호환성을 위한 고정
 python -m pip install pyperclip regex requests mistune boto3 clipboard pillow win10toast pywin32 plyer b2sdk pynput watchdog send2trash PyQt5 pygments pandas tabulate oauth2client gspread google-api-python-client langdetect pyautogui dropbox pyinstaller cloudinary==1.26.0 pyimgur
 Write-Host "OK pip 패키지 설치 완료"
 
+# 기존 사용자 Python Scripts 경로 제거 (PATH 충돌 및 "Unable to create process" 오류 방지)
+$userPath = [System.Environment]::GetEnvironmentVariable("PATH", "User")
+$cleanPath = ($userPath -split ';' | Where-Object { $_.ToLower() -notlike "*\roaming\python\*" }) -join ';'
+[System.Environment]::SetEnvironmentVariable("PATH", $cleanPath, "User")
+$env:PATH = ($env:PATH -split ';' | Where-Object { $_.ToLower() -notlike "*\roaming\python\*" }) -join ';'
+
 pipx install gita
 pipx ensurepath
 # FIX: pipx 기본 경로 직접 추가 (ensurepath 후 환경변수 즉시 미반영 문제 방지)
