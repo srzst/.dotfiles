@@ -232,3 +232,5 @@ fi
 
 # secrets 로드
 [[ -f ~/.zshrc_secrets ]] && source ~/.zshrc_secrets
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOPATH/bin
