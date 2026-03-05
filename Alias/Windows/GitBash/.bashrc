@@ -143,8 +143,8 @@ gacp() {
 # gup: 고정 메시지로 즉시 푸시
 alias gup='git add . && git commit -m "auto commit" && git push'
 
-# go: 현재 브랜치 원격지 기준 강제 초기화
-go() {
+# gfo: 현재 브랜치 원격지 기준 강제 초기화
+gfo() {
     local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
     echo -e "\033[0;33mResetting to origin/$branch...\033[0m"
     git fetch origin && git reset --hard "origin/$branch"

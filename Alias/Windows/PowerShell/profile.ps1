@@ -155,8 +155,8 @@ function gacp {
 # gup: 즉시 푸시
 function gup { git add .; git commit -m "auto commit"; git push }
 
-# go: 원격 기준 강제 초기화
-function go {
+# gfo: 원격 기준 강제 초기화
+function gfo {
     $branch = git rev-parse --abbrev-ref HEAD 2>$null
     if (!$branch) { $branch = "main" }
     git fetch origin

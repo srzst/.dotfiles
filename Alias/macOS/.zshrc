@@ -160,8 +160,8 @@ gacp() {
 # gup: 고정 메시지로 즉시 푸시
 alias gup='git add . && git commit -m "auto commit" && git push'
 
-# go: 원격 기준 강제 초기화
-go() {
+# gfo: 원격 기준 강제 초기화
+gfo() {
     local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     if [ -z "$branch" ]; then branch="main"; fi
     echo -e "\033[0;33mFetching from origin and resetting to $branch...\033[0m"

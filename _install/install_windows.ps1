@@ -190,7 +190,7 @@ if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
 }
 scoop install git gsudo vim curl
 scoop bucket add extras
-scoop install python nodejs neovim neovide vscode lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick gcc tabby copyq
+scoop install python nodejs neovim neovide vscode lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic msys2
 Write-Host "OK Scoop 패키지 설치 완료"
 
 # ============================================================
@@ -221,11 +221,11 @@ if (-Not (Get-Command choco -ErrorAction SilentlyContinue)) {
   Write-Host "OK Chocolatey 이미 설치됨 (스킵)"
 }
 choco install bitwarden honeyview bandizip -y
-choco install yt-dlp telegram vlc logseq obsidian tectonic -y
-choco install 7zip awscli github-desktop -y
-choco install autohotkey.portable --version 1.1.37.02 -y
+choco install vlc logseq obsidian -y
+choco install copyq github-desktop -y
+choco install autohotkey.portable -y
+choco install kdeconnect-kde localsend powershell-core -y
 Write-Host "OK Chocolatey 패키지 설치 완료"
-
 # ============================================================
 # pip / pipx / npm 패키지 설치
 # ============================================================
