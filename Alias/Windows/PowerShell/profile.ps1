@@ -171,7 +171,13 @@ function sudo { gsudo }
 function port { param($p) if ($p) { netstat -ano | findstr ":$p" } else { netstat -ano | findstr LISTENING } }
 function myip { Invoke-RestMethod -Uri "https://ifconfig.me" }
 # FIX: ff 로 통일 (fzf f 단축키 충돌 방지 - GitBash와 일관성)
-function ff   { param($name) Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue }
+# function ff   { param($name) Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue }
+function ff {
+    param($name)
+    if (!$name) { Write-Host "사용법: ff <검색어>" -ForegroundColor Yellow; return }
+    Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue |
+        Where-Object { $_.FullName -notmatch '\\(node_modules|\.git|go\\pkg\\mod)\\' }
+}
 
 # ============================================================
 # 외부 도구 초기화 (Yazi, zoxide)
