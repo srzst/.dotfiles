@@ -194,3 +194,5 @@ function y {
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Invoke-Expression (& { zoxide init powershell | Out-String })
 }
+
+$env:PATH += ";C:\Users\x\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude-code\2.1.70"
