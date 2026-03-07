@@ -7,3 +7,6 @@
 [submodule "modules/common"]
 	path = modules/common
 	url = https://github.com/srzst/common
+[submodule "modules/windows"]
+	path = modules/windows
+	url = https://github.com/srzst/windows
