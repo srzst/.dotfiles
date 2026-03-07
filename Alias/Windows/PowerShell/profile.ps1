@@ -163,6 +163,18 @@ function gfo {
     git reset --hard "origin/$branch"
 }
 
+# 서브모듈 함수
+function gsacp {
+    param([string]$msg = "auto commit")
+    git submodule foreach git add .
+    git submodule foreach git commit -m $msg
+    git submodule foreach git push
+    git add .
+    git commit -m $msg
+    git push
+}
+
+
 # ============================================================
 # 시스템 유틸리티
 # ============================================================
