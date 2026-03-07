@@ -1,0 +1,12 @@
+[submodule "modules/linux"]
+	path = modules/linux
+	url = https://github.com/srzst/linux
+[submodule "modules/mac"]
+	path = modules/mac
+	url = https://github.com/srzst/mac
+[submodule "modules/Windows"]
+	path = modules/Windows
+	url = https://github.com/srzst/windows
+[submodule "modules/common"]
+	path = modules/common
+	url = https://github.com/srzst/common
