@@ -167,7 +167,16 @@ gfo() {
     echo -e "\033[0;33mFetching from origin and resetting to $branch...\033[0m"
     git fetch origin && git reset --hard "origin/$branch"
 }
-
+# 서브 모듈 일괄 커밋 및 푸시
+gsacp() {
+    local msg="${1:-auto commit}"
+    git submodule foreach "git add ."
+    git submodule foreach "git commit -m '$msg'"
+    git submodule foreach "git push"
+    git add .
+    git commit -m "$msg"
+    git push
+}
 # ============================================================
 # Docker 관련
 # ============================================================

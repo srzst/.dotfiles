@@ -163,6 +163,17 @@ alias gstl='git stash list'
 alias gr='git reset --hard'
 alias grs='git reset --soft HEAD~1'
 alias gclean='git clean -fd'
+# 서브 모듈 일괄 커밋 및 푸시
+gsacp() {
+    local msg="${1:-auto commit}"
+    git submodule foreach "git add ."
+    git submodule foreach "git commit -m '$msg'"
+    git submodule foreach "git push"
+    git add .
+    git commit -m "$msg"
+    git push
+}
+
 
 # ============================================================
 # 유틸리티 함수
