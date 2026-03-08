@@ -152,11 +152,31 @@ Write-LogOK "SSH 개인키 복원 완료"
 
 # SSH config 설정
 $sshConfigPath = "$HOME\.ssh\config"
+# config 파일 없으면 먼저 생성
+if (-Not (Test-Path $sshConfigPath)) {
+  New-Item -ItemType File -Force -Path $sshConfigPath | Out-Null
+  Write-LogOK "SSH config 파일 생성 완료"
+}
 if (-Not (Select-String -Path $sshConfigPath -Pattern "Host github.com" -Quiet -ErrorAction SilentlyContinue)) {
-  Add-Content -Path $sshConfigPath -Value "`nHost github.com`n  IdentityFile ~/.ssh/id_ed25519`n  User git"
+  Add-Content -Path $sshConfigPath -Value "`nHost github.com`n  IdentityFile ~/.ssh/id_ed25519`n  User git`n  StrictHostKeyChecking no"
   Write-LogOK "SSH config 설정 완료"
 } else {
   Write-LogOK "SSH config 이미 존재 (스킵)"
+}
+
+# GitHub known_hosts 미리 등록 (연결 테스트 시 yes/no 프롬프트 방지)
+Write-Log "GitHub known_hosts 등록 중..."
+try {
+  $knownHostsPath = "$HOME\.ssh\known_hosts"
+  $githubKey = ssh-keyscan -t ed25519 github.com 2>$null
+  if ($githubKey) {
+    Add-Content -Path $knownHostsPath -Value $githubKey
+    Write-LogOK "GitHub known_hosts 등록 완료"
+  } else {
+    Write-LogWarn "GitHub known_hosts 등록 실패 → 네트워크 확인"
+  }
+} catch {
+  Write-LogWarn "GitHub known_hosts 등록 중 오류: $_"
 }
 
 # GitHub 연결 테스트
