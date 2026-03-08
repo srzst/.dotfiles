@@ -1,38 +1,69 @@
-# 1. 기본 설정 (기본적으로 모든 텍스트 파일은 LF 사용)
-* text=auto eol=lf
+# .gitattributes_global
+# 모든 텍스트 파일 기본값: repo에는 LF, Windows checkout 시 CRLF 자동 변환
+*                       text=auto eol=lf
 
-# 2. Windows 전용 스크립트 (CRLF 사용)
-*.ps1 text eol=crlf
-*.bat text eol=crlf
-*.ahk text eol=crlf
+# Windows 전용 스크립트 파일들 → CRLF 강제 (Windows에서 실행 안정성)
+*.ps1                   text eol=crlf
+*.bat                   text eol=crlf
+*.cmd                   text eol=crlf
+*.ahk                   text eol=crlf
 
-# 3. 쉘 및 설정 파일 (LF 사용)
-.bashrc text eol=lf
-.zshrc text eol=lf
-.vimrc text eol=lf
-.zsh.rc text eol=lf
-*.sh text eol=lf
-*.alias text eol=lf
+# 쉘 스크립트 및 Unix 계열 설정 파일 → LF 강제
+*.sh                    text eol=lf
+*.bash*                 text eol=lf
+*.zsh*                  text eol=lf
+*.fish                  text eol=lf
+*.alias                 text eol=lf
+.bashrc                 text eol=lf
+.zshrc                  text eol=lf
+.vimrc                  text eol=lf
 
-# 4. 에디터 및 데이터 형식 (LF 사용)
-*.lua text eol=lf
-*.json text eol=lf
-*.toml text eol=lf
-*.yaml text eol=lf
-*.yml text eol=lf
+# 프로그래밍 & 데이터 파일 → LF 강제 (크로스플랫폼 표준)
+*.py                    text eol=lf
+*.lua                   text eol=lf
+*.js                    text eol=lf
+*.jsx                   text eol=lf
+*.ts                    text eol=lf
+*.tsx                   text eol=lf
+*.html                  text eol=lf
+*.htm                   text eol=lf
+*.css                   text eol=lf
+*.json                  text eol=lf
+*.toml                  text eol=lf
+*.yaml                  text eol=lf
+*.yml                   text eol=lf
+*.md                    text eol=lf
+*.markdown              text eol=lf
+*.txt                   text eol=lf
+*.ini                   text eol=lf
+*.cfg                   text eol=lf
+*.conf                  text eol=lf
 
-# 5. 인증 및 보안 파일 (LF 사용)
-id_ed25519 text eol=lf
-config text eol=lf
-credentials text eol=lf
+# SSH 및 인증 파일 → 반드시 LF (줄바꿈이 섞이면 키 인식 실패 가능)
+id_*                    text eol=lf
+known_hosts             text eol=lf
+authorized_keys         text eol=lf
+config                  text eol=lf   # .ssh/config
+credentials             text eol=lf   # AWS 등
 
-# 6. 바이너리 파일 (줄 바꿈 변환 안 함)
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.exe binary
-*.ico binary
-*.zip binary
+# 이미지, 바이너리, 압축 파일 등 → 줄바꿈 변환 절대 안 함
+*.png                   binary
+*.jpg                   binary
+*.jpeg                  binary
+*.gif                   binary
+*.bmp                   binary
+*.ico                   binary
+*.exe                   binary
+*.dll                   binary
+*.zip                   binary
+*.7z                    binary
+*.rar                   binary
+*.pdf                   binary
+*.ttf                   binary
+*.otf                   binary
+*.woff                  binary
+*.woff2                 binary
 
-# git config --global core.attributesFile ~/.gitattributes_global
+# Git LFS로 관리할 파일 (필요 시 추가)
+# *.psd filter=lfs diff=lfs merge=lfs -text
+# *.ai filter=lfs diff=lfs merge=lfs -text
