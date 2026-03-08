@@ -208,6 +208,8 @@ $gitCreds = Get-BwsSecret "711d2b06-8271-4470-8e63-b40000d9129f"
 if ($gitCreds) {
   Set-Content -Path "$HOME\.git-credentials" -Value $gitCreds -NoNewline
   # GCM 대신 .git-credentials 파일 직접 사용 (서브모듈 clone 시 팝업 방지)
+  # system 레벨 먼저 설정 (GCM이 system 레벨에서 우선순위 높게 동작하므로)
+  git config --system credential.helper store
   git config --global credential.helper store
   Write-LogOK ".git-credentials 복원 완료 (credential.helper store 설정)"
 } else {
