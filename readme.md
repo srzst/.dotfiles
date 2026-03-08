@@ -78,6 +78,26 @@ git submodule update --init --recursive
 
 > 설치 스크립트가 자동으로 실행하므로 수동 실행 불필요. remote URL은 스크립트가 HTTPS로 자동 변환.
 
+OS별로 분리하고 싶은 경우
+
+```powershell
+# Windows
+git submodule update --init modules/common
+git submodule update --init modules/windows
+```
+
+```bash
+# macOS
+git submodule update --init modules/common
+git submodule update --init modules/mac
+```
+
+```bash
+# Ubuntu
+git submodule update --init modules/common
+git submodule update --init modules/linux
+```
+
 ---
 
 ## 에디터 구성
@@ -125,11 +145,13 @@ bws CLI는 설치 스크립트가 자동 설치함. 버전 변경 시 각 스크
 git clone https://github.com/srzst/.dotfiles ~/.dotfiles
 ```
 
+> 서브모듈은 private repo라 인증 필요. 설치 스크립트가 `.git-credentials` 복원 후 자동 초기화하므로 수동 실행 불필요.
+
 ---
 
 ### 2. 설치 스크립트 실행
 
-각 OS / 용도별 스크립트를 직접 실행.
+각 OS / 용도별 스크립트를 직접 실행. (나는 서버의 경우에만 따로 분기 진행)
 
 **macOS:**
 
