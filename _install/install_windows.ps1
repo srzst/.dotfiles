@@ -209,7 +209,6 @@ if ($gitCreds) {
   Set-Content -Path "$HOME\.git-credentials" -Value $gitCreds -NoNewline
   # GCM 대신 .git-credentials 파일 직접 사용 (서브모듈 clone 시 팝업 방지)
   git config --global credential.helper store
-  git config --system credential.helper store 
   Write-LogOK ".git-credentials 복원 완료 (credential.helper store 설정)"
 } else {
   Write-LogWarn ".git-credentials 복원 실패 (스킵)"
@@ -226,7 +225,8 @@ if ($gitCreds) {
 # ============================================================
 Write-Log "서브모듈 초기화 중..."
 try {
-  git -C $REPO submodule update --init --recursive 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+  # --recursive 제외: 서브모듈 내 서브모듈(scriptos 등) URL 미등록 오류 방지
+  git -C $REPO submodule update --init 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
   Write-LogOK "서브모듈 초기화 완료"
 } catch {
   Write-LogErr "서브모듈 초기화 실패: $_  → SSH 인증 또는 .gitmodules 확인"
@@ -329,7 +329,10 @@ if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
   Write-Log "Scoop 설치 중..."
   try {
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-    Invoke-WebRequest -useb get.scoop.sh | Invoke-Expression
+    # 관리자 권한 실행 허용 (-RunAsAdmin)
+    $env:SCOOP = "$HOME\scoop"
+    [System.Environment]::SetEnvironmentVariable("SCOOP", "$HOME\scoop", "User")
+    iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
     Write-LogOK "Scoop 설치 완료"
   } catch {
