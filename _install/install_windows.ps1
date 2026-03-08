@@ -229,6 +229,8 @@ Write-Log "서브모듈 초기화 중..."
 try {
   # --recursive 제외: 서브모듈 내 서브모듈(scriptos 등) URL 미등록 오류 방지
   git -C $REPO submodule update --init 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+  # detached HEAD 복구: 서브모듈 초기화 시 git 기본 동작으로 detached HEAD가 되므로 main 브랜치로 복구
+  git -C $REPO submodule foreach "git checkout main 2>/dev/null || true" 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
   Write-LogOK "서브모듈 초기화 완료"
 } catch {
   Write-LogErr "서브모듈 초기화 실패: $_  → SSH 인증 또는 .gitmodules 확인"
