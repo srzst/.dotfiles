@@ -319,7 +319,7 @@ Write-LogOK "Git 글로벌 attributes 연결 완료"
 #   imagemagick
 #   tabby
 #   tectonic
-#   autohotkey1   ← AHK v1.1 전용 패키지 (upgrade 시 v2 설치 방지)
+#   autohotkey1.1 ← AHK v1.1 전용 패키지 (versions bucket, upgrade 시 v2 설치 방지)
 # ------------------------------------------------------------
 # ※ msys2 제외 이유:
 #   scoop으로 설치 시 mingw64 환경이 함께 설치되어
@@ -349,6 +349,7 @@ try {
   scoop install git gsudo vim curl
   scoop bucket add extras
   scoop bucket add nerd-fonts
+  scoop bucket add versions
   scoop update
   scoop install Hack-NF
   scoop install autohotkey1.1
