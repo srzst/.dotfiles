@@ -170,10 +170,10 @@ function gsacp {
     git submodule foreach "git add . && (git diff --cached --quiet || git commit -m '$msg')"
     git submodule foreach "git push"
     git add .
-    git diff --cached --quiet || git commit -m $msg
+    git status --porcelain | Out-Null
+    git commit -m $msg 2>$null
     git push
 }
-
 # ============================================================
 # 시스템 유틸리티
 # ============================================================
