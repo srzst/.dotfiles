@@ -168,7 +168,6 @@ function gsacp {
         [string]$msg = "auto commit",
         [switch]$NoPush
     )
-    # 현재 경로가 .dotfiles 루트인지 확인
     $rootPath = "$HOME\.dotfiles"
     if ((Get-Location).Path -ne $rootPath) {
         Write-Host "gsacp는 .dotfiles 루트에서만 실행하세요!" -ForegroundColor Red
@@ -178,7 +177,7 @@ function gsacp {
     }
     Write-Host "=== 서브모듈 처리 시작 ===" -ForegroundColor Cyan
     git submodule foreach --quiet `
-        "branch=\$(git symbolic-ref --short HEAD 2>/dev/null); if [ -z \"\$branch\" ]; then git checkout main 2>/dev/null; fi; git add . && git status --porcelain | grep -q . && git commit -m '$msg' && git push"
+        "git add . && git status --porcelain | grep -q . && git commit -m '$msg' && git push"
     Write-Host "=== 최상위 repo 처리 ===" -ForegroundColor Cyan
     git add .
     if (git status --porcelain) {
