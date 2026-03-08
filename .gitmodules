@@ -6,7 +6,7 @@
 	url = https://github.com/srzst/mac
 [submodule "modules/common"]
 	path = modules/common
-	url = https://github.com/srzst/common
+	url = https://github.com/srzst/common.git
 [submodule "modules/windows"]
 	path = modules/windows
 	url = https://github.com/srzst/windows
