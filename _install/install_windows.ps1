@@ -205,8 +205,14 @@ if ($bbApi) { Set-Content -Path "$HOME\.backblaze\backblazeapi" -Value $bbApi -N
 else        { Write-LogWarn ".backblaze 복원 실패 (스킵)" }
 
 $gitCreds = Get-BwsSecret "711d2b06-8271-4470-8e63-b40000d9129f"
-if ($gitCreds) { Set-Content -Path "$HOME\.git-credentials" -Value $gitCreds -NoNewline; Write-LogOK ".git-credentials 복원 완료" }
-else           { Write-LogWarn ".git-credentials 복원 실패 (스킵)" }
+if ($gitCreds) {
+  Set-Content -Path "$HOME\.git-credentials" -Value $gitCreds -NoNewline
+  # GCM 대신 .git-credentials 파일 직접 사용 (서브모듈 clone 시 팝업 방지)
+  git config --global credential.helper store
+  Write-LogOK ".git-credentials 복원 완료 (credential.helper store 설정)"
+} else {
+  Write-LogWarn ".git-credentials 복원 실패 (스킵)"
+}
 
 # ============================================================
 # 서브모듈 초기화 (SSH 키 복원 후)
