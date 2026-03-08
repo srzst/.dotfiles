@@ -349,9 +349,12 @@ try {
   scoop install git gsudo vim curl
   scoop bucket add extras
   scoop bucket add nerd-fonts
+  scoop update
   scoop install Hack-NF
   scoop install autohotkey1
   scoop install python nodejs neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic
+  # C compiler (nvim-treesitter 요구사항)
+  winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
   Write-LogOK "Scoop 패키지 설치 완료"
 } catch {
   Write-LogErr "Scoop 패키지 설치 중 오류: $_  → 개별 패키지 수동 설치 필요 여부 확인"
@@ -366,7 +369,11 @@ if (-Not (Get-Command choco -ErrorAction SilentlyContinue)) {
   try {
     Set-ExecutionPolicy Bypass -Scope Process -Force
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    # $result 변수 충돌 방지: 스크립트를 임시 파일로 저장 후 실행
+    $chocoScript = "$env:TEMP\install_choco.ps1"
+    (New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1') | Set-Content $chocoScript
+    & $chocoScript
+    Remove-Item $chocoScript -ErrorAction SilentlyContinue
     Write-LogOK "Chocolatey 설치 완료"
   } catch {
     Write-LogErr "Chocolatey 설치 실패: $_  → https://chocolatey.org/install 수동 설치"
@@ -496,6 +503,9 @@ $cleanPath = ($userPath -split ';' | Where-Object { $_.ToLower() -notlike "*\roa
 [System.Environment]::SetEnvironmentVariable("PATH", $cleanPath, "User")
 $env:PATH  = ($env:PATH   -split ';' | Where-Object { $_.ToLower() -notlike "*\roaming\python\*" }) -join ';'
 
+# Scoop PATH 즉시 반영 (pipx 인식 안됨 방지)
+$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+
 try {
   pipx install gita 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
   pipx ensurepath
@@ -532,8 +542,14 @@ if (Test-Path $winSnapTarget) {
     Write-Log "WinSnap 다운로드 중..."
     Invoke-WebRequest -Uri $winSnapUrl -OutFile $winSnapZip -UseBasicParsing
     Expand-Archive -Path $winSnapZip -DestinationPath $winSnapExtDir -Force
-    Write-Log "WinSnap 설치 중... (설치 창이 뜰 수 있음)"
-    Start-Process -FilePath $winSnapExe -Wait
+    # 파일명 한글 인코딩 문제 방지: 실제 exe 파일 탐색
+    $winSnapExeFound = Get-ChildItem -Path $winSnapExtDir -Filter "*x64*단일*.exe" -Recurse | Select-Object -First 1
+    if (-Not $winSnapExeFound) {
+      $winSnapExeFound = Get-ChildItem -Path $winSnapExtDir -Filter "*.exe" -Recurse | Select-Object -First 1
+    }
+    if (-Not $winSnapExeFound) { throw "WinSnap 설치 파일을 찾을 수 없습니다" }
+    Write-Log "WinSnap 설치 중... (설치 창이 뜰 수 있음): $($winSnapExeFound.FullName)"
+    Start-Process -FilePath $winSnapExeFound.FullName -Wait
     Write-LogOK "WinSnap 설치 완료"
   } catch {
     Write-LogErr "WinSnap 설치 실패: $_  → https://dl.srzst.com/WinSnap_v6.2.2.zip 수동 설치"
