@@ -174,7 +174,12 @@ New-Item -ItemType SymbolicLink -Force `
   -Path "$HOME\AppData\Roaming\Zed\settings.json" `
   -Target "$REPO\zed\settings.json"
 Write-Host "OK Zed 설정 연결 완료"
-
+Remove-Item "$HOME\.gitattributes_global" -Force -ErrorAction SilentlyContinue
+New-Item -ItemType SymbolicLink -Force `
+  -Path "$HOME\.gitattributes_global" `
+  -Target "$REPO\.gitattributes"
+git config --global core.attributesFile "$HOME\.gitattributes_global"
+Write-Host "OK Git 글로벌 attributes 연결 완료"
 # ============================================================
 # Scoop 설치 및 패키지
 # ============================================================

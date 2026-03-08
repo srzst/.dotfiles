@@ -34,3 +34,5 @@ credentials text eol=lf
 *.exe binary
 *.ico binary
 *.zip binary
+
+# git config --global core.attributesFile ~/.gitattributes_global

@@ -105,7 +105,10 @@ git config --global core.excludesfile ~/.gitignore_global
 grep -qxF '*_secrets*' ~/.gitignore_global 2>/dev/null || echo '*_secrets*' >> ~/.gitignore_global
 grep -qxF '.pwsh_secrets*' ~/.gitignore_global 2>/dev/null || echo '.pwsh_secrets*' >> ~/.gitignore_global
 echo "OK 글로벌 gitignore 설정 완료"
-
+# 글로벌 gitattributes 설정
+ln -sf "$REPO/.gitattributes" ~/.gitattributes_global
+git config --global core.attributesFile ~/.gitattributes_global
+echo "OK Git 글로벌 attributes 연결 완료"
 # Private 저장소 clone (SSH 키 복원 후)
 echo ""
 echo "Private 저장소 clone 중..."
