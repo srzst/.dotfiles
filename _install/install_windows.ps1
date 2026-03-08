@@ -351,7 +351,7 @@ try {
   scoop bucket add nerd-fonts
   scoop update
   scoop install Hack-NF
-  scoop install autohotkey1.1
+  scoop install autohotkey1
   scoop install python nodejs neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic
   # C compiler (nvim-treesitter 요구사항)
   winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
@@ -428,6 +428,13 @@ if ($utf8Status -ne "1") {
 #   cloudinary 1.26.x → urllib3 1.x 전용. 장기적으로 cloudinary 2.x 업그레이드 시
 #   urllib3<2.0.0 고정 제거 및 cloudinary==1.26.0 고정 제거 필요.
 # ------------------------------------------------------------
+
+# winget PATH 누락 방지 (WindowsApps 경로가 PATH에 없는 경우 강제 주입)
+$wingetPath = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
+if ($env:PATH -notlike "*WindowsApps*") {
+  $env:PATH += ";$wingetPath"
+  Write-Log "winget PATH 강제 주입 완료: $wingetPath"
+}
 
 # winget 소스 업데이트 및 기존 앱 업그레이드
 Write-Log "winget 소스 업데이트 및 기존 앱 업그레이드 시도..."
