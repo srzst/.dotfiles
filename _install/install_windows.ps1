@@ -513,7 +513,7 @@ Write-LogOK "Winget 패키지 설치 완료"
 # ============================================================
 Write-Log "pip 패키지 설치 중..."
 try {
-  python -m pip install --upgrade pip 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+  # Scoop python은 scoop update python으로 업데이트하므로 pip upgrade 불필요
   # urllib3<2.0.0: cloudinary 1.26.x 호환성 고정
   # → cloudinary 2.x 업그레이드 시 이 고정 제거 필요
   python -m pip install "urllib3<2.0.0" 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
