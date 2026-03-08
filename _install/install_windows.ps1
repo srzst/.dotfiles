@@ -464,28 +464,51 @@ $cleanPath = ($userPath -split ';' | Where-Object { $_.ToLower() -notlike "*\roa
 [System.Environment]::SetEnvironmentVariable("PATH", $cleanPath, "User")
 $env:PATH  = ($env:PATH   -split ';' | Where-Object { $_.ToLower() -notlike "*\roaming\python\*" }) -join ';'
 
-
 try {
   pipx install gita 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
   pipx ensurepath
   # FIX: pipx 기본 경로 직접 추가 (ensurepath 후 환경변수 즉시 미반영 문제 방지)
   $env:PATH = "$HOME\.local\bin;" + $env:PATH
-  gita add $REPO                   2>$null
-  gita add "$REPO\modules\common"  2>$null
-  gita add "$REPO\modules\linux"   2>$null
-  gita add "$REPO\modules\mac"     2>$null
-  gita add "$REPO\modules\windows" 2>$null
-  Write-LogOK "pipx/gita 설치 및 .dotfiles + 서브모듈 등록 완료"
+  gita add $REPO 2>$null
+  Write-LogOK "pipx/gita 설치 및 .dotfiles 등록 완료"
 } catch {
   Write-LogErr "pipx/gita 설치 실패: $_"
 }
-
 
 try {
   npm install -g electron 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
   Write-LogOK "npm 패키지 설치 완료"
 } catch {
   Write-LogErr "npm 패키지 설치 실패: $_  → nodejs 설치 여부 확인"
+}
+
+# ============================================================
+# WinSnap 자동 설치
+# 인증 완료 버전 zip 다운로드 → 압축 해제 → 설치
+# ※ silent 옵션 미확인 → 설치 창이 뜰 수 있음
+# ============================================================
+$winSnapUrl    = "https://dl.srzst.com/WinSnap_v6.2.2.zip"
+$winSnapZip    = "$env:TEMP\WinSnap_v6.2.2.zip"
+$winSnapExtDir = "$env:TEMP\WinSnap_v6.2.2"
+$winSnapExe    = "$winSnapExtDir\WinSnap_v6.2.2_x64_KO_단일.exe"
+$winSnapTarget = "C:\Program Files\WinSnap\WinSnap.exe"
+
+if (Test-Path $winSnapTarget) {
+  Write-LogOK "WinSnap 이미 설치됨 (스킵)"
+} else {
+  try {
+    Write-Log "WinSnap 다운로드 중..."
+    Invoke-WebRequest -Uri $winSnapUrl -OutFile $winSnapZip -UseBasicParsing
+    Expand-Archive -Path $winSnapZip -DestinationPath $winSnapExtDir -Force
+    Write-Log "WinSnap 설치 중... (설치 창이 뜰 수 있음)"
+    Start-Process -FilePath $winSnapExe -Wait
+    Write-LogOK "WinSnap 설치 완료"
+  } catch {
+    Write-LogErr "WinSnap 설치 실패: $_  → https://dl.srzst.com/WinSnap_v6.2.2.zip 수동 설치"
+  } finally {
+    Remove-Item $winSnapZip    -ErrorAction SilentlyContinue
+    Remove-Item $winSnapExtDir -Recurse -ErrorAction SilentlyContinue
+  }
 }
 
 # ============================================================
@@ -514,6 +537,21 @@ try {
 }
 
 # ============================================================
+# 시작 프로그램 및 스케줄 작업 등록 (startup_register.ps1)
+# ============================================================
+$startupScript = "$REPO\modules\windows\ps1\startup_register.ps1"
+if (Test-Path $startupScript) {
+  try {
+    & $startupScript -MACHINE_TYPE $MACHINE_TYPE 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+    Write-LogOK "시작 프로그램 및 스케줄 작업 등록 완료"
+  } catch {
+    Write-LogErr "startup_register.ps1 실행 실패: $_"
+  }
+} else {
+  Write-LogWarn "startup_register.ps1 없음 (스킵): $startupScript"
+}
+
+# ============================================================
 # GitBash .bashrc 안내
 # ============================================================
 Write-Host ""
@@ -535,7 +573,7 @@ Write-Host "    ln -sf ""`$REPO/Alias/Windows/GitBash/.bashrc"" ~/.bashrc"
 # PhotoScape X Pro  - MS Store
 # Snipdo            - https://snipdo-app.com
 # Spark Desktop     - https://sparkmailapp.com
-# WinSnap           - https://ntwind.com/software/winsnap.html
+# WinSnap           - 자동 설치 처리됨 (install_windows.ps1)
 # Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html
 # Blip              - 공식 사이트 확인 필요
 # ------------------------------------------------------------
@@ -550,7 +588,7 @@ Write-Host "    Mountain Duck     - https://mountainduck.io"
 Write-Host "    PhotoScape X Pro  - MS Store"
 Write-Host "    Snipdo            - https://snipdo-app.com"
 Write-Host "    Spark Desktop     - https://sparkmailapp.com"
-Write-Host "    WinSnap           - https://ntwind.com/software/winsnap.html"
+# Write-Host "    WinSnap           - 자동 설치 처리됨"
 Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"
 Write-Host "    Blip              - 공식 사이트 확인 필요"
 
