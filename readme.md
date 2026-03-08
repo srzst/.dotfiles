@@ -78,26 +78,6 @@ git submodule update --init --recursive
 
 > 설치 스크립트가 자동으로 실행하므로 수동 실행 불필요. remote URL은 스크립트가 HTTPS로 자동 변환.
 
-OS별로 분리하고 싶은 경우
-
-```powershell
-# Windows
-git submodule update --init modules/common
-git submodule update --init modules/windows
-```
-
-```bash
-# macOS
-git submodule update --init modules/common
-git submodule update --init modules/mac
-```
-
-```bash
-# Ubuntu
-git submodule update --init modules/common
-git submodule update --init modules/linux
-```
-
 ---
 
 ## 에디터 구성
@@ -141,6 +121,14 @@ bws CLI는 설치 스크립트가 자동 설치함. 버전 변경 시 각 스크
 
 ### 1. Clone
 
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/srzst/.dotfiles $HOME\.dotfiles
+```
+
+**macOS / Ubuntu:**
+
 ```bash
 git clone https://github.com/srzst/.dotfiles ~/.dotfiles
 ```
@@ -151,7 +139,7 @@ git clone https://github.com/srzst/.dotfiles ~/.dotfiles
 
 ### 2. 설치 스크립트 실행
 
-각 OS / 용도별 스크립트를 직접 실행. (나는 서버의 경우에만 따로 분기 진행)
+각 OS / 용도별 스크립트를 직접 실행. 서브모듈은 전체 초기화(`--init`) 진행. Ubuntu 서버만 `modules/common` + `modules/linux` 로 분리 예정.
 
 **macOS:**
 
@@ -173,6 +161,22 @@ bash ~/.dotfiles/_install/install_ubuntu_sv.sh
 
 **Windows (관리자 권한 PowerShell):**
 
+git 미설치 시 먼저 실행:
+
+```powershell
+winget install -e --id Git.Git --source winget
+# 설치 후 PATH 즉시 반영 (PowerShell 재시작 대신)
+$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + $env:PATH
+```
+
+실행 정책 설정 (최초 1회):
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+설치 스크립트 실행:
+
 ```powershell
 & "$HOME\.dotfiles\_install\install_windows.ps1"
 ```
@@ -185,9 +189,9 @@ Windows는 실행 후 머신 타입 선택:
   2) vm    - 가상머신
 ```
 
-> **macOS:** Homebrew, Neovim/LazyVim, lazygit, Yazi, LaunchAgents, macOS 시스템 설정 포함
-> **Ubuntu:** 미러 서버(카카오) 변경, 시스템 업데이트, Neovim/LazyVim, lazygit, Yazi, Tailscale 포함
-> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외). 서브모듈(`modules/linux`) 관련 추가 작업은 추후 반영 예정
+> **macOS:** Homebrew, Neovim/LazyVim, lazygit, Yazi, LaunchAgents, macOS 시스템 설정 포함  
+> **Ubuntu:** 미러 서버(카카오) 변경, 시스템 업데이트, Neovim/LazyVim, lazygit, Yazi, Tailscale 포함  
+> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외). 서브모듈(`modules/linux`) 관련 추가 작업은 추후 반영 예정  
 > **Windows:** Scoop / winget / Chocolatey(비상용) 패키지, Hack Nerd Font / WinSnap 자동 설치, Neovim/LazyVim, 서브모듈 초기화, 시작 프로그램 및 스케줄 작업 등록(`startup_register.ps1`) 포함
 
 Ubuntu 서버 스크립트는 실행 초반에 BWS 토큰 · 사용자 암호 · root 암호를 한 번에 입력받고, 이후 완전 무인으로 진행됨. Neovim, LazyVim, Yazi, lazygit, pipx 등 GUI/개발 도구는 설치되지 않으며 시간대는 `Asia/Seoul`로 자동 고정.
@@ -254,6 +258,8 @@ ln -sf "$REPO/Alias/Windows/GitBash/.bashrc" ~/.bashrc
 ---
 
 ## 심볼릭 링크 경로
+
+VSCode, Cursor, Zed 계정 동기화로 링크 불필요.
 
 | 환경                | 원본 경로                                                        | 링크 대상                              |
 | ------------------- | ---------------------------------------------------------------- | -------------------------------------- |
