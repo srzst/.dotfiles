@@ -1,6 +1,6 @@
 # .dotfiles
 
-> version 1.02
+> version 1.03
 
 개인 개발 환경 설정 파일 모음.
 
@@ -22,18 +22,17 @@
 │       │   └── .bashrc
 │       └── PowerShell/
 │           └── profile.ps1
+├── modules/                         ← 서브모듈 (private)
+│   ├── common/                      ← 운영체제 공통
+│   ├── linux/                       ← Linux 전용 (ubuntusv 포함)
+│   ├── mac/                         ← macOS 전용
+│   └── windows/                     ← Windows 전용
 ├── neovim/
 │   ├── lua/
 │   │   ├── config/
 │   │   └── plugins/
-│   ├── .gitignore
-│   ├── .neoconf.json
 │   ├── init.lua
-│   ├── lazy-lock.json
-│   ├── lazyvim.json
-│   ├── LICENSE
-│   ├── README.md
-│   └── stylua.toml
+│   └── ...
 ├── Vim/
 │   └── .vimrc
 ├── vscode/
@@ -49,17 +48,35 @@
 │   │   ├── KeyBindings/
 │   │   │   └── DefaultKeyBinding.dict
 │   │   └── LaunchAgents/
-│   │       ├── com.user.clip_history.plist
-│   │       ├── com.user.url_changer.plist
-│   │       ├── launch_agents_reload.sh
-│   │       └── readmore.md
 │   ├── install_mac.sh
 │   ├── install_ubuntu.sh
 │   ├── install_ubuntu_sv.sh
 │   └── install_windows.ps1
 ├── .gitattributes
+├── .gitmodules
 └── readme.md
 ```
+
+---
+
+## 서브모듈
+
+프라이빗 자료는 서브모듈로 분리 관리. `.dotfiles`는 공개 저장소이며 서브모듈은 모두 private repo.
+
+| 서브모듈 경로     | 저장소 URL                         | 내용                        |
+| ----------------- | ---------------------------------- | --------------------------- |
+| `modules/common`  | `https://github.com/srzst/common`  | 운영체제 공통 스크립트/설정 |
+| `modules/linux`   | `https://github.com/srzst/linux`   | Linux 서버 전용 (ubuntusv)  |
+| `modules/mac`     | `https://github.com/srzst/mac`     | macOS 전용                  |
+| `modules/windows` | `https://github.com/srzst/windows` | Windows 전용                |
+
+### 서브모듈 초기화
+
+```bash
+git submodule update --init --recursive
+```
+
+> 설치 스크립트가 자동으로 실행하므로 수동 실행 불필요. remote URL은 스크립트가 HTTPS로 자동 변환.
 
 ---
 
@@ -78,11 +95,13 @@
 
 Hack Nerd Font 설치 필요 (Ubuntu 서버라면 불필요)
 
-| 환경    | 설치 방법                                                                        |
-| ------- | -------------------------------------------------------------------------------- |
-| Windows | 설치 스크립트가 Scoop nerd-fonts bucket으로 자동 설치 (`Hack-NF`, `FiraCode-NF`) |
-| macOS   | `brew install --cask font-hack-nerd-font`                                        |
-| Ubuntu  | `sudo apt install fonts-hack`                                                    |
+| 환경    | 설치 방법                                                         |
+| ------- | ----------------------------------------------------------------- |
+| Windows | 설치 스크립트가 Scoop nerd-fonts bucket으로 자동 설치 (`Hack-NF`) |
+| macOS   | `brew install --cask font-hack-nerd-font`                         |
+| Ubuntu  | `sudo apt install fonts-hack`                                     |
+
+> **macOS:** install_mac.sh에 폰트 설치 블록 미포함 시 위 명령을 수동 실행하거나 스크립트에 추가 필요.
 
 ---
 
@@ -146,8 +165,8 @@ Windows는 실행 후 머신 타입 선택:
 
 > **macOS:** Homebrew, Neovim/LazyVim, lazygit, Yazi, LaunchAgents, macOS 시스템 설정 포함  
 > **Ubuntu:** 미러 서버(카카오) 변경, 시스템 업데이트, Neovim/LazyVim, lazygit, Yazi, Tailscale 포함  
-> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외)  
-> **Windows:** Scoop / Chocolatey 패키지, Nerd Fonts, Neovim/LazyVim, xwin 스케줄 작업 등록 포함
+> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외). 서브모듈(`modules/linux`) 관련 추가 작업은 추후 반영 예정  
+> **Windows:** Scoop / winget / Chocolatey(비상용) 패키지, Hack Nerd Font 자동 설치, Neovim/LazyVim, 서브모듈 초기화 포함. 시작 프로그램 및 스케줄 작업 등록은 추후 추가 예정
 
 Ubuntu 서버 스크립트는 실행 초반에 BWS 토큰 · 사용자 암호 · root 암호를 한 번에 입력받고, 이후 완전 무인으로 진행됨. Neovim, LazyVim, Yazi, lazygit, pipx 등 GUI/개발 도구는 설치되지 않으며 시간대는 `Asia/Seoul`로 자동 고정.
 
@@ -208,7 +227,7 @@ ln -sf "$REPO/Alias/Windows/GitBash/.bashrc" ~/.bashrc
 | root 환경 동기화       | ❌                      | ✅                  |
 | 시간대 설정            | 수동 (dpkg-reconfigure) | 자동 (Asia/Seoul)   |
 | sudo 무인 처리         | ❌                      | ✅ (암호 사전 입력) |
-| clone 저장소           | `ubuntusv`              | `ubuntusv`          |
+| 서브모듈 작업          | ❌                      | 추후 예정           |
 
 ---
 
@@ -235,18 +254,13 @@ ln -sf "$REPO/Alias/Windows/GitBash/.bashrc" ~/.bashrc
 
 ## GitHub Desktop 호환
 
-설치 스크립트 마지막에 모든 저장소의 remote URL을 HTTPS로 자동 변경. 첫 push 시 GitHub 로그인 팝업이 뜨며, 이후 자격 증명 관리자가 자동 처리.
+설치 스크립트 실행 시 `.dotfiles` remote URL을 HTTPS로 자동 변경. 서브모듈 remote URL도 스크립트가 SSH → HTTPS로 자동 변환. 첫 push 시 GitHub 로그인 팝업이 뜨며, 이후 자격 증명 관리자가 자동 처리.
 
-| 저장소      | URL                                      | 환경                 |
-| ----------- | ---------------------------------------- | -------------------- |
-| `.dotfiles` | `https://github.com/srzst/.dotfiles.git` | 전체                 |
-| `.myConfig` | `https://github.com/srzst/.myConfig.git` | macOS / Windows      |
-| `xwin`      | `https://github.com/srzst/xwin.git`      | macOS / Windows      |
-| `script`    | `https://github.com/srzst/script.git`    | macOS / Windows      |
-| `scriptos`  | `https://github.com/srzst/scriptos.git`  | macOS / Windows      |
-| `ubuntusv`  | `https://github.com/srzst/ubuntusv.git`  | Ubuntu / Ubuntu 서버 |
+| 저장소      | URL                                      | 환경 |
+| ----------- | ---------------------------------------- | ---- |
+| `.dotfiles` | `https://github.com/srzst/.dotfiles.git` | 전체 |
 
-> Ubuntu / Ubuntu 서버는 `.dotfiles`, `ubuntusv` 2개만 clone 및 HTTPS 변경.
+> 서브모듈은 스크립트가 SSH → HTTPS 자동 변환하여 GitHub Desktop 호환 유지.
 
 ---
 
