@@ -178,7 +178,7 @@ function gsacp {
     }
     Write-Host "=== 서브모듈 처리 시작 ===" -ForegroundColor Cyan
     git submodule foreach --quiet `
-        "branch=\$(git symbolic-ref --short HEAD 2>/dev/null); if [ -z \"\$branch\" ]; then git checkout main 2>/dev/null; fi; git add . && git status --porcelain | grep -q . && git commit -m '$msg' && git push" 2>$null
+        "branch=\$(git symbolic-ref --short HEAD 2>/dev/null); if [ -z \"\$branch\" ]; then git checkout main 2>/dev/null; fi; git add . && git status --porcelain | grep -q . && git commit -m '$msg' && git push"
     Write-Host "=== 최상위 repo 처리 ===" -ForegroundColor Cyan
     git add .
     if (git status --porcelain) {
