@@ -166,13 +166,38 @@ function gfo {
 # 서브모듈 함수
 
 function gsacp {
-    param([string]$msg = "auto commit")
-    git submodule foreach "git add . && (git diff --cached --quiet || git commit -m '$msg')"
-    git submodule foreach "git push"
+    param(
+        [string]$msg = "auto commit",
+        [switch]$NoPush
+    )
+
+    # 현재 경로가 .dotfiles 루트인지 확인
+    $rootPath = "$HOME\.dotfiles"
+    if ((Get-Location).Path -ne $rootPath) {
+        Write-Host "gsacp는 .dotfiles 루트에서만 실행하세요!" -ForegroundColor Red
+        Write-Host "현재 위치: $(Get-Location)" -ForegroundColor Yellow
+        Write-Host "루트로 이동하려면: cd $rootPath" -ForegroundColor Cyan
+        return
+    }
+
+    Write-Host "=== 서브모듈 처리 시작 ===" -ForegroundColor Cyan
+
+    git submodule foreach --quiet `
+        "git add . && git diff --cached --quiet || git commit -m '$msg' && git push" 2>$null
+
+    Write-Host "=== 최상위 repo 처리 ===" -ForegroundColor Cyan
+
     git add .
-    git status --porcelain | Out-Null
-    git commit -m $msg 2>$null
-    git push
+    if (git status --porcelain) {
+        git commit -m $msg
+        if (-not $NoPush) {
+            git push
+        }
+    } else {
+        Write-Host "변경사항 없음 (스킵)" -ForegroundColor Green
+    }
+
+    Write-Host "=== 완료 ===" -ForegroundColor Green
 }
 # ============================================================
 # 시스템 유틸리티

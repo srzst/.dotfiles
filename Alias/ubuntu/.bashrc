@@ -163,16 +163,32 @@ alias gstl='git stash list'
 alias gr='git reset --hard'
 alias grs='git reset --soft HEAD~1'
 alias gclean='git clean -fd'
-# 서브 모듈 일괄 커밋 및 푸시
+
+# 서브 모듈 일괄 커밋 및 푸시 (bash/zsh용)
 gsacp() {
     local msg="${1:-auto commit}"
-    git submodule foreach "git add . && git diff --cached --quiet || git commit -m '$msg'"
-    git submodule foreach "git push"
-    git add .
-    git diff --cached --quiet || git commit -m "$msg"
-    git push
-}
 
+    # 1. 모든 서브모듈에서 변경사항이 있으면 커밋
+    git submodule foreach --quiet "
+        git add . &&
+        if ! git diff --cached --quiet; then
+            git commit -m '$msg'
+        fi
+    " 2>/dev/null
+
+    # 2. 서브모듈들 푸시 (변경이 있었던 서브모듈만)
+    git submodule foreach --quiet "git push" 2>/dev/null
+
+    # 3. 최상위 저장소 처리
+    git add .
+
+    if ! git diff --cached --quiet; then
+        git commit -m "$msg"
+        git push
+    else
+        echo "최상위 저장소에 변경사항 없음 (스킵)"
+    fi
+}
 
 # ============================================================
 # 유틸리티 함수
