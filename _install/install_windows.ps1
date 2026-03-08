@@ -449,23 +449,16 @@ try {
 Write-Log "Winget 신규 패키지 설치 중..."
 $wingetApps = @(
     "Microsoft.VisualStudioCode",
-    "ZedIndustries.Zed",
     "Anysphere.Cursor",
-    "Google.Chrome",
     "Brave.Brave",
     "Vivaldi.Vivaldi",
-    "NAVER.Whale",
     "Bitwarden.Bitwarden",
     "GitHub.GitHubDesktop",
     "Microsoft.PowerToys",
     "Microsoft.PowerShell",
-    "Bandisoft.Bandizip",
-    "Bandisoft.Honeyview",
     "Obsidian.Obsidian",
     "Logseq.Logseq",
-    "CopyQ.CopyQ",
-    "LocalSend.LocalSend",
-    "Kakao.KakaoTalk"
+    "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {
   try {
@@ -476,6 +469,33 @@ foreach ($app in $wingetApps) {
       Write-LogOK "winget 설치 완료: $app"
     } elseif ($LASTEXITCODE -eq -1978335189) {
       # 0x8A150011 = 이미 설치됨
+      Write-LogOK "winget 이미 설치됨 (스킵): $app"
+    } else {
+      Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app  → 수동 설치 또는 ID 재확인"
+    }
+  } catch {
+    Write-LogErr "winget 예외 발생: $app : $_"
+  }
+}
+
+# --scope user 제외 목록 (설치 실패 이력 있는 앱)
+$wingetAppsNoScope = @(
+    "ZedIndustries.Zed",
+    "Google.Chrome",
+    "NAVER.Whale",
+    "Bandisoft.Bandizip",
+    "Bandisoft.Honeyview",
+    "CopyQ.CopyQ",
+    "Kakao.KakaoTalk"
+)
+foreach ($app in $wingetAppsNoScope) {
+  try {
+    $result = winget install -e --id $app `
+      --accept-package-agreements --accept-source-agreements 2>&1
+    Add-Content -Path $LOG_FILE -Value ($result | Out-String)
+    if ($LASTEXITCODE -eq 0) {
+      Write-LogOK "winget 설치 완료: $app"
+    } elseif ($LASTEXITCODE -eq -1978335189) {
       Write-LogOK "winget 이미 설치됨 (스킵): $app"
     } else {
       Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app  → 수동 설치 또는 ID 재확인"
