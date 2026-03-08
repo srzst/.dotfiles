@@ -164,16 +164,18 @@ function gfo {
 }
 
 # 서브모듈 함수
+
 function gsacp {
     param([string]$msg = "auto commit")
-    git submodule foreach git add .
-    git submodule foreach git commit -m $msg
-    git submodule foreach git push
+    git submodule foreach '
+        git add . 
+        git diff --cached --quiet || git commit -m "'"$msg"'"
+        git push
+    '
     git add .
-    git commit -m $msg
+    git diff --cached --quiet || git commit -m $msg
     git push
 }
-
 
 # ============================================================
 # 시스템 유틸리티
