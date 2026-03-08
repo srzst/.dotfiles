@@ -209,6 +209,7 @@ if ($gitCreds) {
   Set-Content -Path "$HOME\.git-credentials" -Value $gitCreds -NoNewline
   # GCM 대신 .git-credentials 파일 직접 사용 (서브모듈 clone 시 팝업 방지)
   git config --global credential.helper store
+  git config --system credential.helper store 
   Write-LogOK ".git-credentials 복원 완료 (credential.helper store 설정)"
 } else {
   Write-LogWarn ".git-credentials 복원 실패 (스킵)"
