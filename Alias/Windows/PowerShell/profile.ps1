@@ -162,14 +162,12 @@ function gfo {
     git fetch origin
     git reset --hard "origin/$branch"
 }
-
 # 서브모듈 함수
 function gsacp {
     param(
         [string]$msg = "auto commit",
         [switch]$NoPush
     )
-
     # 현재 경로가 .dotfiles 루트인지 확인
     $rootPath = "$HOME\.dotfiles"
     if ((Get-Location).Path -ne $rootPath) {
@@ -178,12 +176,10 @@ function gsacp {
         Write-Host "루트로 이동하려면: cd $rootPath" -ForegroundColor Cyan
         return
     }
-
     Write-Host "=== 서브모듈 처리 시작 ===" -ForegroundColor Cyan
     git submodule foreach --quiet `
-        "branch=\$(git symbolic-ref --short HEAD 2>nul); if [ -z \"\$branch\" ]; then git checkout main 2>nul; fi; git add . && git diff --cached --quiet || git commit -m '$msg' && git push" 2>$null
+        "branch=\$(git symbolic-ref --short HEAD 2>/dev/null); if [ -z \"\$branch\" ]; then git checkout main 2>/dev/null; fi; git add . && git status --porcelain | grep -q . && git commit -m '$msg' && git push" 2>$null
     Write-Host "=== 최상위 repo 처리 ===" -ForegroundColor Cyan
-
     git add .
     if (git status --porcelain) {
         git commit -m $msg
@@ -193,7 +189,6 @@ function gsacp {
     } else {
         Write-Host "변경사항 없음 (스킵)" -ForegroundColor Green
     }
-
     Write-Host "=== 완료 ===" -ForegroundColor Green
 }
 # ============================================================
