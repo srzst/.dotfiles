@@ -167,11 +167,19 @@ gfo() {
     echo -e "\033[0;33mFetching from origin and resetting to $branch...\033[0m"
     git fetch origin && git reset --hard "origin/$branch"
 }
-# 서브 모듈 일괄 커밋 및 푸시 (bash/zsh용)
 gsacp() {
     local msg="${1:-auto commit}"
+    local root="$HOME/.dotfiles"   # 필요하면 경로 수정
 
-    # 1. 모든 서브모듈에서 변경사항이 있으면 커밋
+    if [[ "$(pwd)" != "$root" ]]; then
+        echo -e "\033[31mgsacp는 .dotfiles 루트에서만 실행하세요!\033[m" >&2
+        echo -e "현재 위치: $(pwd)" >&2
+        echo -e "이동 명령어: cd $root" >&2
+        return 1
+    fi
+
+    echo -e "\033[36m=== 서브모듈 처리 시작 ===\033[m"
+
     git submodule foreach --quiet "
         git add . &&
         if ! git diff --cached --quiet; then
@@ -179,18 +187,18 @@ gsacp() {
         fi
     " 2>/dev/null
 
-    # 2. 서브모듈들 푸시 (변경이 있었던 서브모듈만)
     git submodule foreach --quiet "git push" 2>/dev/null
 
-    # 3. 최상위 저장소 처리
     git add .
 
     if ! git diff --cached --quiet; then
         git commit -m "$msg"
         git push
     else
-        echo "최상위 저장소에 변경사항 없음 (스킵)"
+        echo "최상위 저장소 변경사항 없음 (스킵)"
     fi
+
+    echo -e "\033[32m=== 완료 ===\033[m"
 }
 # ============================================================
 # Docker 관련
