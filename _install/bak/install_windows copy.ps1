@@ -508,6 +508,7 @@ $wingetAppsNoScope = @(
     "Kakao.KakaoTalk",
     "Iterate.MountainDuck"
 )
+
 foreach ($app in $wingetAppsNoScope) {
   try {
     $result = winget install -e --id $app `
