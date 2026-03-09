@@ -36,24 +36,28 @@ function Write-LogErr  { param([string]$msg) Write-Log "ERR  $msg" "ERROR"; $FAI
 Write-Log "========== Windows 설치 스크립트 시작 =========="
 Write-Log "로그 파일: $LOG_FILE"
 
+# # ============================================================
+# # 머신 타입 선택 (가장 먼저)
+# # ============================================================
+# Write-Host ""
+# Write-Host "머신 타입을 선택하세요:"
+# Write-Host "  1) main  - 데스크탑 / 노트북"
+# Write-Host "  2) vm    - 가상머신"
+# $machineTypeInput = Read-Host "선택 (1 or 2)"
+# switch ($machineTypeInput) {
+#   "1" { $MACHINE_TYPE = "main" }
+#   "2" { $MACHINE_TYPE = "vm" }
+#   default {
+#     Write-LogErr "잘못된 입력 '$machineTypeInput' - 스크립트 종료"
+#     exit 1
+#   }
+# }
+# Write-LogOK "머신 타입: $MACHINE_TYPE"
 # ============================================================
-# 머신 타입 선택 (가장 먼저)
+# 머신 타입 선택 (main으로 고정)
 # ============================================================
-Write-Host ""
-Write-Host "머신 타입을 선택하세요:"
-Write-Host "  1) main  - 데스크탑 / 노트북"
-Write-Host "  2) vm    - 가상머신"
-$machineTypeInput = Read-Host "선택 (1 or 2)"
-switch ($machineTypeInput) {
-  "1" { $MACHINE_TYPE = "main" }
-  "2" { $MACHINE_TYPE = "vm" }
-  default {
-    Write-LogErr "잘못된 입력 '$machineTypeInput' - 스크립트 종료"
-    exit 1
-  }
-}
+$MACHINE_TYPE = "main"
 Write-LogOK "머신 타입: $MACHINE_TYPE"
-
 # ============================================================
 # BWS 액세스 토큰 입력
 # ============================================================
