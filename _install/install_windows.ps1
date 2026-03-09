@@ -360,8 +360,8 @@ try {
   scoop install Hack-NF
   scoop install autohotkey1.1
   scoop install python  
-  # scoop install nodejs 
-  # scoop install neovim neovide lazygit tree-sitter yazi ffmpeg 5zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
+  scoop install nodejs 
+  scoop install neovim neovide lazygit tree-sitter yazi ffmpeg 5zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
   # C compiler (nvim-treesitter 요구사항)
   winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
   Write-LogOK "Scoop 패키지 설치 완료"
@@ -456,7 +456,7 @@ try {
 
 Write-Log "Winget 신규 패키지 설치 중..."
 $wingetApps = @(
-    # "Microsoft.VisualStudioCode",
+    "Microsoft.VisualStudioCode",
     # "Anysphere.Cursor",
     # "Brave.Brave",
     # "Vivaldi.Vivaldi",
@@ -613,7 +613,6 @@ try {
 }
 
 # LazyVim 초기화 (Neovim 플러그인 동기화)
-# LazyVim 초기화 (Neovim 플러그인 동기화)
 # 1차: 플러그인 동기화
 # 2차: mason 패키지 설치 완료 대기 (1차 실행 시 nvim 종료로 설치 중단되는 경우 방지)
 try {
@@ -655,16 +654,15 @@ Write-Host "    ln -sf ""`$REPO/Alias/Windows/GitBash/.bashrc"" ~/.bashrc"
 # ============================================================
 # Figma             - https://figma.com/downloads
 # Typora            - https://typora.io
-# UpNote            - MS Store
+# UpNote            - https://download.getupnote.com/app/UpNote%20Setup.exe
 # FastStone Capture - https://faststone.org
 # Jump Desktop      - MS Store
 # Mountain Duck     - https://mountainduck.io
 # PhotoScape X Pro  - MS Store
 # Snipdo            - https://snipdo-app.com
 # Spark Desktop     - https://sparkmailapp.com
-# WinSnap           - 자동 설치 처리됨 (install_windows.ps1)
 # Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html
-# Blip              - 공식 사이트 확인 필요
+# Blip              - https://www.blip.com
 # ------------------------------------------------------------
 Write-Host ""
 Write-Log "INFO 수동 설치 필요 항목:"
