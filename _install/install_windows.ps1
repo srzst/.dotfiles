@@ -355,7 +355,9 @@ try {
   scoop update
   scoop install Hack-NF
   scoop install autohotkey1.1
-  scoop install python nodejs neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
+  scoop install python  
+  # scoop install nodejs 
+  # scoop install neovim neovide lazygit tree-sitter yazi ffmpeg 5zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
   # C compiler (nvim-treesitter 요구사항)
   winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
   Write-LogOK "Scoop 패키지 설치 완료"
