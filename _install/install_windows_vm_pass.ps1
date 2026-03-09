@@ -379,7 +379,7 @@ $wingetApps = @(
     "Microsoft.PowerShell",
     # "Obsidian.Obsidian",
     # "Logseq.Logseq",
-    # "LocalSend.LocalSend"
+    "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {
   try {
@@ -401,13 +401,13 @@ foreach ($app in $wingetApps) {
 # --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
     # "ZedIndustries.Zed",
-    "Google.Chrome",
     # "NAVER.Whale",
     # "Bandisoft.Bandizip",
     # "Bandisoft.Honeyview",
     # "CopyQ.CopyQ",
     # "Kakao.KakaoTalk",
-    # "Iterate.MountainDuck"
+    # "Iterate.MountainDuck",
+    "Google.Chrome"
 )
 foreach ($app in $wingetAppsNoScope) {
   try {
