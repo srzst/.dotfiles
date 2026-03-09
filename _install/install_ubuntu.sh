@@ -227,25 +227,31 @@ ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 | grep -q "succes
   && echo "OK GitHub SSH 인증 성공" \
   || echo "WARN GitHub SSH 인증 실패 - BWS 키 또는 GitHub 등록 확인 필요"
 
-# 저장소 clone (SSH - private repo)
+# # 저장소 clone (SSH - private repo)
+# echo ""
+# echo "저장소 clone 중..."
+# repos=(
+#   "git@github.com:srzst/ubuntusv.git"
+# )
+# for repo in "${repos[@]}"; do
+#   repo_name=$(basename "$repo" .git)
+#   if [ ! -d "$HOME/$repo_name" ]; then
+#     git clone "$repo" "$HOME/$repo_name"
+#     echo "OK $repo_name clone 완료"
+#   else
+#     echo "OK $repo_name 이미 존재 (스킵)"
+#   fi
+# done
+# 서브모듈 초기화 (linux 전용)
 echo ""
-echo "저장소 clone 중..."
-repos=(
-  "git@github.com:srzst/ubuntusv.git"
-)
-for repo in "${repos[@]}"; do
-  repo_name=$(basename "$repo" .git)
-  if [ ! -d "$HOME/$repo_name" ]; then
-    git clone "$repo" "$HOME/$repo_name"
-    echo "OK $repo_name clone 완료"
-  else
-    echo "OK $repo_name 이미 존재 (스킵)"
-  fi
-done
-
-# Cron 등록 (6시간마다 pull)
-(crontab -l 2>/dev/null; echo "0 */6 * * * cd $HOME/.dotfiles && git pull origin main") | crontab -
-echo "OK Cron 등록 완료 (6시간마다 pull)"
+echo "서브모듈 초기화 중..."
+git -C "$REPO" submodule update --init modules/linux
+git -C "$REPO/modules/linux" checkout main 2>/dev/null || true
+echo "OK modules/linux 초기화 완료"
+# Cron 등록 (3시간마다 pull)
+(crontab -l 2>/dev/null; echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main && git submodule update --remote modules/linux") | crontab -
+# (crontab -l 2>/dev/null; echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main") | crontab -
+echo "OK Cron 등록 완료 (3시간마다 pull)"
 
 # pip 패키지 설치
 echo ""

@@ -189,9 +189,9 @@ Windows는 실행 후 머신 타입 선택:
   2) vm    - 가상머신
 ```
 
-> **macOS:** Homebrew, Neovim/LazyVim, lazygit, Yazi, LaunchAgents, macOS 시스템 설정 포함  
-> **Ubuntu:** 미러 서버(카카오) 변경, 시스템 업데이트, Neovim/LazyVim, lazygit, Yazi, Tailscale 포함  
-> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외). 서브모듈(`modules/linux`) 관련 추가 작업은 추후 반영 예정  
+> **macOS:** Homebrew, Neovim/LazyVim, lazygit, Yazi, LaunchAgents, macOS 시스템 설정 포함
+> **Ubuntu:** 미러 서버(카카오) 변경, 시스템 업데이트, Neovim/LazyVim, lazygit, Yazi, Tailscale 포함
+> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외). 서브모듈(`modules/linux`) 관련 추가 작업은 추후 반영 예정
 > **Windows:** Scoop / winget / Chocolatey(비상용) 패키지, Hack Nerd Font / WinSnap 자동 설치, Neovim/LazyVim, 서브모듈 초기화, 시작 프로그램 및 스케줄 작업 등록(`startup_register.ps1`) 포함
 
 Ubuntu 서버 스크립트는 실행 초반에 BWS 토큰 · 사용자 암호 · root 암호를 한 번에 입력받고, 이후 완전 무인으로 진행됨. Neovim, LazyVim, Yazi, lazygit, pipx 등 GUI/개발 도구는 설치되지 않으며 시간대는 `Asia/Seoul`로 자동 고정.
