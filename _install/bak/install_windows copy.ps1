@@ -36,24 +36,28 @@ function Write-LogErr  { param([string]$msg) Write-Log "ERR  $msg" "ERROR"; $FAI
 Write-Log "========== Windows 설치 스크립트 시작 =========="
 Write-Log "로그 파일: $LOG_FILE"
 
+# # ============================================================
+# # 머신 타입 선택 (가장 먼저)
+# # ============================================================
+# Write-Host ""
+# Write-Host "머신 타입을 선택하세요:"
+# Write-Host "  1) main  - 데스크탑 / 노트북"
+# Write-Host "  2) vm    - 가상머신"
+# $machineTypeInput = Read-Host "선택 (1 or 2)"
+# switch ($machineTypeInput) {
+#   "1" { $MACHINE_TYPE = "main" }
+#   "2" { $MACHINE_TYPE = "vm" }
+#   default {
+#     Write-LogErr "잘못된 입력 '$machineTypeInput' - 스크립트 종료"
+#     exit 1
+#   }
+# }
+# Write-LogOK "머신 타입: $MACHINE_TYPE"
 # ============================================================
-# 머신 타입 선택 (가장 먼저)
+# 머신 타입 선택 (main으로 고정)
 # ============================================================
-Write-Host ""
-Write-Host "머신 타입을 선택하세요:"
-Write-Host "  1) main  - 데스크탑 / 노트북"
-Write-Host "  2) vm    - 가상머신"
-$machineTypeInput = Read-Host "선택 (1 or 2)"
-switch ($machineTypeInput) {
-  "1" { $MACHINE_TYPE = "main" }
-  "2" { $MACHINE_TYPE = "vm" }
-  default {
-    Write-LogErr "잘못된 입력 '$machineTypeInput' - 스크립트 종료"
-    exit 1
-  }
-}
+$MACHINE_TYPE = "main"
 Write-LogOK "머신 타입: $MACHINE_TYPE"
-
 # ============================================================
 # BWS 액세스 토큰 입력
 # ============================================================
@@ -265,7 +269,7 @@ try {
 # ============================================================
 # 심볼릭 링크
 # ============================================================
-function New-Symlink {
+function New-Symlink {gg
   param([string]$LinkPath, [string]$TargetPath)
   try {
     Remove-Item $LinkPath -Force -Recurse -ErrorAction SilentlyContinue
@@ -293,17 +297,34 @@ New-Symlink "$HOME\AppData\Roaming\Zed\settings.json" "$REPO\zed\settings.json"
 New-Symlink "$HOME\.gitattributes_global" "$REPO\.gitattributes"
 git config --global core.attributesFile "$HOME\.gitattributes_global"
 Write-LogOK "Git 글로벌 attributes 연결 완료"
+
 # ============================================================
 # Scoop 설치 및 패키지
 # (CLI / 개발 도구 – portable + .dotfiles 연동 최적)
 # ============================================================
 # 설치 목록:
-#   git, gsudo, vim, curl
-#   python, nodejs
-#   neovim, neovide, lazygit, tree-sitter
-#   yazi, ffmpeg, 7zip, jq, poppler
-#   fd, ripgrep, fzf, zoxide, imagemagick
-#   tabby, tectonic, typora, pipx
+#   git
+#   gsudo
+#   vim
+#   curl
+#   python
+#   nodejs
+#   neovim
+#   neovide
+#   lazygit
+#   tree-sitter
+#   yazi
+#   ffmpeg
+#   7zip
+#   jq
+#   poppler
+#   fd
+#   ripgrep
+#   fzf
+#   zoxide
+#   imagemagick
+#   tabby
+#   tectonic
 #   autohotkey1.1 ← AHK v1.1 전용 패키지 (versions bucket, upgrade 시 v2 설치 방지)
 # ------------------------------------------------------------
 # ※ msys2 제외 이유:
@@ -338,7 +359,9 @@ try {
   scoop update
   scoop install Hack-NF
   scoop install autohotkey1.1
-  scoop install python nodejs neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx typora
+  scoop install python  
+  scoop install nodejs 
+  # scoop install neovim neovide lazygit tree-sitter yazi ffmpeg 5zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
   # C compiler (nvim-treesitter 요구사항)
   winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
   Write-LogOK "Scoop 패키지 설치 완료"
@@ -369,17 +392,6 @@ if (-Not (Get-Command choco -ErrorAction SilentlyContinue)) {
 }
 
 # ============================================================
-# Chocolatey 패키지 설치
-# ============================================================
-Write-Log "Chocolatey 패키지 설치 중..."
-try {
-  choco install sparkmail -y 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
-  Write-LogOK "choco sparkmail 설치 완료"
-} catch {
-  Write-LogErr "choco sparkmail 설치 실패: $_"
-}
-
-# ============================================================
 # Python UTF-8 모드 설정 (한글 인코딩 오류 방지)
 # ============================================================
 Write-Log "Python UTF-8 모드 설정 중..."
@@ -397,8 +409,6 @@ if ($utf8Status -ne "1") {
 # (GUI 앱 + 일반 앱 – choco 완전 대체)
 # ============================================================
 # 설치 목록:
-#   Raycast.Raycast               ← 런처
-#   Figma.Figma                   ← 디자인 툴
 #   Microsoft.VisualStudioCode    ← 에디터
 #   ZedIndustries.Zed             ← 에디터 (공식 winget 지원)
 #   Anysphere.Cursor              ← AI 코딩 에디터
@@ -418,12 +428,14 @@ if ($utf8Status -ne "1") {
 #   CopyQ.CopyQ                   ← 클립보드 관리자
 #   LocalSend.LocalSend           ← 로컬 파일 전송
 #   Kakao.KakaoTalk               ← 메신저
-#   Iterate.MountainDuck          ← 클라우드 마운트
 # ------------------------------------------------------------
 # ※ --silent 미사용 이유:
 #   일부 앱 설치 실패를 숨기는 경우가 있어 제거.
 #   --accept-package-agreements --accept-source-agreements --scope user 만 사용.
 #   강제 재설치 필요 시: --force 추가
+# ※ cloudinary/urllib3 고정 관련:
+#   cloudinary 1.26.x → urllib3 1.x 전용. 장기적으로 cloudinary 2.x 업그레이드 시
+#   urllib3<2.0.0 고정 제거 및 cloudinary==1.26.0 고정 제거 필요.
 # ------------------------------------------------------------
 
 # winget PATH 누락 방지 (WindowsApps 경로가 PATH에 없는 경우 강제 주입)
@@ -442,31 +454,8 @@ try {
   Write-LogWarn "winget 업그레이드 중 오류 (무시하고 계속): $_"
 }
 
-# MS Store 전용 ID 목록 (--exact 없이 설치)
-$wingetStoreApps = @(
-    "9PFXXSHC64H3"   # Raycast
-)
-foreach ($app in $wingetStoreApps) {
-  try {
-    $result = winget install --id $app `
-      --accept-package-agreements --accept-source-agreements 2>&1
-    Add-Content -Path $LOG_FILE -Value ($result | Out-String)
-    if ($LASTEXITCODE -eq 0) {
-      Write-LogOK "winget 설치 완료: $app"
-    } elseif ($LASTEXITCODE -eq -1978335189) {
-      Write-LogOK "winget 이미 설치됨 (스킵): $app"
-    } else {
-      Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app  → 수동 설치 또는 ID 재확인"
-    }
-  } catch {
-    Write-LogErr "winget 예외 발생: $app : $_"
-  }
-}
-
-# 9PFXXSHC64H3 = Raycast 공식 MS Store ID (2026-03 기준), 실패 시 winget search Raycast 재확인
 Write-Log "Winget 신규 패키지 설치 중..."
 $wingetApps = @(
-    "Figma.Figma",
     "Microsoft.VisualStudioCode",
     "Anysphere.Cursor",
     "Brave.Brave",
@@ -477,7 +466,12 @@ $wingetApps = @(
     "Microsoft.PowerShell",
     "Obsidian.Obsidian",
     "Logseq.Logseq",
+    "appmakes.Typora",
+    "Iterate.MountainDuck",
+    "Figma.Figma",
+    "FastStone.Capture",   
     "LocalSend.LocalSend"
+    
 )
 foreach ($app in $wingetApps) {
   try {
@@ -499,16 +493,14 @@ foreach ($app in $wingetApps) {
 
 # --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
-    "ZedIndustries.Zed",
-    "Google.Chrome",
-    "NAVER.Whale",
-    "Bandisoft.Bandizip",
-    "Bandisoft.Honeyview",
-    "CopyQ.CopyQ",
-    "Kakao.KakaoTalk",
-    "Iterate.MountainDuck"
+    # "ZedIndustries.Zed",
+    # "NAVER.Whale",
+    # "Bandisoft.Bandizip",
+    # "Bandisoft.Honeyview",
+    # "CopyQ.CopyQ",
+    # "Kakao.KakaoTalk",
+    "Google.Chrome"
 )
-
 foreach ($app in $wingetAppsNoScope) {
   try {
     $result = winget install -e --id $app `
@@ -535,12 +527,18 @@ try {
   # Scoop python은 scoop update python으로 업데이트하므로 pip upgrade 불필요
   # urllib3<2.0.0: cloudinary 1.26.x 호환성 고정
   # → cloudinary 2.x 업그레이드 시 이 고정 제거 필요
-  python -m pip install "urllib3<2.0.0" 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+  # python -m pip install "urllib3<2.0.0" 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+  python -m pip install "urllib3<2.0.0" | Tee-Object -Append -FilePath $LOG_FILE
   python -m pip install `
     pyperclip regex requests mistune boto3 clipboard pillow win10toast pywin32 plyer `
     b2sdk pynput watchdog send2trash PyQt5 pygments pandas tabulate oauth2client gspread `
     google-api-python-client langdetect pyautogui dropbox pyinstaller cloudinary==1.26.0 pyimgur `
-    2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+    | Tee-Object -Append -FilePath $LOG_FILE
+  # python -m pip install `
+    # pyperclip regex requests mistune boto3 clipboard pillow win10toast pywin32 plyer `
+    # b2sdk pynput watchdog send2trash PyQt5 pygments pandas tabulate oauth2client gspread `
+    # google-api-python-client langdetect pyautogui dropbox pyinstaller cloudinary==1.26.0 pyimgur `
+    # 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
   Write-LogOK "pip 패키지 설치 완료"
 } catch {
   Write-LogErr "pip 패키지 설치 실패: $_  → python 설치 여부 및 PATH 확인"
@@ -625,11 +623,9 @@ try {
   Write-LogErr ".dotfiles remote 변경 실패: $_"
 }
 
-# ============================================================
 # LazyVim 초기화 (Neovim 플러그인 동기화)
 # 1차: 플러그인 동기화
 # 2차: mason 패키지 설치 완료 대기 (1차 실행 시 nvim 종료로 설치 중단되는 경우 방지)
-# ============================================================
 try {
   nvim --headless "+Lazy! sync" +qa 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
   Start-Sleep -Seconds 3
@@ -664,38 +660,30 @@ Write-Host "    rm ~/.bashrc"
 Write-Host "    ln -sf ""`$REPO/Alias/Windows/GitBash/.bashrc"" ~/.bashrc"
 
 # ============================================================
-# winget Git 제거 (Scoop Git으로 대체)
-# ============================================================
-Write-Log "winget Git 제거 중 (Scoop Git으로 대체됨)..."
-try {
-  winget uninstall --id Git.Git --silent --accept-source-agreements 2>$null
-  Write-LogOK "winget Git 제거 완료"
-} catch {
-  Write-LogWarn "winget Git 제거 실패 (이미 없거나 수동 제거 필요)"
-}
-
-# ============================================================
 # 수동 설치 필요 항목 안내
 # (패키지 매니저 미지원 / 유료 / MS Store 전용)
 # ============================================================
-# UpNote            - MS Store
+# Figma             - https://figma.com/downloads
+# Typora            - https://typora.io
+# UpNote            - https://download.getupnote.com/app/UpNote%20Setup.exe
 # FastStone Capture - https://faststone.org
 # Jump Desktop      - MS Store
+# Mountain Duck     - https://mountainduck.io
 # PhotoScape X Pro  - MS Store
 # Snipdo            - https://snipdo-app.com
-# WinSnap           - 자동 설치 처리됨 (install_windows.ps1)
+# Spark Desktop     - https://sparkmailapp.com
 # Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html
-# Blip              - 공식 사이트 확인 필요
+# Blip              - https://www.blip.com
 # ------------------------------------------------------------
 Write-Host ""
 Write-Log "INFO 수동 설치 필요 항목:"
-Write-Host "    UpNote            - MS Store"
+Write-Host "    UpNote            - https://download.getupnote.com/app/UpNote%20Setup.exe"
 Write-Host "    FastStone Capture - https://faststone.org"
-Write-Host "    Jump Desktop      - MS Store"
+Write-Host "    Jump Desktop      - https://jumpdesktop.com/download.html"
 Write-Host "    PhotoScape X Pro  - MS Store"
 Write-Host "    Snipdo            - https://snipdo-app.com"
 Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"
-Write-Host "    Blip              - 공식 사이트 확인 필요"
+Write-Host "    Blip              - https://www.blip.com"
 
 # ============================================================
 # 최종 요약: WARN / ERR 발생 항목 출력
