@@ -19,76 +19,167 @@ $BWS_URL_WIN  = "https://github.com/bitwarden/sdk-sm/releases/download/bws-v${BW
 # 스크립트 전체 실행 내용을 파일로 기록
 # 로그 위치: $HOME\install_windows_<날짜시간>.log
 # ============================================================
-$LOG_FILE     = "$HOME\install_windows_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+$LOG_FILE = "$HOME\install_windows_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 $FAILED_ITEMS = [System.Collections.Generic.List[string]]::new()
 
 function Write-Log {
-    param([string]$Message, [string]$Level = "INFO")
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+        [string]$Level = "INFO"
+    )
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $line = "[$timestamp][$Level] $Message"
     Write-Host $line
-    Add-Content -Path $LOG_FILE -Value $line
+    Add-Content -Path $LOG_FILE -Value $line -Encoding UTF8
 }
+
 function Write-LogOK   { param([string]$msg) Write-Log "OK   $msg" "INFO" }
 function Write-LogWarn { param([string]$msg) Write-Log "WARN $msg" "WARN"; $FAILED_ITEMS.Add("WARN: $msg") }
 function Write-LogErr  { param([string]$msg) Write-Log "ERR  $msg" "ERROR"; $FAILED_ITEMS.Add("ERR:  $msg") }
 
 Write-Log "========== Windows 설치 스크립트 시작 =========="
 Write-Log "로그 파일: $LOG_FILE"
-
-# ============================================================
-# BWS 액세스 토큰 입력
-# ============================================================
-$existingToken = [System.Environment]::GetEnvironmentVariable("BWS_ACCESS_TOKEN", "User")
-if (-Not $existingToken) {
-  Write-Host ""
-  $bwsToken = Read-Host "BWS 액세스 토큰을 입력하세요"
-  [System.Environment]::SetEnvironmentVariable("BWS_ACCESS_TOKEN", $bwsToken, "User")
-  $env:BWS_ACCESS_TOKEN = $bwsToken
-  Write-LogOK "BWS_ACCESS_TOKEN 사용자 환경변수 등록 완료"
-} else {
-  $env:BWS_ACCESS_TOKEN = $existingToken
-  Write-LogOK "BWS_ACCESS_TOKEN 이미 존재 (스킵)"
-}
-
-# Git 설정
-try {
-  git config --global user.email "x@srzst.com"
-  git config --global user.name  "x"
-  Write-LogOK "Git 설정 완료"
-} catch {
-  Write-LogErr "Git 설정 실패: $_  → git 설치 여부 확인"
-}
-
 # ============================================================
 # bws CLI 설치
 # ============================================================
 $BWS_BIN = "$HOME\bws\bws.exe"
 if (-Not (Test-Path $BWS_BIN)) {
-  Write-Log "bws CLI 설치 중... (v$BWS_VERSION)"
-  try {
-    New-Item -ItemType Directory -Force -Path "$HOME\bws" | Out-Null
-    Invoke-WebRequest -Uri $BWS_URL_WIN -OutFile "$HOME\bws\bws.zip"
-    Expand-Archive -Path "$HOME\bws\bws.zip" -DestinationPath "$HOME\bws" -Force
-    Remove-Item "$HOME\bws\bws.zip"
-    Write-LogOK "bws CLI 설치 완료"
-  } catch {
-    Write-LogErr "bws CLI 설치 실패: $_  → 네트워크 또는 URL 확인: $BWS_URL_WIN"
-    exit 1
-  }
+    Write-Log "bws CLI 설치 시작 (v$BWS_VERSION)"
+    try {
+        New-Item -ItemType Directory -Force -Path "$HOME\bws" | Out-Null
+        Invoke-WebRequest -Uri $BWS_URL_WIN -OutFile "$HOME\bws\bws.zip"
+        Expand-Archive -Path "$HOME\bws\bws.zip" -DestinationPath "$HOME\bws" -Force
+        Remove-Item "$HOME\bws\bws.zip"
+        Write-LogOK "bws CLI 설치 완료"
+    } catch {
+        Write-LogErr "bws CLI 설치 실패: $_"
+        exit 1
+    }
 } else {
-  Write-LogOK "bws CLI 이미 설치됨 (스킵)"
-  $bwsVer = & $BWS_BIN --version 2>$null
-  if ($bwsVer) { Write-Log "현재 bws 버전: $bwsVer" }
-  else          { Write-LogWarn "bws --version 실행 실패 → 실행 파일 손상 가능성, 수동 확인 권장" }
+    Write-LogOK "bws CLI가 이미 존재합니다."
 }
 
+# ============================================================
 # 글로벌 gitignore 설정
+# ============================================================
 $gitignorePath = "$HOME\.gitignore_global"
 git config --global core.excludesfile $gitignorePath
 $existingContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath } else { @() }
 if ($existingContent -notcontains '*_secrets*') { Add-Content -Path $gitignorePath -Value '*_secrets*' }
-Write-LogOK "글로벌 gitignore 설정 완료"
+Write-LogOK "글로벌 gitignore 설정 완료 (*_secrets* 제외)"
+
+# ============================================================
+# BWS 토큰 로드: repo 내 AES-256 7z + PIN + logo.png 해시 조합
+# ============================================================
+if (-not $env:BWS_ACCESS_TOKEN) {
+    Write-Host "`n[인증] BWS 보안 시스템 접속을 위해 PIN을 입력하세요." -ForegroundColor Yellow
+    $USER_PIN = Read-Host "PIN 입력"
+
+    # logo.png 해시 추출 (8자리)
+    $logoPath = "$REPO\logo.png"
+    if (-Not (Test-Path $logoPath)) {
+        Write-LogErr "해시 재료(logo.png)가 없습니다. 리포지토리 클론 상태를 확인하세요."
+        exit 1
+    }
+    $HASH_PART = (Get-FileHash $logoPath -Algorithm SHA256).Hash.Substring(0,8)
+    $FULL_PASS = "${USER_PIN}${HASH_PART}"
+    Write-Log "암호 조합 완료 (PIN + 해시 앞 8자리)"
+
+    # 파일 경로
+    $assetsZip = "$REPO\_install\assets\setup-assets.7z"
+    $tempDir = "$env:TEMP\bws_auth_temp"
+
+    # 7-Zip 경로 찾기
+    $sevenZipPaths = @(
+        "C:\Program Files\7-Zip\7z.exe",
+        "C:\Program Files (x86)\7-Zip\7z.exe",
+        "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\7zip.7zip_Microsoft.Winget.Source_8wekyb3d8bbwe\7z.exe"
+    )
+    $7z = $null
+    foreach ($path in $sevenZipPaths) {
+        if (Test-Path $path) {
+            $7z = $path
+            break
+        }
+    }
+
+    if (-not $7z) {
+        Write-Log "7-Zip을 찾을 수 없어 winget으로 설치를 시작합니다..."
+        winget install --id 7zip.7zip --exact --silent --accept-source-agreements --accept-package-agreements | Out-Null
+        
+        # PATH 새로고침
+        $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+        Start-Sleep -Seconds 2
+
+        foreach ($path in $sevenZipPaths) {
+            if (Test-Path $path) {
+                $7z = $path
+                break
+            }
+        }
+
+        if (-not $7z) {
+            Write-LogErr "7-Zip 설치 후에도 경로를 찾을 수 없습니다. 수동 설치 후 재실행하세요."
+            exit 1
+        }
+    }
+
+    Write-Log "보안 자산 해제 중... (7-Zip 경로: $7z)"
+
+    # 압축 해제
+    & $7z x "$assetsZip" -o"$tempDir" -p"$FULL_PASS" -y | Out-Null
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-LogErr "인증 실패: PIN이 틀렸거나 해시가 일치하지 않습니다. (LASTEXITCODE: $LASTEXITCODE)"
+        exit 1
+    }
+
+    # dotfiles.dat에서 토큰 파싱
+    $datFile = "$tempDir\dotfiles.dat"
+    if (-Not (Test-Path $datFile)) {
+        Write-LogErr "압축 해제됐지만 dotfiles.dat 파일이 없음"
+        exit 1
+    }
+
+    $tokenLine = Get-Content $datFile | Select-Object -Index 4
+    if ($tokenLine -match '"([^"]+)"') {
+        $env:BWS_ACCESS_TOKEN = $Matches[1].Trim()
+    } else {
+        Write-LogErr "dotfiles.dat에서 토큰 추출 실패 (형식 오류)"
+        exit 1
+    }
+
+    # 임시 파일 정리
+    Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+
+    Write-LogOK "BWS 인증 성공 (토큰 로드 완료)"
+} else {
+    Write-LogOK "기존 BWS_ACCESS_TOKEN 사용 (입력 스킵)"
+}
+
+# ============================================================
+# BWS secrets 복원 함수
+# ============================================================
+function Get-BwsSecret($id) {
+    try {
+        $raw = & $BWS_BIN secret get $id 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-LogErr "BWS Secret 추출 실패 (ID: $id)"
+            return $null
+        }
+        $json = $raw | ConvertFrom-Json
+        return $json.value
+    } catch {
+        Write-LogErr "BWS Secret 예외 발생 (ID: $id): $_"
+        return $null
+    }
+}
+
+# ===========================================
+
+
+
 
 # ============================================================
 # BWS secrets 복원 함수
