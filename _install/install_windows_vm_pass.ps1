@@ -35,6 +35,17 @@ function Write-LogErr  { param([string]$msg) Write-Log "ERR  $msg" "ERROR"; $FAI
 
 Write-Log "========== Windows 설치 스크립트 시작 =========="
 Write-Log "로그 파일: $LOG_FILE"
+
+# ============================================================
+# 7-Zip 설치 확인 및 winget 자동 설치 (추가됨)
+# ============================================================
+if (-not (Get-Command 7z.exe -ErrorAction SilentlyContinue)) {
+    Write-Log "7-Zip을 찾을 수 없어 winget으로 설치를 시작합니다..."
+    winget install --id 7zip.7zip --exact --silent --accept-source-agreements --accept-package-agreements | Out-Null
+    # 설치 후 즉시 경로 인식
+    $env:Path += ";C:\Program Files\7-Zip"
+}
+
 # ============================================================
 # BWS 토큰 자동 로드 시스템
 # ============================================================
@@ -55,8 +66,8 @@ if (-not $env:BWS_ACCESS_TOKEN) {
     $assetsZip = "$REPO\_install\assets\setup-assets.7z"
     $tempDir = "$env:TEMP\bws_auth_temp"
     
-    # 7-Zip 경로 확인 (시스템에 깔려있는 7z 사용)
-    $7z = "7z.exe" 
+    # 7-Zip 경로 확인 (시스템 경로 및 기본 설치 경로 강제 지정)
+    $7z = if (Test-Path "C:\Program Files\7-Zip\7z.exe") { "C:\Program Files\7-Zip\7z.exe" } else { "7z.exe" }
     
     Write-Log "보안 자산 해제 중..."
     & $7z x -p"$FULL_PASS" "$assetsZip" -o"$tempDir" -y | Out-Null
@@ -102,6 +113,7 @@ git config --global core.excludesfile $gitignorePath
 $existingContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath } else { @() }
 if ($existingContent -notcontains '*_secrets*') { Add-Content -Path $gitignorePath -Value '*_secrets*' }
 Write-LogOK "글로벌 gitignore 설정 완료 (*_secrets* 제외)"
+
 
 # ============================================================
 # BWS secrets 복원 함수
