@@ -355,7 +355,8 @@ try {
   scoop update
   scoop install Hack-NF
   scoop install autohotkey1.1
-  scoop install python nodejs neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
+  scoop install python pipx
+  scoop install ffmpeg 7zip jq poppler fd ripgrep imagemagick tectonic 
   # C compiler (nvim-treesitter 요구사항)
   winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
   Write-LogOK "Scoop 패키지 설치 완료"
@@ -450,17 +451,17 @@ try {
 
 Write-Log "Winget 신규 패키지 설치 중..."
 $wingetApps = @(
-    "raycast.raycast",
-    "Microsoft.VisualStudioCode",
-    "Anysphere.Cursor",
-    "Brave.Brave",
-    "Vivaldi.Vivaldi",
+    "raycast.raycast",  
+    # "Microsoft.VisualStudioCode",
+    # "Anysphere.Cursor",
+    # "Brave.Brave",
+    # "Vivaldi.Vivaldi",
     "Bitwarden.Bitwarden",
-    "GitHub.GitHubDesktop",
-    "Microsoft.PowerToys",
-    "Microsoft.PowerShell",
-    "Obsidian.Obsidian",
-    "Logseq.Logseq",
+    # "GitHub.GitHubDesktop",
+    # "Microsoft.PowerToys",
+    # "Microsoft.PowerShell",
+    # "Obsidian.Obsidian",
+    # "Logseq.Logseq",
     "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {
@@ -483,13 +484,13 @@ foreach ($app in $wingetApps) {
 
 # --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
-    "ZedIndustries.Zed",
+    # "ZedIndustries.Zed",
     "Google.Chrome",
-    "NAVER.Whale",
+    # "NAVER.Whale",
     "Bandisoft.Bandizip",
-    "Bandisoft.Honeyview",
-    "CopyQ.CopyQ",
-    "Kakao.KakaoTalk"
+    # "Bandisoft.Honeyview",
+    # "CopyQ.CopyQ",
+    # "Kakao.KakaoTalk"
 )
 foreach ($app in $wingetAppsNoScope) {
   try {
@@ -670,7 +671,7 @@ try {
 # Spark Desktop     - https://sparkmailapp.com
 # WinSnap           - 자동 설치 처리됨 (install_windows.ps1)
 # Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html
-# Blip              - https://blip.net/download
+# Blip              - 공식 사이트 확인 필요
 # ------------------------------------------------------------
 Write-Host ""
 Write-Log "INFO 수동 설치 필요 항목:"
@@ -685,8 +686,7 @@ Write-Host "    Snipdo            - https://snipdo-app.com"
 Write-Host "    Spark Desktop     - https://sparkmailapp.com"
 # Write-Host "    WinSnap           - 자동 설치 처리됨"
 Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"
-Write-Host "    Blip              - 공식 사이트 확인 필요"
-
+Write-Host "    Blip              - https://blip.net/download"
 # ============================================================
 # 최종 요약: WARN / ERR 발생 항목 출력
 # ============================================================
