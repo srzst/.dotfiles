@@ -165,36 +165,34 @@ alias grs='git reset --soft HEAD~1'
 alias gclean='git clean -fd'
 gsacp() {
     local msg="${1:-auto commit}"
-    local root="$HOME/.dotfiles"   # 필요하면 경로 수정
+    local root="$HOME/.dotfiles"
 
     if [[ "$(pwd)" != "$root" ]]; then
-        echo -e "\033[31mgsacp는 .dotfiles 루트에서만 실행하세요!\033[m" >&2
-        echo -e "현재 위치: $(pwd)" >&2
-        echo -e "이동 명령어: cd $root" >&2
+        echo -e "\033[31mgsacp must be run at .dotfiles root!\033[0m" >&2
+        echo -e "current path: $(pwd)" >&2
+        echo -e "move command: cd $root" >&2
         return 1
     fi
 
-    echo -e "\033[36m=== 서브모듈 처리 시작 ===\033[m"
+    echo -e "\033[36m=== Start submodule processing ===\033[0m"
 
     git submodule foreach --quiet "
-        git add . &&
-        if ! git diff --cached --quiet; then
-            git commit -m '$msg'
+        git add .
+        if git status --porcelain | grep -q .; then
+            git commit -m '$msg' && git push
         fi
-    " 2>/dev/null
+    "
 
-    git submodule foreach --quiet "git push" 2>/dev/null
+    echo -e "\033[36m=== Root repository processing ===\033[0m"
 
     git add .
-
-    if ! git diff --cached --quiet; then
-        git commit -m "$msg"
-        git push
+    if git status --porcelain | grep -q .; then
+        git commit -m "$msg" && git push
     else
-        echo "최상위 저장소 변경사항 없음 (스킵)"
+        echo "No changes (skipped)"
     fi
 
-    echo -e "\033[32m=== 완료 ===\033[m"
+    echo -e "\033[32m=== Done ===\033[0m"
 }
 # ============================================================
 # 유틸리티 함수
