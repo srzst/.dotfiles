@@ -1,58 +1,10 @@
-﻿$REPO = "$HOME\.dotfiles"
-
-# ============================================================
-# 사용자: x / 암호: (Bitwarden 참고)
-# 관리자 권한 PowerShell에서 실행:
-# & "$HOME\.dotfiles\_install\install_windows.ps1"
-# ============================================================
-
-# ============================================================
-# 버전 변수 (업데이트 시 여기만 수정)
-# ※ 버전 확인: https://github.com/bitwarden/sdk-sm/releases
-# ※ 2026-03 기준 최신: 2.0.0 (2025-02-05 릴리스, 1년 이상 유지 중)
-# ============================================================
-$BWS_VERSION  = "2.0.0"
-$BWS_URL_WIN  = "https://github.com/bitwarden/sdk-sm/releases/download/bws-v${BWS_VERSION}/bws-x86_64-pc-windows-msvc-${BWS_VERSION}.zip"
-
-# ============================================================
-# 로그 설정
-# 스크립트 전체 실행 내용을 파일로 기록
-# 로그 위치: $HOME\install_windows_<날짜시간>.log
-# ============================================================
-$LOG_FILE     = "$HOME\install_windows_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
-$FAILED_ITEMS = [System.Collections.Generic.List[string]]::new()
-
-function Write-Log {
-    param([string]$Message, [string]$Level = "INFO")
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $line = "[$timestamp][$Level] $Message"
-    Write-Host $line
-    Add-Content -Path $LOG_FILE -Value $line
-}
-function Write-LogOK   { param([string]$msg) Write-Log "OK   $msg" "INFO" }
-function Write-LogWarn { param([string]$msg) Write-Log "WARN $msg" "WARN"; $FAILED_ITEMS.Add("WARN: $msg") }
-function Write-LogErr  { param([string]$msg) Write-Log "ERR  $msg" "ERROR"; $FAILED_ITEMS.Add("ERR:  $msg") }
-
-Write-Log "========== Windows 설치 스크립트 시작 =========="
-Write-Log "로그 파일: $LOG_FILE"
-
-# ============================================================
-# 7-Zip 설치 확인 및 winget 자동 설치 (추가됨)
-# ============================================================
-if (-not (Get-Command 7z.exe -ErrorAction SilentlyContinue)) {
-    Write-Log "7-Zip을 찾을 수 없어 winget으로 설치를 시작합니다..."
-    winget install --id 7zip.7zip --exact --silent --accept-source-agreements --accept-package-agreements | Out-Null
-    # 설치 후 즉시 경로 인식
-    $env:Path += ";C:\Program Files\7-Zip"
-}
-
-# ============================================================
-# BWS 토큰 자동 로드 시스템
+﻿# ============================================================
+# BWS 토큰 자동 로드 시스템 (PIN + logo.png 해시 조합)
 # ============================================================
 if (-not $env:BWS_ACCESS_TOKEN) {
     Write-Host "`n[인증] BWS 보안 시스템 접속을 위해 PIN을 입력하세요." -ForegroundColor Yellow
     $USER_PIN = Read-Host "PIN 입력"
-    
+
     # logo.png 해시 추출 (8자리)
     $logoPath = "$REPO\logo.png"
     if (-Not (Test-Path $logoPath)) {
@@ -62,30 +14,72 @@ if (-not $env:BWS_ACCESS_TOKEN) {
     $HASH_PART = (Get-FileHash $logoPath -Algorithm SHA256).Hash.Substring(0,8)
     $FULL_PASS = "${USER_PIN}${HASH_PART}"
 
-    # setup-assets.7z 해제 시도
+    # setup-assets.7z 경로
     $assetsZip = "$REPO\_install\assets\setup-assets.7z"
     $tempDir = "$env:TEMP\bws_auth_temp"
-    
-    # 7-Zip 경로 확인 (시스템 경로 및 기본 설치 경로 강제 지정)
-    $7z = if (Test-Path "C:\Program Files\7-Zip\7z.exe") { "C:\Program Files\7-Zip\7z.exe" } else { "7z.exe" }
-    
-    Write-Log "보안 자산 해제 중..."
-    & $7z x -p"$FULL_PASS" "$assetsZip" -o"$tempDir" -y | Out-Null
-    
+
+    # 7-Zip 경로 강제 지정 (winget 설치 후에도 바로 잡히게)
+    $sevenZipPaths = @(
+        "C:\Program Files\7-Zip\7z.exe",
+        "C:\Program Files (x86)\7-Zip\7z.exe",
+        "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\7zip.7zip_Microsoft.Winget.Source_8wekyb3d8bbwe\7z.exe"
+    )
+    $7z = $null
+    foreach ($path in $sevenZipPaths) {
+        if (Test-Path $path) {
+            $7z = $path
+            break
+        }
+    }
+
+    if (-not $7z) {
+        Write-Log "7-Zip을 찾을 수 없어 winget으로 설치를 시작합니다..."
+        winget install --id 7zip.7zip --exact --silent --accept-source-agreements --accept-package-agreements | Out-Null
+        
+        # 설치 후 PATH 새로고침 (중요!)
+        $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+        Start-Sleep -Seconds 2  # 잠깐 기다려서 PATH 반영
+
+        # 다시 경로 찾기
+        foreach ($path in $sevenZipPaths) {
+            if (Test-Path $path) {
+                $7z = $path
+                break
+            }
+        }
+
+        if (-not $7z) {
+            Write-LogErr "7-Zip 설치 후에도 경로를 찾을 수 없습니다. 수동 설치 후 재실행하세요."
+            exit 1
+        }
+    }
+
+    Write-Log "보안 자산 해제 중... (7-Zip 경로: $7z)"
+
+    # 압축 해제 실행
+    & $7z x "$assetsZip" -o"$tempDir" -p"$FULL_PASS" -y | Out-Null
+
     if ($LASTEXITCODE -ne 0) {
-        Write-LogErr "인증 실패: PIN이 틀렸거나 해시가 일치하지 않습니다."
+        Write-LogErr "인증 실패: PIN이 틀렸거나 해시가 일치하지 않습니다. (LASTEXITCODE: $LASTEXITCODE)"
         exit 1
     }
 
     # dotfiles.dat에서 토큰 파싱
     $datFile = "$tempDir\dotfiles.dat"
-    $tokenLine = Get-Content $datFile | Select-Object -Index 4 # 5번째 줄
-    # "여기에_진짜_BWS_토큰_복붙" 부분만 추출
-    $env:BWS_ACCESS_TOKEN = $tokenLine.Split('"')[1] 
+    if (-Not (Test-Path $datFile)) {
+        Write-LogErr "압축 해제됐지만 dotfiles.dat 파일이 없음"
+        exit 1
+    }
 
-    # 임시 파일 정리
-    Remove-Item $tempDir -Recurse -Force
+    $tokenLine = Get-Content $datFile | Select-Object -Index 4  # 5번째 줄 (0부터 시작)
+    $env:BWS_ACCESS_TOKEN = $tokenLine.Split('"')[1].Trim()     # " 뒤에 있는 토큰 추출
+
+    # 임시 파일 정리 (보안)
+    Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+
     Write-LogOK "BWS 인증 성공 (토큰 로드 완료)"
+} else {
+    Write-LogOK "기존 BWS_ACCESS_TOKEN 사용 (입력 스킵)"
 }
 # ============================================================
 # bws CLI 설치 및 설정
