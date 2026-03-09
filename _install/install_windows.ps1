@@ -238,9 +238,10 @@ function New-Symlink {
     Write-LogErr "심볼릭 링크 실패: $LinkPath → $TargetPath : $_"
   }
 }
-
-New-Symlink "$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" "$REPO\Alias\Windows\PowerShell\profile.ps1"
-New-Symlink "$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"        "$REPO\Alias\Windows\PowerShell\profile.ps1"
+New-Symlink $PROFILE "$REPO\Alias\Windows\PowerShell\profile.ps1"
+# New-Symlink $PROFILE "$REPO\Alias\Windows\PowerShell\profile.ps1"
+# New-Symlink "$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" "$REPO\Alias\Windows\PowerShell\profile.ps1"
+# New-Symlink "$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"        "$REPO\Alias\Windows\PowerShell\profile.ps1"
 
 $nvimTarget = "$HOME\AppData\Local\nvim"
 if (Test-Path $nvimTarget) { Remove-Item $nvimTarget -Recurse -Force }
