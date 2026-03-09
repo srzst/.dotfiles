@@ -1,4 +1,42 @@
-﻿# ============================================================
+﻿$REPO = "$HOME\.dotfiles"
+
+# ============================================================
+# 사용자: x / 암호: (Bitwarden 참고)
+# 관리자 권한 PowerShell에서 실행:
+# & "$HOME\.dotfiles\_install\install_windows.ps1"
+# ============================================================
+
+# ============================================================
+# 버전 변수 (업데이트 시 여기만 수정)
+# ※ 버전 확인: https://github.com/bitwarden/sdk-sm/releases
+# ※ 2026-03 기준 최신: 2.0.0 (2025-02-05 릴리스, 1년 이상 유지 중)
+# ============================================================
+$BWS_VERSION  = "2.0.0"
+$BWS_URL_WIN  = "https://github.com/bitwarden/sdk-sm/releases/download/bws-v${BWS_VERSION}/bws-x86_64-pc-windows-msvc-${BWS_VERSION}.zip"
+
+# ============================================================
+# 로그 설정
+# 스크립트 전체 실행 내용을 파일로 기록
+# 로그 위치: $HOME\install_windows_<날짜시간>.log
+# ============================================================
+$LOG_FILE     = "$HOME\install_windows_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+$FAILED_ITEMS = [System.Collections.Generic.List[string]]::new()
+
+function Write-Log {
+    param([string]$Message, [string]$Level = "INFO")
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $line = "[$timestamp][$Level] $Message"
+    Write-Host $line
+    Add-Content -Path $LOG_FILE -Value $line
+}
+function Write-LogOK   { param([string]$msg) Write-Log "OK   $msg" "INFO" }
+function Write-LogWarn { param([string]$msg) Write-Log "WARN $msg" "WARN"; $FAILED_ITEMS.Add("WARN: $msg") }
+function Write-LogErr  { param([string]$msg) Write-Log "ERR  $msg" "ERROR"; $FAILED_ITEMS.Add("ERR:  $msg") }
+
+Write-Log "========== Windows 설치 스크립트 시작 =========="
+Write-Log "로그 파일: $LOG_FILE"
+
+# ============================================================
 # bws CLI 설치 및 설정
 # ============================================================
 $BWS_BIN = "$HOME\bws\bws.exe"
