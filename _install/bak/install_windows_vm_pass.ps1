@@ -585,13 +585,13 @@ try {
 # ------------------------------------------------------------
 Write-Host ""
 Write-Log "INFO 수동 설치 필요 항목:"
-Write-Host "    UpNote            - MS Store"
+Write-Host "    UpNote            - https://download.getupnote.com/app/UpNote%20Setup.exe"
 Write-Host "    FastStone Capture - https://faststone.org"
-Write-Host "    Jump Desktop      - MS Store"
+Write-Host "    Jump Desktop      - https://jumpdesktop.com/download.html"
 Write-Host "    PhotoScape X Pro  - MS Store"
 Write-Host "    Snipdo            - https://snipdo-app.com"
 Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"
-Write-Host "    Blip              - 공식 사이트 확인 필요"
+Write-Host "    Blip              - https://www.blip.com"
 
 # ============================================================
 # 최종 요약: WARN / ERR 발생 항목 출력
