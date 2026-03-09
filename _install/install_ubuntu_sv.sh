@@ -173,38 +173,48 @@ EOF
   echo "OK SSH config 설정 완료"
 fi
 
-# FIX: 신규 설치 환경에서 known_hosts 없으면 프롬프트로 블로킹되는 문제 방지
+# SSH config 설정
+if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
+  cat >> ~/.ssh/config << 'EOF'
+Host github.com
+  IdentityFile ~/.ssh/id_ed25519
+  User git
+EOF
+  chmod 600 ~/.ssh/config
+  echo "OK SSH config 설정 완료"
+fi
+
+# GitHub known_hosts 등록
+ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+echo "OK GitHub known_hosts 등록 완료"
+
+# GitHub SSH 연결 테스트
 echo ""
 echo "GitHub SSH 연결 테스트 중..."
-ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 | grep -q "successfully authenticated" \
+ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" \
   && echo "OK GitHub SSH 인증 성공" \
   || echo "WARN GitHub SSH 인증 실패 - BWS 키 또는 GitHub 등록 확인 필요"
 
-# # 저장소 clone (SSH - private repo)
-# echo ""
-# echo "저장소 clone 중..."
-# repos=(
-#   "git@github.com:srzst/ubuntusv.git"
-# )
-# for repo in "${repos[@]}"; do
-#   repo_name=$(basename "$repo" .git)
-#   if [ ! -d "$HOME/$repo_name" ]; then
-#     git clone "$repo" "$HOME/$repo_name"
-#     echo "OK $repo_name clone 완료"
-#   else
-#     echo "OK $repo_name 이미 존재 (스킵)"
-#   fi
-# done
-# 서브모듈 초기화 (linux 전용)
+# 저장소 clone (SSH - private repo)
 echo ""
-echo "서브모듈 초기화 중..."
-git -C "$REPO" submodule update --init modules/linux
-git -C "$REPO/modules/linux" checkout main 2>/dev/null || true
-echo "OK modules/linux 초기화 완료"
+echo "저장소 clone 중..."
+repos=(
+  "git@github.com:srzst/.dotfiles.git"
+  "git@github.com:srzst/.dotfolders.git"
+)
+for repo in "${repos[@]}"; do
+  repo_name=$(basename "$repo" .git)
+  if [ ! -d "$HOME/$repo_name" ]; then
+    git clone "$repo" "$HOME/$repo_name"
+    echo "OK $repo_name clone 완료"
+  else
+    echo "OK $repo_name 이미 존재 (스킵)"
+  fi
+done
+
 
 # Cron 등록 (3시간마다 pull)
-# (crontab -l 2>/dev/null; echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main") | crontab -
-(crontab -l 2>/dev/null; echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main && git submodule update --remote modules/linux") | crontab -
+(crontab -l 2>/dev/null; echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main && cd $HOME/.dotfolders && git pull origin main") | crontab -
 echo "OK Cron 등록 완료 (3시간마다 pull)"
 
 # Tailscale 설치 및 인증
