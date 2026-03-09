@@ -1,86 +1,21 @@
-﻿$REPO = "$HOME\.dotfiles"
-
-# ============================================================
-# 사용자: x / 암호: (Bitwarden 참고)
-# 관리자 권한 PowerShell에서 실행:
-# & "$HOME\.dotfiles\_install\install_windows.ps1"
-# ============================================================
-
-# ============================================================
-# 버전 변수 (업데이트 시 여기만 수정)
-# ※ 버전 확인: https://github.com/bitwarden/sdk-sm/releases
-# ※ 2026-03 기준 최신: 2.0.0 (2025-02-05 릴리스, 1년 이상 유지 중)
-# ============================================================
-$BWS_VERSION  = "2.0.0"
-$BWS_URL_WIN  = "https://github.com/bitwarden/sdk-sm/releases/download/bws-v${BWS_VERSION}/bws-x86_64-pc-windows-msvc-${BWS_VERSION}.zip"
-
-# ============================================================
-# 로그 설정
-# 스크립트 전체 실행 내용을 파일로 기록
-# 로그 위치: $HOME\install_windows_<날짜시간>.log
-# ============================================================
-$LOG_FILE     = "$HOME\install_windows_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
-$FAILED_ITEMS = [System.Collections.Generic.List[string]]::new()
-
-function Write-Log {
-    param([string]$Message, [string]$Level = "INFO")
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $line = "[$timestamp][$Level] $Message"
-    Write-Host $line
-    Add-Content -Path $LOG_FILE -Value $line
-}
-function Write-LogOK   { param([string]$msg) Write-Log "OK   $msg" "INFO" }
-function Write-LogWarn { param([string]$msg) Write-Log "WARN $msg" "WARN"; $FAILED_ITEMS.Add("WARN: $msg") }
-function Write-LogErr  { param([string]$msg) Write-Log "ERR  $msg" "ERROR"; $FAILED_ITEMS.Add("ERR:  $msg") }
-
-Write-Log "========== Windows 설치 스크립트 시작 =========="
-Write-Log "로그 파일: $LOG_FILE"
-
-# ============================================================
-# BWS 액세스 토큰 입력
-# ============================================================
-$existingToken = [System.Environment]::GetEnvironmentVariable("BWS_ACCESS_TOKEN", "User")
-if (-Not $existingToken) {
-  Write-Host ""
-  $bwsToken = Read-Host "BWS 액세스 토큰을 입력하세요"
-  [System.Environment]::SetEnvironmentVariable("BWS_ACCESS_TOKEN", $bwsToken, "User")
-  $env:BWS_ACCESS_TOKEN = $bwsToken
-  Write-LogOK "BWS_ACCESS_TOKEN 사용자 환경변수 등록 완료"
-} else {
-  $env:BWS_ACCESS_TOKEN = $existingToken
-  Write-LogOK "BWS_ACCESS_TOKEN 이미 존재 (스킵)"
-}
-
-# Git 설정
-try {
-  git config --global user.email "x@srzst.com"
-  git config --global user.name  "x"
-  Write-LogOK "Git 설정 완료"
-} catch {
-  Write-LogErr "Git 설정 실패: $_  → git 설치 여부 확인"
-}
-
-# ============================================================
-# bws CLI 설치
+﻿# ============================================================
+# bws CLI 설치 및 설정
 # ============================================================
 $BWS_BIN = "$HOME\bws\bws.exe"
 if (-Not (Test-Path $BWS_BIN)) {
-  Write-Log "bws CLI 설치 중... (v$BWS_VERSION)"
-  try {
-    New-Item -ItemType Directory -Force -Path "$HOME\bws" | Out-Null
-    Invoke-WebRequest -Uri $BWS_URL_WIN -OutFile "$HOME\bws\bws.zip"
-    Expand-Archive -Path "$HOME\bws\bws.zip" -DestinationPath "$HOME\bws" -Force
-    Remove-Item "$HOME\bws\bws.zip"
-    Write-LogOK "bws CLI 설치 완료"
-  } catch {
-    Write-LogErr "bws CLI 설치 실패: $_  → 네트워크 또는 URL 확인: $BWS_URL_WIN"
-    exit 1
-  }
+    Write-Log "bws CLI 설치 시작 (v$BWS_VERSION)"
+    try {
+        New-Item -ItemType Directory -Force -Path "$HOME\bws" | Out-Null
+        Invoke-WebRequest -Uri $BWS_URL_WIN -OutFile "$HOME\bws\bws.zip"
+        Expand-Archive -Path "$HOME\bws\bws.zip" -DestinationPath "$HOME\bws" -Force
+        Remove-Item "$HOME\bws\bws.zip"
+        Write-LogOK "bws CLI 설치 완료"
+    } catch {
+        Write-LogErr "bws CLI 설치 실패: $_"
+        exit 1
+    }
 } else {
-  Write-LogOK "bws CLI 이미 설치됨 (스킵)"
-  $bwsVer = & $BWS_BIN --version 2>$null
-  if ($bwsVer) { Write-Log "현재 bws 버전: $bwsVer" }
-  else          { Write-LogWarn "bws --version 실행 실패 → 실행 파일 손상 가능성, 수동 확인 권장" }
+    Write-LogOK "bws CLI가 이미 존재합니다."
 }
 
 # 글로벌 gitignore 설정
@@ -88,26 +23,24 @@ $gitignorePath = "$HOME\.gitignore_global"
 git config --global core.excludesfile $gitignorePath
 $existingContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath } else { @() }
 if ($existingContent -notcontains '*_secrets*') { Add-Content -Path $gitignorePath -Value '*_secrets*' }
-Write-LogOK "글로벌 gitignore 설정 완료"
+Write-LogOK "글로벌 gitignore 설정 완료 (*_secrets* 제외)"
 
 # ============================================================
 # BWS secrets 복원 함수
-# 실패 시 $null 반환 + 로그 기록 (스크립트 중단 없음)
-# 중요 secrets 실패 시 호출부에서 직접 exit 처리
 # ============================================================
 function Get-BwsSecret($id) {
-  try {
-    $raw = & $BWS_BIN secret get $id 2>&1
-    if (-Not $?) {
-      Write-LogErr "bws secret get 실패 (id: $id) → BWS 토큰 또는 secret ID 확인 필요"
-      return $null
+    try {
+        $raw = & $BWS_BIN secret get $id 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-LogErr "BWS Secret 추출 실패 (ID: $id)"
+            return $null
+        }
+        $json = $raw | ConvertFrom-Json
+        return $json.value
+    } catch {
+        Write-LogErr "BWS Secret 예외 발생 (ID: $id): $_"
+        return $null
     }
-    $json = $raw | ConvertFrom-Json
-    return $json.value
-  } catch {
-    Write-LogErr "bws secret get 예외 발생 (id: $id): $_"
-    return $null
-  }
 }
 
 # ============================================================
@@ -435,18 +368,18 @@ foreach ($app in $wingetStoreApps) {
 
 Write-Log "Winget 신규 패키지 설치 중..."
 $wingetApps = @(
-    "Figma.Figma",
-    "Microsoft.VisualStudioCode",
-    "Anysphere.Cursor",
-    "Brave.Brave",
-    "Vivaldi.Vivaldi",
-    "Bitwarden.Bitwarden",
-    "GitHub.GitHubDesktop",
-    "Microsoft.PowerToys",
+    # "Figma.Figma",
+    # "Microsoft.VisualStudioCode",
+    # "Anysphere.Cursor",
+    # "Brave.Brave",
+    # "Vivaldi.Vivaldi",
+    # "Bitwarden.Bitwarden",
+    # "GitHub.GitHubDesktop",
+    # "Microsoft.PowerToys",
     "Microsoft.PowerShell",
-    "Obsidian.Obsidian",
+    # "Obsidian.Obsidian",
     # "Logseq.Logseq",
-    "LocalSend.LocalSend"
+    # "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {
   try {
@@ -467,14 +400,14 @@ foreach ($app in $wingetApps) {
 
 # --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
-    "ZedIndustries.Zed",
+    # "ZedIndustries.Zed",
     "Google.Chrome",
-    "NAVER.Whale",
-    "Bandisoft.Bandizip",
-    "Bandisoft.Honeyview",
-    "CopyQ.CopyQ",
-    "Kakao.KakaoTalk",
-    "Iterate.MountainDuck"
+    # "NAVER.Whale",
+    # "Bandisoft.Bandizip",
+    # "Bandisoft.Honeyview",
+    # "CopyQ.CopyQ",
+    # "Kakao.KakaoTalk",
+    # "Iterate.MountainDuck"
 )
 foreach ($app in $wingetAppsNoScope) {
   try {
