@@ -1,5 +1,72 @@
 ﻿# ============================================================
-# BWS 토큰 자동 로드 시스템 (PIN + logo.png 해시 조합)
+# Windows .dotfiles 초기 설치 스크립트 (2026.03)
+# 관리자 권한 PowerShell에서 실행하세요
+# ============================================================
+
+$REPO = "$HOME\.dotfiles"
+
+# ============================================================
+# 로그 함수 정의 (반드시 맨 위에 있어야 함!)
+# ============================================================
+$LOG_FILE = "$HOME\install_windows_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+$FAILED_ITEMS = [System.Collections.Generic.List[string]]::new()
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+        [string]$Level = "INFO"
+    )
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $line = "[$timestamp][$Level] $Message"
+    Write-Host $line
+    Add-Content -Path $LOG_FILE -Value $line -Encoding UTF8
+}
+
+function Write-LogOK   { param([string]$msg) Write-Log "OK   $msg" "INFO" }
+function Write-LogWarn { param([string]$msg) Write-Log "WARN $msg" "WARN"; $FAILED_ITEMS.Add("WARN: $msg") }
+function Write-LogErr  { param([string]$msg) Write-Log "ERR  $msg" "ERROR"; $FAILED_ITEMS.Add("ERR:  $msg") }
+
+Write-Log "========== Windows 설치 스크립트 시작 =========="
+Write-Log "로그 파일: $LOG_FILE"
+
+# ============================================================
+# 버전 변수
+# ============================================================
+$BWS_VERSION = "2.0.0"
+$BWS_URL_WIN = "https://github.com/bitwarden/sdk-sm/releases/download/bws-v${BWS_VERSION}/bws-x86_64-pc-windows-msvc-${BWS_VERSION}.zip"
+
+# ============================================================
+# bws CLI 설치
+# ============================================================
+$BWS_BIN = "$HOME\bws\bws.exe"
+if (-Not (Test-Path $BWS_BIN)) {
+    Write-Log "bws CLI 설치 시작 (v$BWS_VERSION)"
+    try {
+        New-Item -ItemType Directory -Force -Path "$HOME\bws" | Out-Null
+        Invoke-WebRequest -Uri $BWS_URL_WIN -OutFile "$HOME\bws\bws.zip"
+        Expand-Archive -Path "$HOME\bws\bws.zip" -DestinationPath "$HOME\bws" -Force
+        Remove-Item "$HOME\bws\bws.zip"
+        Write-LogOK "bws CLI 설치 완료"
+    } catch {
+        Write-LogErr "bws CLI 설치 실패: $_"
+        exit 1
+    }
+} else {
+    Write-LogOK "bws CLI가 이미 존재합니다."
+}
+
+# ============================================================
+# 글로벌 gitignore 설정
+# ============================================================
+$gitignorePath = "$HOME\.gitignore_global"
+git config --global core.excludesfile $gitignorePath
+$existingContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath } else { @() }
+if ($existingContent -notcontains '*_secrets*') { Add-Content -Path $gitignorePath -Value '*_secrets*' }
+Write-LogOK "글로벌 gitignore 설정 완료 (*_secrets* 제외)"
+
+# ============================================================
+# BWS 토큰 로드: repo 내 AES-256 7z + PIN + logo.png 해시 조합
 # ============================================================
 if (-not $env:BWS_ACCESS_TOKEN) {
     Write-Host "`n[인증] BWS 보안 시스템 접속을 위해 PIN을 입력하세요." -ForegroundColor Yellow
@@ -18,7 +85,7 @@ if (-not $env:BWS_ACCESS_TOKEN) {
     $assetsZip = "$REPO\_install\assets\setup-assets.7z"
     $tempDir = "$env:TEMP\bws_auth_temp"
 
-    # 7-Zip 경로 강제 지정 (winget 설치 후에도 바로 잡히게)
+    # 7-Zip 경로 찾기
     $sevenZipPaths = @(
         "C:\Program Files\7-Zip\7z.exe",
         "C:\Program Files (x86)\7-Zip\7z.exe",
@@ -36,11 +103,10 @@ if (-not $env:BWS_ACCESS_TOKEN) {
         Write-Log "7-Zip을 찾을 수 없어 winget으로 설치를 시작합니다..."
         winget install --id 7zip.7zip --exact --silent --accept-source-agreements --accept-package-agreements | Out-Null
         
-        # 설치 후 PATH 새로고침 (중요!)
+        # PATH 새로고침
         $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
-        Start-Sleep -Seconds 2  # 잠깐 기다려서 PATH 반영
+        Start-Sleep -Seconds 2
 
-        # 다시 경로 찾기
         foreach ($path in $sevenZipPaths) {
             if (Test-Path $path) {
                 $7z = $path
@@ -56,7 +122,7 @@ if (-not $env:BWS_ACCESS_TOKEN) {
 
     Write-Log "보안 자산 해제 중... (7-Zip 경로: $7z)"
 
-    # 압축 해제 실행
+    # 압축 해제
     & $7z x "$assetsZip" -o"$tempDir" -p"$FULL_PASS" -y | Out-Null
 
     if ($LASTEXITCODE -ne 0) {
@@ -71,16 +137,18 @@ if (-not $env:BWS_ACCESS_TOKEN) {
         exit 1
     }
 
-    $tokenLine = Get-Content $datFile | Select-Object -Index 4  # 5번째 줄 (0부터 시작)
+    $tokenLine = Get-Content $datFile | Select-Object -Index 4  # 5번째 줄
     $env:BWS_ACCESS_TOKEN = $tokenLine.Split('"')[1].Trim()     # " 뒤에 있는 토큰 추출
 
-    # 임시 파일 정리 (보안)
+    # 임시 파일 정리
     Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 
     Write-LogOK "BWS 인증 성공 (토큰 로드 완료)"
 } else {
     Write-LogOK "기존 BWS_ACCESS_TOKEN 사용 (입력 스킵)"
 }
+
+
 # ============================================================
 # bws CLI 설치 및 설정
 # ============================================================
