@@ -1,6 +1,6 @@
 # .dotfiles
 
-> version 1.03
+> version 1.04
 
 개인 개발 환경 설정 파일 모음.
 
@@ -22,11 +22,6 @@
 │       │   └── .bashrc
 │       └── PowerShell/
 │           └── profile.ps1
-├── modules/                         ← 서브모듈 (private)
-│   ├── common/                      ← 운영체제 공통
-│   ├── linux/                       ← Linux 전용 (ubuntusv 포함)
-│   ├── mac/                         ← macOS 전용
-│   └── windows/                     ← Windows 전용
 ├── neovim/
 │   ├── lua/
 │   │   ├── config/
@@ -53,30 +48,24 @@
 │   ├── install_ubuntu_sv.sh
 │   └── install_windows.ps1
 ├── .gitattributes
-├── .gitmodules
 └── readme.md
 ```
 
 ---
 
-## 서브모듈
+## .dotfolders
 
-프라이빗 자료는 서브모듈로 분리 관리. `.dotfiles`는 공개 저장소이며 서브모듈은 모두 private repo.
+프라이빗 자료는 별도 private repo로 분리 관리. `.dotfiles`는 공개 저장소이며 `.dotfolders`는 private repo.
 
-| 서브모듈 경로     | 저장소 URL                         | 내용                        |
-| ----------------- | ---------------------------------- | --------------------------- |
-| `modules/common`  | `https://github.com/srzst/common`  | 운영체제 공통 스크립트/설정 |
-| `modules/linux`   | `https://github.com/srzst/linux`   | Linux 서버 전용 (ubuntusv)  |
-| `modules/mac`     | `https://github.com/srzst/mac`     | macOS 전용                  |
-| `modules/windows` | `https://github.com/srzst/windows` | Windows 전용                |
+| 경로                    | 저장소 URL                             | 내용                        |
+| ----------------------- | -------------------------------------- | --------------------------- |
+| `~/.dotfolders`         | `https://github.com/srzst/.dotfolders` | 전체 프라이빗 설정 모음     |
+| `~/.dotfolders/common`  |                                        | 운영체제 공통 스크립트/설정 |
+| `~/.dotfolders/linux`   |                                        | Linux 서버 전용             |
+| `~/.dotfolders/mac`     |                                        | macOS 전용                  |
+| `~/.dotfolders/windows` |                                        | Windows 전용                |
 
-### 서브모듈 초기화
-
-```bash
-git submodule update --init --recursive
-```
-
-> 설치 스크립트가 자동으로 실행하므로 수동 실행 불필요. remote URL은 스크립트가 HTTPS로 자동 변환.
+설치 스크립트가 자동으로 `~/.dotfolders`에 clone.
 
 ---
 
@@ -133,13 +122,13 @@ git clone https://github.com/srzst/.dotfiles $HOME\.dotfiles
 git clone https://github.com/srzst/.dotfiles ~/.dotfiles
 ```
 
-> 서브모듈은 private repo라 인증 필요. 설치 스크립트가 `.git-credentials` 복원 후 자동 초기화하므로 수동 실행 불필요.
+> `.dotfolders`는 설치 스크립트가 자동으로 clone하므로 수동 실행 불필요.
 
 ---
 
 ### 2. 설치 스크립트 실행
 
-각 OS / 용도별 스크립트를 직접 실행. 서브모듈은 전체 초기화(`--init`) 진행. Ubuntu 서버만 `modules/common` + `modules/linux` 로 분리 예정.
+각 OS / 용도별 스크립트를 직접 실행.
 
 **macOS:**
 
@@ -181,20 +170,12 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 & "$HOME\.dotfiles\_install\install_windows.ps1"
 ```
 
-Windows는 실행 후 머신 타입 선택:
-
-```
-머신 타입을 선택하세요:
-  1) main  - 데스크탑 / 노트북
-  2) vm    - 가상머신
-```
-
 > **macOS:** Homebrew, Neovim/LazyVim, lazygit, Yazi, LaunchAgents, macOS 시스템 설정 포함
 > **Ubuntu:** 미러 서버(카카오) 변경, 시스템 업데이트, Neovim/LazyVim, lazygit, Yazi, Tailscale 포함
-> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외). 서브모듈(`modules/linux`) 관련 추가 작업은 추후 반영 예정
-> **Windows:** Scoop / winget / Chocolatey(비상용) 패키지, Hack Nerd Font / WinSnap 자동 설치, Neovim/LazyVim, 서브모듈 초기화, 시작 프로그램 및 스케줄 작업 등록(`startup_register.ps1`) 포함
+> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외)
+> **Windows:** Scoop / winget / Chocolatey(비상용) 패키지, Hack Nerd Font / WinSnap 자동 설치, Neovim/LazyVim, `.dotfolders` 자동 clone, 시작 프로그램 및 스케줄 작업 등록(`startup_register.ps1`) 포함
 
-Ubuntu 서버 스크립트는 실행 초반에 BWS 토큰 · 사용자 암호 · root 암호를 한 번에 입력받고, 이후 완전 무인으로 진행됨. Neovim, LazyVim, Yazi, lazygit, pipx 등 GUI/개발 도구는 설치되지 않으며 시간대는 `Asia/Seoul`로 자동 고정.
+Ubuntu 서버 스크립트는 실행 초반에 BWS 토큰 · root 암호를 한 번에 입력받고, 이후 완전 무인으로 진행됨. Neovim, LazyVim, Yazi, lazygit, pipx 등 GUI/개발 도구는 설치되지 않으며 시간대는 `Asia/Seoul`로 자동 고정.
 
 **GitBash 추가 작업** (Windows 설치 완료 후 GitBash에서 실행):
 
@@ -253,7 +234,6 @@ ln -sf "$REPO/Alias/Windows/GitBash/.bashrc" ~/.bashrc
 | root 환경 동기화       | ❌                      | ✅                  |
 | 시간대 설정            | 수동 (dpkg-reconfigure) | 자동 (Asia/Seoul)   |
 | sudo 무인 처리         | ❌                      | ✅ (암호 사전 입력) |
-| 서브모듈 작업          | ❌                      | 추후 예정           |
 
 ---
 
@@ -261,31 +241,29 @@ ln -sf "$REPO/Alias/Windows/GitBash/.bashrc" ~/.bashrc
 
 VSCode, Cursor, Zed 계정 동기화로 링크 불필요.
 
-| 환경                | 원본 경로                                                        | 링크 대상                              |
-| ------------------- | ---------------------------------------------------------------- | -------------------------------------- |
-| macOS               | `~/.zshrc`                                                       | `Alias/macOS/.zshrc`                   |
-| Ubuntu / 서버       | `~/.bashrc`                                                      | `Alias/ubuntu/.bashrc`                 |
-| Neovim (Mac/Ubuntu) | `~/.config/nvim`                                                 | `neovim/`                              |
-| Yazi (Mac/Ubuntu)   | `~/.config/yazi`                                                 | `yazi/`                                |
-| Vim (Mac/Ubuntu)    | `~/.vimrc`                                                       | `Vim/.vimrc`                           |
-| Windows PowerShell  | `~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1` | `Alias/Windows/PowerShell/profile.ps1` |
-| PowerShell Core     | `~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1`        | `Alias/Windows/PowerShell/profile.ps1` |
-| GitBash             | `~/.bashrc`                                                      | `Alias/Windows/GitBash/.bashrc`        |
-| Neovim (Windows)    | `~/AppData/Local/nvim`                                           | `neovim/`                              |
-| Yazi (Windows)      | `~/AppData/Roaming/yazi/config`                                  | `yazi/`                                |
-| Zed (Windows)       | `~/AppData/Roaming/Zed/settings.json`                            | `zed/settings.json`                    |
+| 환경                | 원본 경로                             | 링크 대상                              |
+| ------------------- | ------------------------------------- | -------------------------------------- |
+| macOS               | `~/.zshrc`                            | `Alias/macOS/.zshrc`                   |
+| Ubuntu / 서버       | `~/.bashrc`                           | `Alias/ubuntu/.bashrc`                 |
+| Neovim (Mac/Ubuntu) | `~/.config/nvim`                      | `neovim/`                              |
+| Yazi (Mac/Ubuntu)   | `~/.config/yazi`                      | `yazi/`                                |
+| Vim (Mac/Ubuntu)    | `~/.vimrc`                            | `Vim/.vimrc`                           |
+| Windows PowerShell  | `$PROFILE` (환경에 따라 자동 결정)    | `Alias/Windows/PowerShell/profile.ps1` |
+| GitBash             | `~/.bashrc`                           | `Alias/Windows/GitBash/.bashrc`        |
+| Neovim (Windows)    | `~/AppData/Local/nvim`                | `neovim/`                              |
+| Yazi (Windows)      | `~/AppData/Roaming/yazi/config`       | `yazi/`                                |
+| Zed (Windows)       | `~/AppData/Roaming/Zed/settings.json` | `zed/settings.json`                    |
 
 ---
 
 ## GitHub Desktop 호환
 
-설치 스크립트 실행 시 `.dotfiles` remote URL을 HTTPS로 자동 변경. 서브모듈 remote URL도 스크립트가 SSH → HTTPS로 자동 변환. 첫 push 시 GitHub 로그인 팝업이 뜨며, 이후 자격 증명 관리자가 자동 처리.
+설치 스크립트 실행 시 `.dotfiles` remote URL을 HTTPS로 자동 변경. 첫 push 시 GitHub 로그인 팝업이 뜨며, 이후 자격 증명 관리자가 자동 처리.
 
-| 저장소      | URL                                      | 환경 |
-| ----------- | ---------------------------------------- | ---- |
-| `.dotfiles` | `https://github.com/srzst/.dotfiles.git` | 전체 |
-
-> 서브모듈은 스크립트가 SSH → HTTPS 자동 변환하여 GitHub Desktop 호환 유지.
+| 저장소        | URL                                        | 환경 |
+| ------------- | ------------------------------------------ | ---- |
+| `.dotfiles`   | `https://github.com/srzst/.dotfiles.git`   | 전체 |
+| `.dotfolders` | `https://github.com/srzst/.dotfolders.git` | 전체 |
 
 ---
 
