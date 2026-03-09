@@ -169,10 +169,10 @@ function gsacp {
     )
     $rootPath = "$HOME\.dotfiles"
     if ((Get-Location).Path -ne $rootPath) {
-        Write-Host "gsacp는 .dotfiles 루트에서만 실행하세요!" -ForegroundColor Red
+        Write-Host "gsacp used at .dotfiles root" -ForegroundColor Red
         return
     }
-    Write-Host "=== 서브모듈 처리 시작 ===" -ForegroundColor Cyan
+    Write-Host "=== Start submodule processing ===" -ForegroundColor Cyan
     $submodules = git submodule status | ForEach-Object { ($_ -split '\s+')[2] }
     foreach ($sub in $submodules) {
         $subPath = "$rootPath\$sub"
@@ -188,15 +188,15 @@ function gsacp {
             Pop-Location
         }
     }
-    Write-Host "=== 최상위 repo 처리 ===" -ForegroundColor Cyan
+    Write-Host "=== root repository processing ===" -ForegroundColor Cyan
     git add .
     if (git status --porcelain) {
         git commit -m $msg
         if (-not $NoPush) { git push }
     } else {
-        Write-Host "변경사항 없음 (스킵)" -ForegroundColor Green
+        Write-Host "no changes (skipped)" -ForegroundColor Green
     }
-    Write-Host "=== 완료 ===" -ForegroundColor Green
+    Write-Host "=== submodule processing completed ===" -ForegroundColor Green
 }
 # ============================================================
 # 시스템 유틸리티
@@ -209,7 +209,7 @@ function myip { Invoke-RestMethod -Uri "https://ifconfig.me" }
 # function ff   { param($name) Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue }
 function ff {
     param($name)
-    if (!$name) { Write-Host "사용법: ff <검색어>" -ForegroundColor Yellow; return }
+    if (!$name) { Write-Host "how to use: ff <search term>" -ForegroundColor Yellow; return }
     Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue |
         Where-Object { $_.FullName -notmatch '\\(node_modules|\.git|go\\pkg\\mod)\\' }
 }
