@@ -413,8 +413,7 @@ $wingetApps = @(
     # "appmakes.Typora",
     "Iterate.MountainDuck",
     # "Figma.Figma",
-    "LocalSend.LocalSend",
-    "FastStone.Capture"   
+    "LocalSend.LocalSend"
 )
 foreach ($app in $wingetapps) {
   try {
@@ -588,7 +587,21 @@ if (Test-Path $winSnapReg) {
 } else {
   Write-LogWarn "WinSnap 레지스트리 파일 없음 (스킵): $winSnapReg"
 }
-
+# ============================================================
+# FastStone Capture 설치
+# ※ .dotfolders 내 설치 파일 사용 
+# ============================================================
+$fscInstaller = "$FOLDERS\windows\FastStone\FSCaptureSetup112.exe"
+$fscTarget    = "C:\Program Files (x86)\FastStone Capture\FSCapture.exe"
+if (Test-Path $fscTarget) {
+  Write-LogOK "FastStone Capture 이미 설치됨 (스킵)"
+} elseif (Test-Path $fscInstaller) {
+  Write-Log "FastStone Capture 설치 중..."
+  Start-Process -FilePath $fscInstaller -ArgumentList "/VERYSILENT" -Wait
+  Write-LogOK "FastStone Capture 설치 완료"
+} else {
+  Write-LogWarn "FastStone Capture 설치 파일 없음 (스킵): $fscInstaller"
+}
 # ============================================================
 # GitHub Desktop 호환 - remote URL HTTPS로 변경
 # ============================================================
