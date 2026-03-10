@@ -162,42 +162,7 @@ function gfo {
     git fetch origin
     git reset --hard "origin/$branch"
 }
-function gsacp {
-    param(
-        [string]$msg = "auto commit",
-        [switch]$NoPush
-    )
-    $rootPath = "$HOME\.dotfiles"
-    if ((Get-Location).Path -ne $rootPath) {
-        Write-Host "gsacp used at .dotfiles root" -ForegroundColor Red
-        return
-    }
-    Write-Host "=== Start submodule processing ===" -ForegroundColor Cyan
-    $submodules = git submodule status | ForEach-Object { ($_ -split '\s+')[2] }
-    foreach ($sub in $submodules) {
-        $subPath = "$rootPath\$sub"
-        if (Test-Path $subPath) {
-            Push-Location $subPath
-            git add .
-            $status = git status --porcelain
-            if ($status) {
-                Write-Host "[Commit] $sub" -ForegroundColor Green
-                git commit -m $msg
-                git push
-            }
-            Pop-Location
-        }
-    }
-    Write-Host "=== root repository processing ===" -ForegroundColor Cyan
-    git add .
-    if (git status --porcelain) {
-        git commit -m $msg
-        if (-not $NoPush) { git push }
-    } else {
-        Write-Host "no changes (skipped)" -ForegroundColor Green
-    }
-    Write-Host "=== submodule processing completed ===" -ForegroundColor Green
-}
+
 # ============================================================
 # 시스템 유틸리티
 # ============================================================

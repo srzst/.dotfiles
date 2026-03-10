@@ -163,37 +163,7 @@ alias gstl='git stash list'
 alias gr='git reset --hard'
 alias grs='git reset --soft HEAD~1'
 alias gclean='git clean -fd'
-gsacp() {
-    local msg="${1:-auto commit}"
-    local root="$HOME/.dotfiles"
 
-    if [[ "$(pwd)" != "$root" ]]; then
-        echo -e "\033[31mgsacp must be run at .dotfiles root!\033[0m" >&2
-        echo -e "current path: $(pwd)" >&2
-        echo -e "move command: cd $root" >&2
-        return 1
-    fi
-
-    echo -e "\033[36m=== Start submodule processing ===\033[0m"
-
-    git submodule foreach --quiet "
-        git add .
-        if git status --porcelain | grep -q .; then
-            git commit -m '$msg' && git push
-        fi
-    "
-
-    echo -e "\033[36m=== Root repository processing ===\033[0m"
-
-    git add .
-    if git status --porcelain | grep -q .; then
-        git commit -m "$msg" && git push
-    else
-        echo "No changes (skipped)"
-    fi
-
-    echo -e "\033[32m=== Done ===\033[0m"
-}
 # ============================================================
 # 유틸리티 함수
 # ============================================================
