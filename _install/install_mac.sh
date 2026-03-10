@@ -274,4 +274,5 @@ echo "OK LazyVim 초기화 완료"
 
 echo ""
 echo "OK Mac 설치 완료"
+echo "각종 Token 등 keychain 등록 필요"
 echo "INFO 재시작 후 모든 설정이 적용됩니다."
