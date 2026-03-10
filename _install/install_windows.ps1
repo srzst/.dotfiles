@@ -400,19 +400,19 @@ try {
 
 Write-Log "Winget 신규 패키지 설치 중..."
 $wingetApps = @(
-    # "Microsoft.VisualStudiocode",
-    # "Anysphere.Cursor",
-    # "Brave.Brave",
-    # "Vivaldi.Vivaldi",
-    # "Bitwarden.Bitwarden",
-    # "GitHub.GitHubDesktop",
-    # "Microsoft.PowerToys",
+    "Microsoft.VisualStudiocode",
+    "Anysphere.Cursor",
+    "Brave.Brave",
+    "Vivaldi.Vivaldi",
+    "Bitwarden.Bitwarden",
+    "GitHub.GitHubDesktop",
+    "Microsoft.PowerToys",
     "Microsoft.PowerShell",
-    # "Obsidian.Obsidian",
-    # "Logseq.Logseq",
-    # "appmakes.Typora",
+    "Obsidian.Obsidian",
+    "Logseq.Logseq",
+    "appmakes.Typora",
     "Iterate.MountainDuck",
-    # "Figma.Figma",
+    "Figma.Figma",
     "LocalSend.LocalSend"
 )
 foreach ($app in $wingetapps) {
@@ -434,12 +434,12 @@ foreach ($app in $wingetapps) {
 
 # --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
-    # "ZedIndustries.Zed",
-    # "NAVER.Whale",
-    # "Bandisoft.Bandizip",
-    # "Bandisoft.Honeyview",
-    # "CopyQ.CopyQ",
-    # "Kakao.KakaoTalk",
+    "ZedIndustries.Zed",
+    "NAVER.Whale",
+    "Bandisoft.Bandizip",
+    "Bandisoft.Honeyview",
+    "CopyQ.CopyQ",
+    "Kakao.KakaoTalk",
     "Google.Chrome"
 )
 foreach ($app in $wingetAppsNoScope) {
@@ -517,26 +517,26 @@ try {
   Write-LogErr "npm 패키지 설치 실패: $_  → nodejs 설치 여부 확인"
 }
 
-# # ============================================================
-# # UpNote 자동 설치
-# # ============================================================
-# $upNoteTarget = "C:\Program Files\UpNote\UpNote.exe"
-# if (Test-Path $upNoteTarget) {
-#   Write-LogOK "UpNote 이미 설치됨 (스킵)"
-# } else {
-#   try {
-#     Write-Log "UpNote 다운로드 중..."
-#     $upNoteInstaller = "$env:TEMP\UpNoteSetup.exe"
-#     Invoke-WebRequest -Uri "https://download.getupnote.com/app/UpNote%20Setup.exe" -OutFile $upNoteInstaller -UseBasicParsing
-#     Write-Log "UpNote 설치 중..."
-#     Start-Process -FilePath $upNoteInstaller -ArgumentList "/S" -Wait
-#     Write-LogOK "UpNote 설치 완료"
-#   } catch {
-#     Write-LogErr "UpNote 설치 실패: $_  → https://getupnote.com 수동 설치"
-#   } finally {
-#     Remove-Item $upNoteInstaller -ErrorAction SilentlyContinue
-#   }
-# }
+# ============================================================
+# UpNote 자동 설치
+# ============================================================
+$upNoteTarget = "C:\Program Files\UpNote\UpNote.exe"
+if (Test-Path $upNoteTarget) {
+  Write-LogOK "UpNote 이미 설치됨 (스킵)"
+} else {
+  try {
+    Write-Log "UpNote 다운로드 중..."
+    $upNoteInstaller = "$env:TEMP\UpNoteSetup.exe"
+    Invoke-WebRequest -Uri "https://download.getupnote.com/app/UpNote%20Setup.exe" -OutFile $upNoteInstaller -UseBasicParsing
+    Write-Log "UpNote 설치 중..."
+    Start-Process -FilePath $upNoteInstaller -ArgumentList "/S" -Wait
+    Write-LogOK "UpNote 설치 완료"
+  } catch {
+    Write-LogErr "UpNote 설치 실패: $_  → https://getupnote.com 수동 설치"
+  } finally {
+    Remove-Item $upNoteInstaller -ErrorAction SilentlyContinue
+  }
+}
 # ============================================================
 # Snipdo 자동 설치
 # ※ .appinstaller는 버전 업데이트 시 불일치 오류 발생
@@ -627,14 +627,14 @@ if (Test-Path $startupScript) {
   Write-LogWarn "startup_register.ps1 없음 (스킵): $startupScript"
 }
 
-# ============================================================
-# 레지스트리 설정 복원 (현재 winsnap.reg 하나, 향후 추가 기재)
+
 # ============================================================
 # 레지스트리 설정 복원
-# $registryFiles = @(
-#     "examlple.reg"
-# )
+# ============================================================
 
+# 이전 버전의 Microsoft IME 사용 (AHK 한영 전환 호환성)
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\InputMethod\Settings\KOR" -Name "EnableCompatibilityMode" -Value 1 -Type DWord
+Write-LogOK "Microsoft IME 이전 버전 호환 모드 설정 완료"
 # ============================================================
 # 마우스 커서 설치 (windows_11_cursors_concept_v2)
 # ============================================================
