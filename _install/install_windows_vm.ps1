@@ -281,7 +281,9 @@ if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
     $env:SCOOP = "$HOME\scoop"
     [System.Environment]::SetEnvironmentVariable("SCOOP", "$HOME\scoop", "User")
-    Invoke-Expression "& {$(Invoke-RestMethod get.scoop.sh)} -RunAsAdmin"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $scoopScript = Invoke-RestMethod -Uri "https://get.scoop.sh"
+    Invoke-Expression "& {$scoopScript} -RunAsAdmin"
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
     Write-LogOK "Scoop 설치 완료"
   } catch {
@@ -405,13 +407,13 @@ $wingetApps = @(
     # "Bitwarden.Bitwarden",
     # "GitHub.GitHubDesktop",
     # "Microsoft.PowerToys",
-    "Microsoft.PowerShell",
+    # "Microsoft.PowerShell",
     # "Obsidian.Obsidian",
     # "Logseq.Logseq",
     # "appmakes.Typora",
-    "Iterate.MountainDuck",
+    # "Iterate.MountainDuck",
     # "Figma.Figma",
-    "FastStone.Capture",   
+    # "FastStone.Capture",   
     "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {
@@ -433,7 +435,7 @@ foreach ($app in $wingetApps) {
 
 # --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
-    "ZedIndustries.Zed",
+    # "ZedIndustries.Zed",
     # "NAVER.Whale",
     # "Bandisoft.Bandizip",
     # "Bandisoft.Honeyview",
