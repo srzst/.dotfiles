@@ -460,24 +460,19 @@ foreach ($app in $wingetAppsNoScope) {
     Write-LogErr "winget 예외 발생: $app : $_"
   }
 }
-
-# Raycast 별도 설치 (공식 권장: winget install raycast)
-try {
-  $result = winget install raycast `
-    --accept-package-agreements --accept-source-agreements 2>&1
-  Add-Content -Path $LOG_FILE -Value ($result | Out-String)
-  if ($LASTEXITCODE -eq 0) {
-    Write-LogOK "winget 설치 완료: Raycast"
-  } elseif ($LASTEXITCODE -eq -1978335189) {
-    Write-LogOK "winget 이미 설치됨 (스킵): Raycast"
-  } else {
-    Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): Raycast  → https://raycast.com/windows 수동 설치"
-  }
-} catch {
-  Write-LogErr "winget 예외 발생: Raycast : $_"
+# Raycast 별도 설치 (MS Store 런처 방식)
+# ※ winget 미지원 — .dotfolders 내 설치 파일 사용
+$raycastExe = "$FOLDERS\windows\Raycast\Raycast Installer.exe"
+if (Get-AppxPackage -Name "*Raycast*" -ErrorAction SilentlyContinue) {
+  Write-LogOK "Raycast 이미 설치됨 (스킵)"
+} elseif (Test-Path $raycastExe) {
+  Write-Log "Raycast 설치 중... (MS Store 창이 잠시 뜰 수 있음)"
+  Start-Process $raycastExe -Wait
+  Write-LogOK "Raycast 설치 완료"
+} else {
+  Write-LogWarn "Raycast 설치 파일 없음 → $raycastExe 확인 또는 https://raycast.com/windows 수동 설치"
 }
 Write-LogOK "Winget 패키지 설치 완료"
-
 # ============================================================
 # pip / pipx / npm 패키지 설치
 # ============================================================
@@ -633,7 +628,7 @@ try {
 # 시작 프로그램 및 스케줄 작업 등록 (startup_register.ps1)
 # ============================================================
 $startupScript = "$FOLDERS\windows\ps1\startup_register.ps1"
-if (Test-Path $startupScript) {
+if (Test-Path $startupScript) {/m
   try {
     & $startupScript -MACHINE_TYPE $MACHINE_TYPE 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
     Write-LogOK "시작 프로그램 및 스케줄 작업 등록 완료"
@@ -721,22 +716,23 @@ $raycastDst = "$env:LOCALAPPDATA\Raycast"
   Copy-Item $src $raycastDst -Force
   Write-LogOK "Raycast 설정 복원 완료: $_"
 }
-
 # Mountain Duck 설정 복원
 $mdSrc = "$HOME\.dotfolders\windows\MountainDuck"
 $mdDst = "$env:APPDATA\Cyberduck"
 if (Test-Path $mdSrc) {
+  New-Item -ItemType Directory -Force -Path $mdDst | Out-Null
   Copy-Item "$mdSrc\*.mountainducklicense" $mdDst -Force
   Copy-Item "$mdSrc\Mountain Duck.user.config" $mdDst -Force
   if (Test-Path "$mdSrc\Bookmarks") {
     Remove-Item "$mdDst\Bookmarks" -Recurse -Force -ErrorAction SilentlyContinue
-    # $mdDst\Bookmarks 로 명시해야 폴더로 복사됨 ($mdDst 만 지정 시 충돌)
-    Copy-Item "$mdSrc\Bookmarks" "$mdDst\Bookmarks" -Recurse -Force
+    New-Item -ItemType Directory -Force -Path "$mdDst\Bookmarks" | Out-Null
+    Copy-Item "$mdSrc\Bookmarks\*" "$mdDst\Bookmarks\" -Recurse -Force
   }
   Write-LogOK "Mountain Duck 설정 복원 완료"
 } else {
   Write-LogWarn "Mountain Duck 설정 파일 없음 (스킵): $mdSrc"
 }
+
 
 # Windows Terminal 설정 연결
 $wtSrc = "$HOME\.dotfolders\windows\terminal\settings.json"
