@@ -414,7 +414,7 @@ $wingetApps = @(
     # "appmakes.Typora",
     # "Iterate.MountainDuck",
     # "Figma.Figma",
-    # "FastStone.Capture",   
+    "FastStone.Capture",   
     "LocalSend.LocalSend"
 )
 foreach ($app in $wingetapps) {
@@ -540,38 +540,17 @@ try {
 #     Remove-Item $upNoteInstaller -ErrorAction SilentlyContinue
 #   }
 # }
-
 # ============================================================
-# WinSnap 자동 설치
-# ※ silent 옵션 미확인 → 설치 창이 뜰 수 있음
+# WinSnap Portable 실행 파일 확인
+# ※ .dotfolders 내 포터블 버전 직접 사용
 # ============================================================
-$winSnapZip    = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2.zip"
-$winSnapExtDir = "$env:TEMP\WinSnap_v6.2.2"
-$winSnapTarget = "C:\Program Files\WinSnap\WinSnap.exe"
+$winSnapTarget = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\WinSnap_v6.2.2_포터블\WinSnapPortable.exe"
 if (Test-Path $winSnapTarget) {
-  Write-LogOK "WinSnap 이미 설치됨 (스킵)"
+  Unblock-File -Path $winSnapTarget
+  Write-LogOK "WinSnap Portable 확인 완료: $winSnapTarget"
 } else {
-  try {
-    Expand-Archive -Path $winSnapZip -DestinationPath $winSnapExtDir -Force
-    # 파일명 한글 인코딩 문제 방지: 실제 exe 파일 탐색
-    $winSnapExeFound = Get-ChildItem -Path $winSnapExtDir -Filter "*x64*단일*.exe" -Recurse | Select-Object -First 1
-    if (-Not $winSnapExeFound) {
-      $winSnapExeFound = Get-ChildItem -Path $winSnapExtDir -Filter "*.exe" -Recurse | Select-Object -First 1
-    }
-    if (-Not $winSnapExeFound) { throw "WinSnap 설치 파일을 찾을 수 없습니다" }
-    Write-Log "WinSnap 설치 중... (설치 창이 뜰 수 있음): $($winSnapExeFound.FullName)"
-    Start-Process -FilePath $winSnapExeFound.FullName -ArgumentList "/VERYSILENT"
-    Start-Sleep -Seconds 5
-    Stop-Process -Name "WinSnap" -Force -ErrorAction SilentlyContinue
-    Stop-Process -Name "WinSnap64" -Force -ErrorAction SilentlyContinue    
-    Write-LogOK "WinSnap 설치 완료"
-  } catch {
-    Write-LogErr "WinSnap 설치 실패: $_  → $winSnapZip 파일 확인 필요"
-  } finally {
-    Remove-Item $winSnapExtDir -Recurse -ErrorAction SilentlyContinue
-  }
+  Write-LogWarn "WinSnap Portable 없음 (스킵): $winSnapTarget"
 }
-
 # ============================================================
 # Snipdo 자동 설치
 # ※ .appinstaller는 버전 업데이트 시 불일치 오류 발생
@@ -628,7 +607,7 @@ try {
 # 시작 프로그램 및 스케줄 작업 등록 (startup_register.ps1)
 # ============================================================
 $startupScript = "$FOLDERS\windows\ps1\startup_register.ps1"
-if (Test-Path $startupScript) {/m
+if (Test-Path $startupScript) {
   try {
     & $startupScript -MACHINE_TYPE $MACHINE_TYPE 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
     Write-LogOK "시작 프로그램 및 스케줄 작업 등록 완료"
@@ -638,22 +617,24 @@ if (Test-Path $startupScript) {/m
 } else {
   Write-LogWarn "startup_register.ps1 없음 (스킵): $startupScript"
 }
-
+# ============================================================
+# WinSnap Portable 실행 파일 확인
+# ※ .dotfolders 내 포터블 버전 직접 사용
+# ============================================================
+$winSnapTarget = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\WinSnap_v6.2.2_Portable\WinSnapPortable.exe"
+if (Test-Path $winSnapTarget) {
+  Unblock-File -Path $winSnapTarget
+  Write-LogOK "WinSnap Portable 확인 완료: $winSnapTarget"
+} else {
+  Write-LogWarn "WinSnap Portable 없음 (스킵): $winSnapTarget"
+}
 # ============================================================
 # 레지스트리 설정 복원 (현재 winsnap.reg 하나, 향후 추가 기재)
 # ============================================================
+# 레지스트리 설정 복원
 $registryFiles = @(
-    "winsnap.reg"
+    # "winsnap.reg"
 )
-foreach ($regFile in $registryFiles) {
-  $regPath = "$HOME\.dotfolders\windows\winsnap\$regFile"
-  if (Test-Path $regPath) {
-    reg import $regPath
-    Write-LogOK "레지스트리 복원 완료: $regFile"
-  } else {
-    Write-LogWarn "레지스트리 파일 없음 (스킵): $regFile"
-  }
-}
 
 # ============================================================
 # 마우스 커서 설치 (windows_11_cursors_concept_v2)
@@ -769,7 +750,6 @@ if (-Not (Test-Path $snipSrc)) {
   Copy-Item "$snipSrc\*" $snipDst -Force -Recurse -Exclude "*.appinstaller"
   Write-LogOK "Snipdo 설정 복원 완료"
 }
-
 # ============================================================
 # GitBash .bashrc 안내
 # ============================================================
@@ -789,6 +769,16 @@ Write-Host "    Jump Desktop      - https://jumpdesktop.com/download.html"
 Write-Host "    PhotoScape X Pro  - MS Store"
 Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"
 Write-Host "    Blip              - https://www.blip.com"
+
+# ============================================================
+# Raycast 설정 복원 안내
+# ※ 튜토리얼 완료 후 아래 명령 실행
+# ============================================================
+Write-Host ""
+Write-Log "INFO Raycast 튜토리얼 완료 후 아래 명령 실행:"
+Write-Host "    Stop-Process -Name 'Raycast' -Force -ErrorAction SilentlyContinue"
+Write-Host "    Copy-Item `"$HOME\.dotfolders\windows\Raycast\settings.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
+Write-Host "    Copy-Item `"$HOME\.dotfolders\windows\Raycast\settings_v2.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
 
 # ============================================================
 # 최종 요약: WARN / ERR 발생 항목 출력
