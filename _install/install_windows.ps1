@@ -306,6 +306,8 @@ try {
   cmd /c "ftype AutoHotkeyScript=`"$ahkExe`" `"%1`" %*" 2>&1 | Out-Null
   Write-LogOK ".ahk 파일 연결 등록 완료"
   scoop install python
+  scoop shim add pythonw "$(scoop prefix python)\pythonw.exe"
+  Write-LogOK "pythonw shim 등록 완료"
   scoop install nodejs
   scoop install neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
   # C compiler (nvim-treesitter 요구사항)
