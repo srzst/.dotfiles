@@ -477,6 +477,7 @@ try {
   Write-LogErr "winget 예외 발생: Raycast : $_"
 }
 Write-LogOK "Winget 패키지 설치 완료"
+
 # ============================================================
 # pip / pipx / npm 패키지 설치
 # ============================================================
@@ -545,7 +546,6 @@ if (Test-Path $upNoteTarget) {
   }
 }
 
-
 # ============================================================
 # WinSnap 자동 설치
 # ※ silent 옵션 미확인 → 설치 창이 뜰 수 있음
@@ -579,26 +579,32 @@ if (Test-Path $winSnapTarget) {
 
 # ============================================================
 # Snipdo 자동 설치
+# ※ .appinstaller는 버전 업데이트 시 불일치 오류 발생
+#   → .appinstaller에서 실제 msixbundle URL 파싱 후 직접 설치
 # ============================================================
-# ※ .appinstaller는 버전 업데이트 시 불일치 오류 발생 → URL 직접 다운로드로 변경
-$snipDoPackage   = "JohannesTscholl.Pantherbar"
-$snipDoUrl       = "https://snipdo-app.com/wp-content/uploads/bins/SnipDo.appinstaller"
+$snipDoPackage = "JohannesTscholl.Pantherbar"
 if (Get-AppxPackage -Name $snipDoPackage -ErrorAction SilentlyContinue) {
   Write-LogOK "Snipdo 이미 설치됨 (스킵)"
 } else {
   try {
-    $snipDoInstaller = "$env:TEMP\SnipDo.appinstaller"
-    Write-Log "Snipdo .appinstaller 다운로드 중..."
-    Invoke-WebRequest -Uri $snipDoUrl -OutFile $snipDoInstaller -UseBasicParsing
+    $appInstallerUrl = "https://snipdo-app.com/wp-content/uploads/bins/SnipDo.appinstaller"
+    Write-Log "Snipdo .appinstaller 파싱 중..."
+    $xmlContent = Invoke-RestMethod -Uri $appInstallerUrl -UseBasicParsing
+    $msixUrl = ([xml]$xmlContent).AppInstaller.MainBundle.Uri
+    if (-Not $msixUrl) { throw ".appinstaller에서 msixbundle URL 파싱 실패" }
+    Write-Log "Snipdo msixbundle 다운로드 중: $msixUrl"
+    $snipDoBundle = "$env:TEMP\SnipDo.msixbundle"
+    Invoke-WebRequest -Uri $msixUrl -OutFile $snipDoBundle -UseBasicParsing
     Write-Log "Snipdo 설치 중..."
-    Add-AppxPackage -AppInstallerFile $snipDoInstaller
+    Add-AppxPackage -Path $snipDoBundle
     Write-LogOK "Snipdo 설치 완료"
   } catch {
-    Write-LogErr "Snipdo 설치 실패: $_  → $snipDoUrl 확인 필요"
+    Write-LogErr "Snipdo 설치 실패: $_  → https://snipdo-app.com 수동 설치"
   } finally {
-    Remove-Item $snipDoInstaller -ErrorAction SilentlyContinue
+    Remove-Item "$env:TEMP\SnipDo.msixbundle" -ErrorAction SilentlyContinue
   }
 }
+
 # ============================================================
 # GitHub Desktop 호환 - remote URL HTTPS로 변경
 # ============================================================
@@ -653,6 +659,7 @@ foreach ($regFile in $registryFiles) {
     Write-LogWarn "레지스트리 파일 없음 (스킵): $regFile"
   }
 }
+
 # ============================================================
 # 마우스 커서 설치 (windows_11_cursors_concept_v2)
 # ============================================================
@@ -663,7 +670,8 @@ $cursorInf    = "$cursorExtDir\light\cursor\Install.inf"
 if (Test-Path $cursorZip) {
   try {
     Expand-Archive -Path $cursorZip -DestinationPath $cursorExtDir -Force
-    rundll32 setupapi.dll,InstallHinfSection DefaultInstall 132 $cursorInf
+    # 128: UI 없이 자동 설치 (132는 마우스 속성 창 팝업 발생)
+    rundll32 setupapi.dll,InstallHinfSection DefaultInstall 128 $cursorInf
     # 변경 사항 즉시 반영
     $CursorReload = Add-Type -MemberDefinition @"
       [DllImport("user32.dll")]
@@ -679,9 +687,11 @@ if (Test-Path $cursorZip) {
 } else {
   Write-LogWarn "커서 파일 없음 (스킵): $cursorZip"
 }
+
 # ============================================================
-# 앱 설정 복원(현재 FastStone Capture 하나, 향후 추가 기재)
+# 앱 설정 복원
 # ============================================================
+
 # FastStone Capture 설정 복원
 $fscSrc = "$HOME\.dotfolders\windows\FastStone\FSC"
 $fscDst = "$env:APPDATA\FastStone\FSC"
@@ -695,16 +705,21 @@ if (Test-Path $fscSrc) {
 }
 
 # Raycast 설정 복원
+# ※ Raycast 미설치 시 대상 경로가 없으므로 존재 여부 확인 후 복원
 $raycastSrc = "$HOME\.dotfolders\windows\Raycast"
 $raycastDst = "$env:LOCALAPPDATA\Raycast"
 @("settings.db", "settings_v2.db") | ForEach-Object {
   $src = "$raycastSrc\$_"
-  if (Test-Path $src) {
-    Copy-Item $src "$raycastDst\" -Force
-    Write-LogOK "Raycast 설정 복원 완료: $_"
-  } else {
+  if (-Not (Test-Path $src)) {
     Write-LogWarn "Raycast 설정 파일 없음 (스킵): $src"
+    return
   }
+  if (-Not (Test-Path $raycastDst)) {
+    Write-LogWarn "Raycast 미설치 — 설정 복원 건너뜀: $_ (설치 후 재실행 필요)"
+    return
+  }
+  Copy-Item $src $raycastDst -Force
+  Write-LogOK "Raycast 설정 복원 완료: $_"
 }
 
 # Mountain Duck 설정 복원
@@ -715,7 +730,8 @@ if (Test-Path $mdSrc) {
   Copy-Item "$mdSrc\Mountain Duck.user.config" $mdDst -Force
   if (Test-Path "$mdSrc\Bookmarks") {
     Remove-Item "$mdDst\Bookmarks" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item "$mdSrc\Bookmarks" $mdDst -Recurse -Force 
+    # $mdDst\Bookmarks 로 명시해야 폴더로 복사됨 ($mdDst 만 지정 시 충돌)
+    Copy-Item "$mdSrc\Bookmarks" "$mdDst\Bookmarks" -Recurse -Force
   }
   Write-LogOK "Mountain Duck 설정 복원 완료"
 } else {
@@ -746,14 +762,18 @@ if (Test-Path $tabbySrc) {
 }
 
 # Snipdo 설정 복원
+# ※ Snipdo 미설치 시 패키지 경로가 없으므로 존재 여부 확인 후 복원
 $snipSrc = "$HOME\.dotfolders\windows\snipdo"
 $snipDst = "$env:LOCALAPPDATA\Packages\JohannesTscholl.Pantherbar_3hp4skfxf5x2g\LocalState"
-if (Test-Path $snipSrc) {
+if (-Not (Test-Path $snipSrc)) {
+  Write-LogWarn "Snipdo 설정 파일 없음 (스킵): $snipSrc"
+} elseif (-Not (Test-Path $snipDst)) {
+  Write-LogWarn "Snipdo 미설치 — 설정 복원 건너뜀 (설치 후 재실행 필요)"
+} else {
   Copy-Item "$snipSrc\*" $snipDst -Force -Recurse -Exclude "*.appinstaller"
   Write-LogOK "Snipdo 설정 복원 완료"
-} else {
-  Write-LogWarn "Snipdo 설정 파일 없음 (스킵): $snipSrc"
 }
+
 # ============================================================
 # GitBash .bashrc 안내
 # ============================================================
