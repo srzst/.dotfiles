@@ -407,7 +407,7 @@ $wingetApps = @(
     # "Bitwarden.Bitwarden",
     # "GitHub.GitHubDesktop",
     # "Microsoft.PowerToys",
-    # "Microsoft.PowerShell",
+    "Microsoft.PowerShell",
     # "Obsidian.Obsidian",
     # "Logseq.Logseq",
     # "appmakes.Typora",
@@ -597,7 +597,7 @@ if (Test-Path $fscTarget) {
   Write-LogOK "FastStone Capture 이미 설치됨 (스킵)"
 } elseif (Test-Path $fscInstaller) {
   Write-Log "FastStone Capture 설치 중..."
-  Start-Process -FilePath $fscInstaller -ArgumentList "/VERYSILENT" -Wait
+  Start-Process -FilePath $fscInstaller -ArgumentList "/S" -Wait
   Write-LogOK "FastStone Capture 설치 완료"
 } else {
   Write-LogWarn "FastStone Capture 설치 파일 없음 (스킵): $fscInstaller"
