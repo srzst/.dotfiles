@@ -651,6 +651,32 @@ foreach ($regFile in $registryFiles) {
   }
 }
 # ============================================================
+# 마우스 커서 설치 (windows_11_cursors_concept_v2)
+# ============================================================
+$cursorZip    = "$FOLDERS\windows\etc\windows_11_cursors_concept_v2_by_jepricreations_densjkc.zip"
+$cursorExtDir = "$env:TEMP\cursors_install"
+$cursorInf    = "$cursorExtDir\light\cursor\Install.inf"
+
+if (Test-Path $cursorZip) {
+  try {
+    Expand-Archive -Path $cursorZip -DestinationPath $cursorExtDir -Force
+    rundll32 setupapi.dll,InstallHinfSection DefaultInstall 132 $cursorInf
+    # 변경 사항 즉시 반영
+    $CursorReload = Add-Type -MemberDefinition @"
+      [DllImport("user32.dll")]
+      public static extern bool SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
+"@ -Name "CursorReload" -Namespace "Win32" -PassThru
+    $CursorReload::SystemParametersInfo(0x0057, 0, $null, 3)
+    Write-LogOK "마우스 커서 설치 완료"
+  } catch {
+    Write-LogErr "마우스 커서 설치 실패: $_"
+  } finally {
+    Remove-Item $cursorExtDir -Recurse -ErrorAction SilentlyContinue
+  }
+} else {
+  Write-LogWarn "커서 파일 없음 (스킵): $cursorZip"
+}
+# ============================================================
 # 앱 설정 복원(현재 FastStone Capture 하나, 향후 추가 기재)
 # ============================================================
 # FastStone Capture 설정 복원
@@ -658,6 +684,7 @@ $fscSrc = "$HOME\.dotfolders\windows\FastStone\FSC"
 $fscDst = "$env:APPDATA\FastStone\FSC"
 if (Test-Path $fscSrc) {
   Remove-Item $fscDst -Recurse -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType Directory -Force -Path (Split-Path $fscDst) | Out-Null
   New-Item -ItemType SymbolicLink -Path $fscDst -Target $fscSrc | Out-Null
   Write-LogOK "FastStone 설정 연결 완료"
 } else {
@@ -684,7 +711,8 @@ if (Test-Path $mdSrc) {
   Copy-Item "$mdSrc\*.mountainducklicense" $mdDst -Force
   Copy-Item "$mdSrc\Mountain Duck.user.config" $mdDst -Force
   if (Test-Path "$mdSrc\Bookmarks") {
-    Copy-Item "$mdSrc\Bookmarks" $mdDst -Recurse -Force
+    Remove-Item "$mdDst\Bookmarks" -Recurse -Force -ErrorAction SilentlyContinue
+    Copy-Item "$mdSrc\Bookmarks" $mdDst -Recurse -Force 
   }
   Write-LogOK "Mountain Duck 설정 복원 완료"
 } else {
@@ -707,6 +735,7 @@ $tabbySrc = "$HOME\.dotfolders\windows\Tabby\config.yaml"
 $tabbyDst = "$env:APPDATA\tabby\config.yaml"
 if (Test-Path $tabbySrc) {
   Remove-Item $tabbyDst -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType Directory -Force -Path (Split-Path $tabbyDst) | Out-Null
   New-Item -ItemType SymbolicLink -Path $tabbyDst -Target $tabbySrc | Out-Null
   Write-LogOK "Tabby 설정 연결 완료"
 } else {
