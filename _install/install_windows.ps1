@@ -561,22 +561,25 @@ if (Test-Path $winSnapTarget) {
 # ============================================================
 # Snipdo 자동 설치
 # ============================================================
-$snipDoInstaller = "$FOLDERS\windows\snipdo\SnipDo.appinstaller"
+# ※ .appinstaller는 버전 업데이트 시 불일치 오류 발생 → URL 직접 다운로드로 변경
 $snipDoPackage   = "JohannesTscholl.Pantherbar"
+$snipDoUrl       = "https://snipdo-app.com/wp-content/uploads/bins/SnipDo.appinstaller"
 if (Get-AppxPackage -Name $snipDoPackage -ErrorAction SilentlyContinue) {
   Write-LogOK "Snipdo 이미 설치됨 (스킵)"
 } else {
   try {
-    if (-Not (Test-Path $snipDoInstaller)) { throw "SnipDo.appinstaller 파일 없음" }
+    $snipDoInstaller = "$env:TEMP\SnipDo.appinstaller"
+    Write-Log "Snipdo .appinstaller 다운로드 중..."
+    Invoke-WebRequest -Uri $snipDoUrl -OutFile $snipDoInstaller -UseBasicParsing
     Write-Log "Snipdo 설치 중..."
     Add-AppxPackage -AppInstallerFile $snipDoInstaller
     Write-LogOK "Snipdo 설치 완료"
   } catch {
-    Write-LogErr "Snipdo 설치 실패: $_  → $snipDoInstaller 파일 확인 필요"
+    Write-LogErr "Snipdo 설치 실패: $_  → $snipDoUrl 확인 필요"
+  } finally {
+    Remove-Item $snipDoInstaller -ErrorAction SilentlyContinue
   }
 }
-
-
 # ============================================================
 # GitHub Desktop 호환 - remote URL HTTPS로 변경
 # ============================================================
