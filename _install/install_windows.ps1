@@ -524,27 +524,27 @@ try {
   Write-LogErr "npm 패키지 설치 실패: $_  → nodejs 설치 여부 확인"
 }
 
-# ============================================================
-# UpNote 자동 설치
-# ============================================================
-# $upNoteTarget = "$env:LOCALAPPDATA\Programs\UpNote\UpNote.exe"
-$upNoteTarget = "C:\Program Files\UpNote\UpNote.exe"
-if (Test-Path $upNoteTarget) {
-  Write-LogOK "UpNote 이미 설치됨 (스킵)"
-} else {
-  try {
-    Write-Log "UpNote 다운로드 중..."
-    $upNoteInstaller = "$env:TEMP\UpNoteSetup.exe"
-    Invoke-WebRequest -Uri "https://download.getupnote.com/app/UpNote%20Setup.exe" -OutFile $upNoteInstaller -UseBasicParsing
-    Write-Log "UpNote 설치 중..."
-    Start-Process -FilePath $upNoteInstaller -ArgumentList "/S" -Wait
-    Write-LogOK "UpNote 설치 완료"
-  } catch {
-    Write-LogErr "UpNote 설치 실패: $_  → https://getupnote.com 수동 설치"
-  } finally {
-    Remove-Item $upNoteInstaller -ErrorAction SilentlyContinue
-  }
-}
+# # ============================================================
+# # UpNote 자동 설치
+# # ============================================================
+# # $upNoteTarget = "$env:LOCALAPPDATA\Programs\UpNote\UpNote.exe"
+# $upNoteTarget = "C:\Program Files\UpNote\UpNote.exe"
+# if (Test-Path $upNoteTarget) {
+#   Write-LogOK "UpNote 이미 설치됨 (스킵)"
+# } else {
+#   try {
+#     Write-Log "UpNote 다운로드 중..."
+#     $upNoteInstaller = "$env:TEMP\UpNoteSetup.exe"
+#     Invoke-WebRequest -Uri "https://download.getupnote.com/app/UpNote%20Setup.exe" -OutFile $upNoteInstaller -UseBasicParsing
+#     Write-Log "UpNote 설치 중..."
+#     Start-Process -FilePath $upNoteInstaller -ArgumentList "/S" -Wait
+#     Write-LogOK "UpNote 설치 완료"
+#   } catch {
+#     Write-LogErr "UpNote 설치 실패: $_  → https://getupnote.com 수동 설치"
+#   } finally {
+#     Remove-Item $upNoteInstaller -ErrorAction SilentlyContinue
+#   }
+# }
 
 # ============================================================
 # WinSnap 자동 설치
