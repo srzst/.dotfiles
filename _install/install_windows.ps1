@@ -358,17 +358,17 @@ if ($utf8Status -ne "1") {
 # (GUI 앱 + 일반 앱)
 # ============================================================
 # 설치 목록:
-#   Microsoft.VisualStudioCode    ← 에디터
+#   Microsoft.VisualStudiocode    ← 에디터
 #   ZedIndustries.Zed             ← 에디터
-#   Anysphere.Cursor              ← AI 코딩 에디터 (실패 시 winget search Cursor 재확인)
+#   Anysphere.Cursor              ← ai 코딩 에디터 (실패 시 winget search Cursor 재확인)
 #   Google.Chrome                 ← 브라우저
 #   Brave.Brave                   ← 브라우저
 #   Vivaldi.Vivaldi               ← 브라우저
 #   NAVER.Whale                   ← 브라우저 (해외 IP 사용 시 실패 가능)
 #   Bitwarden.Bitwarden           ← 비밀번호 관리자
-#   GitHub.GitHubDesktop          ← Git GUI
+#   GitHub.GitHubDesktop          ← git GUI
 #   Microsoft.PowerToys           ← 시스템 유틸리티
-#   Microsoft.PowerShell          ← PowerShell Core
+#   Microsoft.PowerShell          ← powerShell Core
 #   Bandisoft.Bandizip            ← 압축 관리자
 #   Bandisoft.Honeyview           ← 이미지 뷰어
 #   Obsidian.Obsidian             ← 문서 관리
@@ -376,6 +376,7 @@ if ($utf8Status -ne "1") {
 #   CopyQ.CopyQ                   ← 클립보드 관리자
 #   LocalSend.LocalSend           ← 로컬 파일 전송
 #   Kakao.KakaoTalk               ← 메신저
+#   Raycast                       ← 런처 (공식 권장: winget install raycast)
 # ------------------------------------------------------------
 # ※ --silent 미사용: 일부 앱 설치 실패를 숨기는 경우 있음
 # ※ cloudinary 1.26.x → urllib3 1.x 전용
@@ -383,9 +384,9 @@ if ($utf8Status -ne "1") {
 # ------------------------------------------------------------
 
 # winget PATH 누락 방지
-$wingetPath = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
-if ($env:PATH -notlike "*WindowsApps*") {
-  $env:PATH += ";$wingetPath"
+$wingetPath = "$env:LOCAlappdata\microsoft\WindowsApps"
+if ($env:PATH -notlike "*windowsapps*") {
+  $env:PATH += ";$wingetpath"
   Write-Log "winget PATH 강제 주입 완료: $wingetPath"
 }
 
@@ -400,7 +401,7 @@ try {
 
 Write-Log "Winget 신규 패키지 설치 중..."
 $wingetApps = @(
-    # "Microsoft.VisualStudioCode",
+    # "Microsoft.VisualStudiocode",
     # "Anysphere.Cursor",
     # "Brave.Brave",
     # "Vivaldi.Vivaldi",
@@ -416,14 +417,14 @@ $wingetApps = @(
     # "FastStone.Capture",   
     "LocalSend.LocalSend"
 )
-foreach ($app in $wingetApps) {
+foreach ($app in $wingetapps) {
   try {
     $result = winget install --id $app --exact `
       --accept-package-agreements --accept-source-agreements --scope user 2>&1
-    Add-Content -Path $LOG_FILE -Value ($result | Out-String)
+    Add-Content -Path $Log_file -value ($result | Out-String)
     if ($LASTEXITCODE -eq 0) {
       Write-LogOK "winget 설치 완료: $app"
-    } elseif ($LASTEXITCODE -eq -1978335189) {
+    } elseif ($LASTEXITCode -eq -1978335189) {
       Write-LogOK "winget 이미 설치됨 (스킵): $app"
     } else {
       Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app  → 수동 설치 또는 ID 재확인"
@@ -441,7 +442,6 @@ $wingetAppsNoScope = @(
     # "Bandisoft.Honeyview",
     # "CopyQ.CopyQ",
     # "Kakao.KakaoTalk",
-    "Raycast.Raycast",
     "Google.Chrome"
 )
 foreach ($app in $wingetAppsNoScope) {
@@ -460,8 +460,23 @@ foreach ($app in $wingetAppsNoScope) {
     Write-LogErr "winget 예외 발생: $app : $_"
   }
 }
-Write-LogOK "Winget 패키지 설치 완료"
 
+# Raycast 별도 설치 (공식 권장: winget install raycast)
+try {
+  $result = winget install raycast `
+    --accept-package-agreements --accept-source-agreements 2>&1
+  Add-Content -Path $LOG_FILE -Value ($result | Out-String)
+  if ($LASTEXITCODE -eq 0) {
+    Write-LogOK "winget 설치 완료: Raycast"
+  } elseif ($LASTEXITCODE -eq -1978335189) {
+    Write-LogOK "winget 이미 설치됨 (스킵): Raycast"
+  } else {
+    Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): Raycast  → https://raycast.com/windows 수동 설치"
+  }
+} catch {
+  Write-LogErr "winget 예외 발생: Raycast : $_"
+}
+Write-LogOK "Winget 패키지 설치 완료"
 # ============================================================
 # pip / pipx / npm 패키지 설치
 # ============================================================
