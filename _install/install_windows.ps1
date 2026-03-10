@@ -565,7 +565,10 @@ if (Test-Path $winSnapTarget) {
     }
     if (-Not $winSnapExeFound) { throw "WinSnap 설치 파일을 찾을 수 없습니다" }
     Write-Log "WinSnap 설치 중... (설치 창이 뜰 수 있음): $($winSnapExeFound.FullName)"
-    Start-Process -FilePath $winSnapExeFound.FullName -Wait
+    Start-Process -FilePath $winSnapExeFound.FullName -ArgumentList "/VERYSILENT"
+    Start-Sleep -Seconds 5
+    Stop-Process -Name "WinSnap" -Force -ErrorAction SilentlyContinue
+    Stop-Process -Name "WinSnap64" -Force -ErrorAction SilentlyContinue    
     Write-LogOK "WinSnap 설치 완료"
   } catch {
     Write-LogErr "WinSnap 설치 실패: $_  → $winSnapZip 파일 확인 필요"
