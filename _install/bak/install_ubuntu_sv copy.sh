@@ -2,8 +2,8 @@
 REPO="$HOME/.dotfiles"
 
 # ============================================================
-# install_ubuntu.sh
-# Ubuntu 전용 설치 스크립트
+# install_ubuntu_server.sh
+# Ubuntu 서버 전용 경량 설치 스크립트
 # 사용자: x / 암호: (Bitwarden 참고)
 # root 계정 활성화 동일 암호
 # ============================================================
@@ -32,10 +32,13 @@ fi
 source ~/.bashrc_secrets
 echo "OK BWS 토큰 로드 완료"
 
-# 2. 시간대 (Asia/Seoul 고정)
+# 2. 유저 암호 (sudo 인증용)
+echo ""
+echo "현재 사용자($USER) 암호를 입력하세요 (sudo 인증용):"
+read -rs USER_PASSWORD
+echo ""
 
 # 3. root 암호
-echo ""
 echo "설정할 root 암호를 입력하세요 (사용자 암호와 동일하게):"
 read -rs ROOT_PASSWORD
 echo ""
@@ -50,52 +53,33 @@ echo "OK 입력값 확인 완료 - 설치를 시작합니다."
 echo ""
 
 # sudo 인증 캐시 (이후 자동 설치 중 sudo 재입력 방지)
-sudo -v
+echo "$USER_PASSWORD" | sudo -S -v 2>/dev/null
 echo "OK sudo 인증 완료"
+
+# sudo 세션 keepalive (50초마다 갱신 - 설치 완료까지 유지)
+while true; do echo "$USER_PASSWORD" | sudo -S -v 2>/dev/null; sleep 50; done &
+SUDO_KEEPALIVE_PID=$!
+trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null" EXIT
 
 # ============================================================
 # 이하 자동 설치 (입력 없이 진행)
 # ============================================================
 
-# 미러 서버 카카오로 변경 (Ubuntu 24.04 DEB822 포맷)
-echo "미러 서버 카카오로 변경 중..."
-sudo sed -i 's|URIs: http://kr.archive.ubuntu.com/ubuntu|URIs: http://mirror.kakao.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
-sudo sed -i 's|URIs: http://archive.ubuntu.com/ubuntu|URIs: http://mirror.kakao.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
-sudo rm -rf /var/lib/apt/lists/*
-echo "OK 미러 서버 변경 완료"
-
-# 시스템 업데이트
+# 시스템 업데이트 (기본 미러 사용)
 echo "시스템 업데이트 중..."
 sudo apt update && sudo apt upgrade -y
 echo "OK 시스템 업데이트 완료"
 
-# 기본 패키지 설치 (unzip 먼저 - bws 설치에 필요)
+# 기본 패키지 설치
 echo "패키지 설치 중..."
 sudo apt install -y \
   curl wget vim git htop net-tools sudo \
-  python3 python3-pip pipx \
+  python3 python3-pip \
   build-essential unzip zip \
   tree tmux
 echo "OK 패키지 설치 완료"
 
-# Yazi 의존성 설치
-echo "Yazi 의존성 설치 중..."
-sudo apt install -y ffmpeg 7zip jq poppler-utils fd-find ripgrep fzf zoxide imagemagick
-echo "OK Yazi 의존성 설치 완료"
-
-# Yazi 설치 (공식 바이너리)
-echo "Yazi 설치 중..."
-wget -qO yazi.zip https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip
-unzip -q yazi.zip -d yazi-temp
-sudo mv yazi-temp/*/yazi /usr/local/bin/
-sudo mv yazi-temp/*/ya /usr/local/bin/
-rm -rf yazi.zip yazi-temp
-echo "OK Yazi 설치 완료"
-
-# FIX: pipx PATH 즉시 반영 (apt 설치 후 현재 세션에 미반영 방지)
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-
-# bws CLI 설치
+# FIX: bws CLI 이미 설치된 경우 스킵
 BWS_BIN="$HOME/bws/bws"
 if [ ! -f "$BWS_BIN" ]; then
   echo "bws CLI 설치 중..."
@@ -110,9 +94,8 @@ else
 fi
 
 # BWS secrets 복원 함수
-# FIX: print() → sys.stdout.write() 로 변경 (개행 문자 포함 방지)
 fetch_secret() {
-  "$BWS_BIN" secret get "$1" 2>/dev/null | python3 -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['value'])"
+  "$BWS_BIN" secret get "$1" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['value'])"
 }
 
 # BWS secrets 복원
@@ -143,63 +126,7 @@ echo "OK 시간대 설정 완료: Asia/Seoul"
 echo "root:$ROOT_PASSWORD" | sudo chpasswd
 echo "OK root 계정 활성화 완료"
 
-# Git 설정
-git config --global user.email "x@srzst.com"
-git config --global user.name "x"
-git config --global pull.rebase true
-echo "OK Git 설정 완료"
-
-# 글로벌 gitignore 설정
-git config --global core.excludesfile ~/.gitignore_global
-grep -qxF '*_secrets*' ~/.gitignore_global 2>/dev/null || echo '*_secrets*' >> ~/.gitignore_global
-echo "OK 글로벌 gitignore 설정 완료"
-
-# git-credentials 사용을 위한 credential helper 설정
-git config --global credential.helper store
-echo "OK credential.helper 설정 완료"
-
-# SSH config 설정
-touch ~/.ssh/config
-chmod 600 ~/.ssh/config
-if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
-  cat >> ~/.ssh/config << 'EOF'
-Host github.com
-  IdentityFile ~/.ssh/id_ed25519
-  User git
-EOF
-  echo "OK SSH config 설정 완료"
-fi
-
-# GitHub known_hosts 등록
-ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
-echo "OK GitHub known_hosts 등록 완료"
-
-# GitHub SSH 연결 테스트
-echo ""
-echo "GitHub SSH 연결 테스트 중..."
-ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" \
-  && echo "OK GitHub SSH 인증 성공" \
-  || echo "WARN GitHub SSH 인증 실패 - BWS 키 또는 GitHub 등록 확인 필요"
-
-# 저장소 clone
-echo ""
-echo "저장소 clone 중..."
-repos=(
-  "git@github.com:srzst/.dotfiles.git"
-  "git@github.com:srzst/.dotfolders.git"
-)
-for repo in "${repos[@]}"; do
-  repo_name=$(basename "$repo" .git)
-  if [ ! -d "$HOME/$repo_name" ]; then
-    git clone "$repo" "$HOME/$repo_name"
-    echo "OK $repo_name clone 완료"
-  else
-    git -C "$HOME/$repo_name" pull
-    echo "OK $repo_name 이미 존재 (pull 완료)"
-  fi
-done
-
-# FIX: .bashrc_secrets 로드 구문 추가 (clone 이후 repo 파일 수정)
+# FIX: secrets 로드 구문을 repo 파일에 먼저 추가한 후 symlink 생성
 if ! grep -q 'bashrc_secrets' "$REPO/Alias/ubuntu/.bashrc" 2>/dev/null; then
   echo '' >> "$REPO/Alias/ubuntu/.bashrc"
   echo '[[ -f ~/.bashrc_secrets ]] && source ~/.bashrc_secrets' >> "$REPO/Alias/ubuntu/.bashrc"
@@ -215,68 +142,80 @@ rm -f ~/.vimrc
 ln -sf "$REPO/Vim/.vimrc" ~/.vimrc
 echo "OK .vimrc 연결 완료"
 
+# Git 설정
+git config --global user.email "x@srzst.com"
+git config --global user.name "x"
+git config --global pull.rebase true 
+echo "OK Git 설정 완료"
+
+# 글로벌 gitignore 설정
+git config --global core.excludesfile ~/.gitignore_global
+grep -qxF '*_secrets*' ~/.gitignore_global 2>/dev/null || echo '*_secrets*' >> ~/.gitignore_global
+echo "OK 글로벌 gitignore 설정 완료"
+
 # 글로벌 gitattributes 설정
 ln -sf "$REPO/.gitattributes" ~/.gitattributes_global
 git config --global core.attributesFile ~/.gitattributes_global
 echo "OK Git 글로벌 attributes 연결 완료"
+# git-credentials 사용을 위한 credential helper 설정
 
-# Neovim 설치
+git config --global credential.helper store
+echo "OK credential.helper 설정 완료"
+
+# SSH config 설정
+if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
+  cat >> ~/.ssh/config << 'EOF'
+Host github.com
+  IdentityFile ~/.ssh/id_ed25519
+  User git
+EOF
+  chmod 600 ~/.ssh/config
+  echo "OK SSH config 설정 완료"
+fi
+
+# SSH config 설정
+if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
+  cat >> ~/.ssh/config << 'EOF'
+Host github.com
+  IdentityFile ~/.ssh/id_ed25519
+  User git
+EOF
+  chmod 600 ~/.ssh/config
+  echo "OK SSH config 설정 완료"
+fi
+
+# GitHub known_hosts 등록
+ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+echo "OK GitHub known_hosts 등록 완료"
+
+# GitHub SSH 연결 테스트
 echo ""
-echo "Neovim 설치 중..."
-curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
-sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
-rm nvim-linux-x86_64.tar.gz
-echo "OK Neovim 설치 완료"
+echo "GitHub SSH 연결 테스트 중..."
+ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" \
+  && echo "OK GitHub SSH 인증 성공" \
+  || echo "WARN GitHub SSH 인증 실패 - BWS 키 또는 GitHub 등록 확인 필요"
 
-# lazygit 설치
-echo "lazygit 설치 중..."
-LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
-curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
-tar -xzf lazygit.tar.gz lazygit
-sudo mv lazygit /usr/local/bin/
-rm lazygit.tar.gz
-echo "OK lazygit 설치 완료"
+# 저장소 clone (SSH - private repo)
+echo ""
+echo "저장소 clone 중..."
+repos=(
+  "git@github.com:srzst/.dotfiles.git"
+  "git@github.com:srzst/.dotfolders.git"
+)
+for repo in "${repos[@]}"; do
+  repo_name=$(basename "$repo" .git)
+  if [ ! -d "$HOME/$repo_name" ]; then
+    git clone "$repo" "$HOME/$repo_name"
+    echo "OK $repo_name clone 완료"
+  else
+    echo "OK $repo_name 이미 존재 (스킵)"
+  fi
+done
 
-# Neovim 연결 (LazyVim)
-rm -rf ~/.config/nvim
-mkdir -p ~/.config
-ln -sf "$REPO/neovim" ~/.config/nvim
-echo "OK Neovim 연결 완료"
 
-rm -rf ~/.config/yazi
-ln -sf "$REPO/yazi" ~/.config/yazi
-echo "OK Yazi 설정 연결 완료"
-
-# LazyVim 초기화
-# echo "LazyVim 초기화 중..."
-# nvim --headless "+Lazy! sync" +qa 2>/tmp/lazyvim_init.log
-# echo "OK LazyVim 초기화 완료 (에러 로그: /tmp/lazyvim_init.log)"
-
-# FIX: Cron 중복 등록 방지 (기존 항목 제거 후 재등록)
-(crontab -l 2>/dev/null | grep -v 'dotfiles.*git pull\|dotfolders.*git pull'; \
-  echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main && cd $HOME/.dotfolders && git pull origin main") | crontab -
+# Cron 등록 (3시간마다 pull)
+(crontab -l 2>/dev/null; echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main && cd $HOME/.dotfolders && git pull origin main") | crontab -
 echo "OK Cron 등록 완료 (3시간마다 pull)"
-
-# pip 패키지 설치
-echo ""
-echo "pip 패키지 설치 중..."
-pip3 install --break-system-packages \
-  boto3 pillow requests mistune \
-  b2sdk \
-  pygments pandas tabulate \
-  oauth2client gspread google-api-python-client \
-  google-auth-oauthlib
-echo "OK pip 패키지 설치 완료"
-
-# FIX: PATH 갱신 후 gita 등록 (ensurepath만으론 현재 세션에 미반영 문제 방지)
-pipx install gita
-pipx ensurepath
-export PATH="$HOME/.local/bin:$PATH"
-# FIX: .dotfiles, .dotfolders 모두 등록
-gita add "$REPO" 2>/dev/null
-gita add "$HOME/.dotfolders" 2>/dev/null
-echo "OK gita 설치 및 .dotfiles/.dotfolders 등록 완료"
 
 # Tailscale 설치 및 인증
 echo ""
@@ -293,8 +232,11 @@ else
 fi
 
 # FIX: .dotfiles remote를 HTTPS로 통일 (GitHub Desktop 호환)
-git -C "$REPO" remote set-url origin "https://github.com/srzst/.dotfiles.git"
-echo "OK remote HTTPS 변경 완료: .dotfiles"
+if [ -d "$REPO" ]; then
+  git -C "$REPO" remote set-url origin "https://github.com/srzst/.dotfiles.git"
+  echo "OK remote HTTPS 변경: .dotfiles"
+fi
+echo "OK remote URL HTTPS로 변경 완료"
 
 # root 환경 동기화 (x 계정과 동일한 환경)
 echo ""
@@ -303,10 +245,8 @@ sudo mkdir -p /root/.config
 sudo ln -sf "$REPO/Alias/ubuntu/.bashrc" /root/.bashrc
 sudo ln -sf "$HOME/.bashrc_secrets" /root/.bashrc_secrets
 sudo ln -sf "$REPO/Vim/.vimrc" /root/.vimrc
-sudo ln -sf "$REPO/neovim" /root/.config/nvim
-sudo ln -sf "$REPO/yazi" /root/.config/yazi
 echo "OK root 환경 동기화 완료"
 
 echo ""
-echo "OK Ubuntu 설치 완료"
+echo "OK Ubuntu 서버 설치 완료"
 echo "INFO 재시작을 권장합니다: sudo reboot"

@@ -174,7 +174,7 @@ function myip { Invoke-RestMethod -Uri "https://ifconfig.me" }
 # function ff   { param($name) Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue }
 function ff {
     param($name)
-    if (!$name) { Write-Host "사용법: ff <검색어>" -ForegroundColor Yellow; return }
+    if (!$name) { Write-Host "how to use: ff <search term>" -ForegroundColor Yellow; return }
     Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue |
         Where-Object { $_.FullName -notmatch '\\(node_modules|\.git|go\\pkg\\mod)\\' }
 }

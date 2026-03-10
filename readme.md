@@ -1,6 +1,6 @@
 # .dotfiles
 
-> version 1.02
+> version 1.04
 
 개인 개발 환경 설정 파일 모음.
 
@@ -26,14 +26,8 @@
 │   ├── lua/
 │   │   ├── config/
 │   │   └── plugins/
-│   ├── .gitignore
-│   ├── .neoconf.json
 │   ├── init.lua
-│   ├── lazy-lock.json
-│   ├── lazyvim.json
-│   ├── LICENSE
-│   ├── README.md
-│   └── stylua.toml
+│   └── ...
 ├── Vim/
 │   └── .vimrc
 ├── vscode/
@@ -49,10 +43,6 @@
 │   │   ├── KeyBindings/
 │   │   │   └── DefaultKeyBinding.dict
 │   │   └── LaunchAgents/
-│   │       ├── com.user.clip_history.plist
-│   │       ├── com.user.url_changer.plist
-│   │       ├── launch_agents_reload.sh
-│   │       └── readmore.md
 │   ├── install_mac.sh
 │   ├── install_ubuntu.sh
 │   ├── install_ubuntu_sv.sh
@@ -60,6 +50,22 @@
 ├── .gitattributes
 └── readme.md
 ```
+
+---
+
+## .dotfolders
+
+프라이빗 자료는 별도 private repo로 분리 관리. `.dotfiles`는 공개 저장소이며 `.dotfolders`는 private repo.
+
+| 경로                    | 저장소 URL                             | 내용                        |
+| ----------------------- | -------------------------------------- | --------------------------- |
+| `~/.dotfolders`         | `https://github.com/srzst/.dotfolders` | 전체 프라이빗 설정 모음     |
+| `~/.dotfolders/common`  |                                        | 운영체제 공통 스크립트/설정 |
+| `~/.dotfolders/linux`   |                                        | Linux 서버 전용             |
+| `~/.dotfolders/mac`     |                                        | macOS 전용                  |
+| `~/.dotfolders/windows` |                                        | Windows 전용                |
+
+설치 스크립트가 자동으로 `~/.dotfolders`에 clone.
 
 ---
 
@@ -78,11 +84,13 @@
 
 Hack Nerd Font 설치 필요 (Ubuntu 서버라면 불필요)
 
-| 환경    | 설치 방법                                                                        |
-| ------- | -------------------------------------------------------------------------------- |
-| Windows | 설치 스크립트가 Scoop nerd-fonts bucket으로 자동 설치 (`Hack-NF`, `FiraCode-NF`) |
-| macOS   | `brew install --cask font-hack-nerd-font`                                        |
-| Ubuntu  | `sudo apt install fonts-hack`                                                    |
+| 환경    | 설치 방법                                                         |
+| ------- | ----------------------------------------------------------------- |
+| Windows | 설치 스크립트가 Scoop nerd-fonts bucket으로 자동 설치 (`Hack-NF`) |
+| macOS   | `brew install --cask font-hack-nerd-font`                         |
+| Ubuntu  | `sudo apt install fonts-hack`                                     |
+
+> **macOS:** install_mac.sh에 폰트 설치 블록 미포함 시 위 명령을 수동 실행하거나 스크립트에 추가 필요.
 
 ---
 
@@ -102,9 +110,19 @@ bws CLI는 설치 스크립트가 자동 설치함. 버전 변경 시 각 스크
 
 ### 1. Clone
 
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/srzst/.dotfiles $HOME\.dotfiles
+```
+
+**macOS / Ubuntu:**
+
 ```bash
 git clone https://github.com/srzst/.dotfiles ~/.dotfiles
 ```
+
+> `.dotfolders`는 설치 스크립트가 자동으로 clone하므로 수동 실행 불필요.
 
 ---
 
@@ -132,24 +150,32 @@ bash ~/.dotfiles/_install/install_ubuntu_sv.sh
 
 **Windows (관리자 권한 PowerShell):**
 
+git 미설치 시 먼저 실행:
+
+```powershell
+winget install -e --id Git.Git --source winget
+# 설치 후 PATH 즉시 반영 (PowerShell 재시작 대신)
+$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + $env:PATH
+```
+
+실행 정책 설정 (최초 1회):
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+설치 스크립트 실행:
+
 ```powershell
 & "$HOME\.dotfiles\_install\install_windows.ps1"
 ```
 
-Windows는 실행 후 머신 타입 선택:
+> **macOS:** Homebrew, Neovim/LazyVim, lazygit, Yazi, LaunchAgents, macOS 시스템 설정 포함
+> **Ubuntu:** 미러 서버(카카오) 변경, 시스템 업데이트, Neovim/LazyVim, lazygit, Yazi, Tailscale 포함
+> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외)
+> **Windows:** Scoop / winget / Chocolatey(비상용) 패키지, Hack Nerd Font / WinSnap 자동 설치, Neovim/LazyVim, `.dotfolders` 자동 clone, 시작 프로그램 및 스케줄 작업 등록(`startup_register.ps1`) 포함
 
-```
-머신 타입을 선택하세요:
-  1) main  - 데스크탑 / 노트북
-  2) vm    - 가상머신
-```
-
-> **macOS:** Homebrew, Neovim/LazyVim, lazygit, Yazi, LaunchAgents, macOS 시스템 설정 포함  
-> **Ubuntu:** 미러 서버(카카오) 변경, 시스템 업데이트, Neovim/LazyVim, lazygit, Yazi, Tailscale 포함  
-> **Ubuntu 서버:** 시스템 업데이트, bws secrets, SSH, Tailscale, root 환경 동기화 포함 (경량, GUI/에디터 도구 제외)  
-> **Windows:** Scoop / Chocolatey 패키지, Nerd Fonts, Neovim/LazyVim, xwin 스케줄 작업 등록 포함
-
-Ubuntu 서버 스크립트는 실행 초반에 BWS 토큰 · 사용자 암호 · root 암호를 한 번에 입력받고, 이후 완전 무인으로 진행됨. Neovim, LazyVim, Yazi, lazygit, pipx 등 GUI/개발 도구는 설치되지 않으며 시간대는 `Asia/Seoul`로 자동 고정.
+Ubuntu 서버 스크립트는 실행 초반에 BWS 토큰 · root 암호를 한 번에 입력받고, 이후 완전 무인으로 진행됨. Neovim, LazyVim, Yazi, lazygit, pipx 등 GUI/개발 도구는 설치되지 않으며 시간대는 `Asia/Seoul`로 자동 고정.
 
 **GitBash 추가 작업** (Windows 설치 완료 후 GitBash에서 실행):
 
@@ -208,45 +234,36 @@ ln -sf "$REPO/Alias/Windows/GitBash/.bashrc" ~/.bashrc
 | root 환경 동기화       | ❌                      | ✅                  |
 | 시간대 설정            | 수동 (dpkg-reconfigure) | 자동 (Asia/Seoul)   |
 | sudo 무인 처리         | ❌                      | ✅ (암호 사전 입력) |
-| clone 저장소           | `ubuntusv`              | `ubuntusv`          |
 
 ---
 
 ## 심볼릭 링크 경로
 
-| 환경                | 원본 경로                                                        | 링크 대상                              |
-| ------------------- | ---------------------------------------------------------------- | -------------------------------------- |
-| macOS               | `~/.zshrc`                                                       | `Alias/macOS/.zshrc`                   |
-| macOS VSCode        | `~/Library/Application Support/Code/User/keybindings.json`       | `vscode/keybindings.json`              |
-| macOS Cursor        | `~/Library/Application Support/Cursor/User/keybindings.json`     | `vscode/keybindings.json`              |
-| macOS Zed           | `~/.config/zed/settings.json`                                    | `zed/settings.json`                    |
-| Ubuntu / 서버       | `~/.bashrc`                                                      | `Alias/ubuntu/.bashrc`                 |
-| Neovim (Mac/Ubuntu) | `~/.config/nvim`                                                 | `neovim/`                              |
-| Yazi (Mac/Ubuntu)   | `~/.config/yazi`                                                 | `yazi/`                                |
-| Vim (Mac/Ubuntu)    | `~/.vimrc`                                                       | `Vim/.vimrc`                           |
-| Windows PowerShell  | `~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1` | `Alias/Windows/PowerShell/profile.ps1` |
-| PowerShell Core     | `~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1`        | `Alias/Windows/PowerShell/profile.ps1` |
-| GitBash             | `~/.bashrc`                                                      | `Alias/Windows/GitBash/.bashrc`        |
-| Neovim (Windows)    | `~/AppData/Local/nvim`                                           | `neovim/`                              |
-| Yazi (Windows)      | `~/AppData/Roaming/yazi/config`                                  | `yazi/`                                |
-| Zed (Windows)       | `~/AppData/Roaming/Zed/settings.json`                            | `zed/settings.json`                    |
+VSCode, Cursor, Zed 계정 동기화로 링크 불필요.
+
+| 환경                | 원본 경로                             | 링크 대상                              |
+| ------------------- | ------------------------------------- | -------------------------------------- |
+| macOS               | `~/.zshrc`                            | `Alias/macOS/.zshrc`                   |
+| Ubuntu / 서버       | `~/.bashrc`                           | `Alias/ubuntu/.bashrc`                 |
+| Neovim (Mac/Ubuntu) | `~/.config/nvim`                      | `neovim/`                              |
+| Yazi (Mac/Ubuntu)   | `~/.config/yazi`                      | `yazi/`                                |
+| Vim (Mac/Ubuntu)    | `~/.vimrc`                            | `Vim/.vimrc`                           |
+| Windows PowerShell  | `$PROFILE` (환경에 따라 자동 결정)    | `Alias/Windows/PowerShell/profile.ps1` |
+| GitBash             | `~/.bashrc`                           | `Alias/Windows/GitBash/.bashrc`        |
+| Neovim (Windows)    | `~/AppData/Local/nvim`                | `neovim/`                              |
+| Yazi (Windows)      | `~/AppData/Roaming/yazi/config`       | `yazi/`                                |
+| Zed (Windows)       | `~/AppData/Roaming/Zed/settings.json` | `zed/settings.json`                    |
 
 ---
 
 ## GitHub Desktop 호환
 
-설치 스크립트 마지막에 모든 저장소의 remote URL을 HTTPS로 자동 변경. 첫 push 시 GitHub 로그인 팝업이 뜨며, 이후 자격 증명 관리자가 자동 처리.
+설치 스크립트 실행 시 `.dotfiles` remote URL을 HTTPS로 자동 변경. 첫 push 시 GitHub 로그인 팝업이 뜨며, 이후 자격 증명 관리자가 자동 처리.
 
-| 저장소      | URL                                      | 환경                 |
-| ----------- | ---------------------------------------- | -------------------- |
-| `.dotfiles` | `https://github.com/srzst/.dotfiles.git` | 전체                 |
-| `.myConfig` | `https://github.com/srzst/.myConfig.git` | macOS / Windows      |
-| `xwin`      | `https://github.com/srzst/xwin.git`      | macOS / Windows      |
-| `script`    | `https://github.com/srzst/script.git`    | macOS / Windows      |
-| `scriptos`  | `https://github.com/srzst/scriptos.git`  | macOS / Windows      |
-| `ubuntusv`  | `https://github.com/srzst/ubuntusv.git`  | Ubuntu / Ubuntu 서버 |
-
-> Ubuntu / Ubuntu 서버는 `.dotfiles`, `ubuntusv` 2개만 clone 및 HTTPS 변경.
+| 저장소        | URL                                        | 환경 |
+| ------------- | ------------------------------------------ | ---- |
+| `.dotfiles`   | `https://github.com/srzst/.dotfiles.git`   | 전체 |
+| `.dotfolders` | `https://github.com/srzst/.dotfolders.git` | 전체 |
 
 ---
 

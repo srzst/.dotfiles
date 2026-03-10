@@ -2,7 +2,7 @@
 REPO="$HOME/.dotfiles"
 
 # ============================================================
-# install_ubuntu_server.sh
+# install_ubuntu_sv.sh
 # Ubuntu 서버 전용 경량 설치 스크립트
 # 사용자: x / 암호: (Bitwarden 참고)
 # root 계정 활성화 동일 암호
@@ -56,10 +56,15 @@ echo ""
 echo "$USER_PASSWORD" | sudo -S -v 2>/dev/null
 echo "OK sudo 인증 완료"
 
-# sudo 세션 keepalive (50초마다 갱신 - 설치 완료까지 유지)
-while true; do echo "$USER_PASSWORD" | sudo -S -v 2>/dev/null; sleep 50; done &
+# FIX: sudo keepalive - 임시 파일 방식으로 ps aux 평문 노출 방지
+SUDO_PASS_FILE=$(mktemp)
+chmod 600 "$SUDO_PASS_FILE"
+echo "$USER_PASSWORD" > "$SUDO_PASS_FILE"
+unset USER_PASSWORD
+
+while true; do sudo -S -v < "$SUDO_PASS_FILE" 2>/dev/null; sleep 50; done &
 SUDO_KEEPALIVE_PID=$!
-trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null" EXIT
+trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null; rm -f $SUDO_PASS_FILE" EXIT
 
 # ============================================================
 # 이하 자동 설치 (입력 없이 진행)
@@ -71,15 +76,19 @@ sudo apt update && sudo apt upgrade -y
 echo "OK 시스템 업데이트 완료"
 
 # 기본 패키지 설치
+# FIX: pipx 추가 (gita 설치에 필요)
 echo "패키지 설치 중..."
 sudo apt install -y \
   curl wget vim git htop net-tools sudo \
-  python3 python3-pip \
+  python3 python3-pip pipx \
   build-essential unzip zip \
   tree tmux
 echo "OK 패키지 설치 완료"
 
-# FIX: bws CLI 이미 설치된 경우 스킵
+# FIX: pipx PATH 즉시 반영 (apt 설치 후 현재 세션에 미반영 방지)
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
+# bws CLI 설치
 BWS_BIN="$HOME/bws/bws"
 if [ ! -f "$BWS_BIN" ]; then
   echo "bws CLI 설치 중..."
@@ -94,8 +103,9 @@ else
 fi
 
 # BWS secrets 복원 함수
+# FIX: print() → sys.stdout.write() 로 변경 (개행 문자 포함 방지)
 fetch_secret() {
-  "$BWS_BIN" secret get "$1" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['value'])"
+  "$BWS_BIN" secret get "$1" 2>/dev/null | python3 -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['value'])"
 }
 
 # BWS secrets 복원
@@ -126,7 +136,64 @@ echo "OK 시간대 설정 완료: Asia/Seoul"
 echo "root:$ROOT_PASSWORD" | sudo chpasswd
 echo "OK root 계정 활성화 완료"
 
-# FIX: secrets 로드 구문을 repo 파일에 먼저 추가한 후 symlink 생성
+# Git 설정
+git config --global user.email "x@srzst.com"
+git config --global user.name "x"
+git config --global pull.rebase true
+echo "OK Git 설정 완료"
+
+# 글로벌 gitignore 설정
+git config --global core.excludesfile ~/.gitignore_global
+grep -qxF '*_secrets*' ~/.gitignore_global 2>/dev/null || echo '*_secrets*' >> ~/.gitignore_global
+echo "OK 글로벌 gitignore 설정 완료"
+
+# git-credentials 사용을 위한 credential helper 설정
+git config --global credential.helper store
+echo "OK credential.helper 설정 완료"
+
+# SSH config 설정
+# FIX: touch로 파일 먼저 생성, 중복 블록 제거
+touch ~/.ssh/config
+chmod 600 ~/.ssh/config
+if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
+  cat >> ~/.ssh/config << 'EOF'
+Host github.com
+  IdentityFile ~/.ssh/id_ed25519
+  User git
+EOF
+  echo "OK SSH config 설정 완료"
+fi
+
+# GitHub known_hosts 등록
+ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+echo "OK GitHub known_hosts 등록 완료"
+
+# GitHub SSH 연결 테스트
+echo ""
+echo "GitHub SSH 연결 테스트 중..."
+ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" \
+  && echo "OK GitHub SSH 인증 성공" \
+  || echo "WARN GitHub SSH 인증 실패 - BWS 키 또는 GitHub 등록 확인 필요"
+
+# 저장소 clone (SSH - private repo)
+echo ""
+echo "저장소 clone 중..."
+repos=(
+  "git@github.com:srzst/.dotfiles.git"
+  "git@github.com:srzst/.dotfolders.git"
+)
+for repo in "${repos[@]}"; do
+  repo_name=$(basename "$repo" .git)
+  if [ ! -d "$HOME/$repo_name" ]; then
+    git clone "$repo" "$HOME/$repo_name"
+    echo "OK $repo_name clone 완료"
+  else
+    git -C "$HOME/$repo_name" pull
+    echo "OK $repo_name 이미 존재 (pull 완료)"
+  fi
+done
+
+# FIX: .bashrc_secrets 로드 구문 추가 (clone 이후 repo 파일 수정)
 if ! grep -q 'bashrc_secrets' "$REPO/Alias/ubuntu/.bashrc" 2>/dev/null; then
   echo '' >> "$REPO/Alias/ubuntu/.bashrc"
   echo '[[ -f ~/.bashrc_secrets ]] && source ~/.bashrc_secrets' >> "$REPO/Alias/ubuntu/.bashrc"
@@ -142,58 +209,15 @@ rm -f ~/.vimrc
 ln -sf "$REPO/Vim/.vimrc" ~/.vimrc
 echo "OK .vimrc 연결 완료"
 
-# Git 설정
-git config --global user.email "x@srzst.com"
-git config --global user.name "x"
-git config --global pull.rebase true 
-echo "OK Git 설정 완료"
+# 글로벌 gitattributes 설정
+ln -sf "$REPO/.gitattributes" ~/.gitattributes_global
+git config --global core.attributesFile ~/.gitattributes_global
+echo "OK Git 글로벌 attributes 연결 완료"
 
-# 글로벌 gitignore 설정
-git config --global core.excludesfile ~/.gitignore_global
-grep -qxF '*_secrets*' ~/.gitignore_global 2>/dev/null || echo '*_secrets*' >> ~/.gitignore_global
-echo "OK 글로벌 gitignore 설정 완료"
-
-# git-credentials 사용을 위한 credential helper 설정
-git config --global credential.helper store
-echo "OK credential.helper 설정 완료"
-
-# SSH config 설정
-if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
-  cat >> ~/.ssh/config << 'EOF'
-Host github.com
-  IdentityFile ~/.ssh/id_ed25519
-  User git
-EOF
-  chmod 600 ~/.ssh/config
-  echo "OK SSH config 설정 완료"
-fi
-
-# FIX: 신규 설치 환경에서 known_hosts 없으면 프롬프트로 블로킹되는 문제 방지
-echo ""
-echo "GitHub SSH 연결 테스트 중..."
-ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 | grep -q "successfully authenticated" \
-  && echo "OK GitHub SSH 인증 성공" \
-  || echo "WARN GitHub SSH 인증 실패 - BWS 키 또는 GitHub 등록 확인 필요"
-
-# 저장소 clone (SSH - private repo)
-echo ""
-echo "저장소 clone 중..."
-repos=(
-  "git@github.com:srzst/ubuntusv.git"
-)
-for repo in "${repos[@]}"; do
-  repo_name=$(basename "$repo" .git)
-  if [ ! -d "$HOME/$repo_name" ]; then
-    git clone "$repo" "$HOME/$repo_name"
-    echo "OK $repo_name clone 완료"
-  else
-    echo "OK $repo_name 이미 존재 (스킵)"
-  fi
-done
-
-# Cron 등록 (6시간마다 pull)
-(crontab -l 2>/dev/null; echo "0 */6 * * * cd $HOME/.dotfiles && git pull origin main") | crontab -
-echo "OK Cron 등록 완료 (6시간마다 pull)"
+# FIX: Cron 중복 등록 방지 (기존 항목 제거 후 재등록)
+(crontab -l 2>/dev/null | grep -v 'dotfiles.*git pull\|dotfolders.*git pull'; \
+  echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main && cd $HOME/.dotfolders && git pull origin main") | crontab -
+echo "OK Cron 등록 완료 (3시간마다 pull)"
 
 # Tailscale 설치 및 인증
 echo ""
@@ -209,12 +233,18 @@ else
   echo "  sudo tailscale up"
 fi
 
+# pipx / gita 설치
+pipx install gita
+pipx ensurepath
+export PATH="$HOME/.local/bin:$PATH"
+# FIX: .dotfiles, .dotfolders 모두 등록
+gita add "$REPO" 2>/dev/null
+gita add "$HOME/.dotfolders" 2>/dev/null
+echo "OK gita 설치 및 .dotfiles/.dotfolders 등록 완료"
+
 # FIX: .dotfiles remote를 HTTPS로 통일 (GitHub Desktop 호환)
-if [ -d "$REPO" ]; then
-  git -C "$REPO" remote set-url origin "https://github.com/srzst/.dotfiles.git"
-  echo "OK remote HTTPS 변경: .dotfiles"
-fi
-echo "OK remote URL HTTPS로 변경 완료"
+git -C "$REPO" remote set-url origin "https://github.com/srzst/.dotfiles.git"
+echo "OK remote HTTPS 변경 완료: .dotfiles"
 
 # root 환경 동기화 (x 계정과 동일한 환경)
 echo ""
