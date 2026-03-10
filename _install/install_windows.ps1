@@ -300,7 +300,7 @@ try {
   scoop bucket add nerd-fonts
   scoop bucket add versions
   scoop update
-  scoop install Hack-NF
+  scoop install Hack-NF Hack-NF-Mono
   scoop install autohotkey1.1
   # .ahk 파일 연결 등록 (Scoop은 자동 등록 안 함)
   $ahkExe = "$HOME\scoop\apps\autohotkey1.1\current\AutoHotkeyU64.exe"
