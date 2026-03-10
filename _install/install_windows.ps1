@@ -441,6 +441,7 @@ $wingetAppsNoScope = @(
     # "Bandisoft.Honeyview",
     # "CopyQ.CopyQ",
     # "Kakao.KakaoTalk",
+    "Raycast.Raycast",
     "Google.Chrome"
 )
 foreach ($app in $wingetAppsNoScope) {
