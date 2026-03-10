@@ -249,9 +249,9 @@ ln -sf "$REPO/yazi" ~/.config/yazi
 echo "OK Yazi 설정 연결 완료"
 
 # LazyVim 초기화
-echo "LazyVim 초기화 중..."
-nvim --headless "+Lazy! sync" +qa 2>/tmp/lazyvim_init.log
-echo "OK LazyVim 초기화 완료 (에러 로그: /tmp/lazyvim_init.log)"
+# echo "LazyVim 초기화 중..."
+# nvim --headless "+Lazy! sync" +qa 2>/tmp/lazyvim_init.log
+# echo "OK LazyVim 초기화 완료 (에러 로그: /tmp/lazyvim_init.log)"
 
 # FIX: Cron 중복 등록 방지 (기존 항목 제거 후 재등록)
 (crontab -l 2>/dev/null | grep -v 'dotfiles.*git pull\|dotfolders.*git pull'; \

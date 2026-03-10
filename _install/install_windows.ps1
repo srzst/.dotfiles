@@ -596,14 +596,14 @@ try {
 # 1차: 플러그인 동기화
 # 2차: mason 패키지 설치 완료 대기 (1차 실행 시 nvim 종료로 설치 중단되는 경우 방지)
 # ============================================================
-try {
-  nvim --headless "+Lazy! sync" +qa 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
-  Start-Sleep -Seconds 3
-  nvim --headless "+Lazy! sync" +qa 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
-  Write-LogOK "LazyVim 초기화 완료"
-} catch {
-  Write-LogErr "LazyVim 초기화 실패: $_  → neovim 설치 및 $REPO\neovim 심볼릭 링크 확인"
-}
+# try {
+#   nvim --headless "+Lazy! sync" +qa 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+#   Start-Sleep -Seconds 3
+#   nvim --headless "+Lazy! sync" +qa 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+#   Write-LogOK "LazyVim 초기화 완료"
+# } catch {
+#   Write-LogErr "LazyVim 초기화 실패: $_  → neovim 설치 및 $REPO\neovim 심볼릭 링크 확인"
+# }
 
 # ============================================================
 # 시작 프로그램 및 스케줄 작업 등록 (startup_register.ps1)
