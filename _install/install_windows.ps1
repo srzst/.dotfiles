@@ -541,17 +541,6 @@ try {
 #   }
 # }
 # ============================================================
-# WinSnap Portable 실행 파일 확인
-# ※ .dotfolders 내 포터블 버전 직접 사용
-# ============================================================
-$winSnapTarget = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\WinSnap_v6.2.2_포터블\WinSnapPortable.exe"
-if (Test-Path $winSnapTarget) {
-  Unblock-File -Path $winSnapTarget
-  Write-LogOK "WinSnap Portable 확인 완료: $winSnapTarget"
-} else {
-  Write-LogWarn "WinSnap Portable 없음 (스킵): $winSnapTarget"
-}
-# ============================================================
 # Snipdo 자동 설치
 # ※ .appinstaller는 버전 업데이트 시 불일치 오류 발생
 #   → .appinstaller에서 실제 msixbundle URL 파싱 후 직접 설치
@@ -578,6 +567,29 @@ if (Get-AppxPackage -Name $snipDoPackage -ErrorAction SilentlyContinue) {
     Remove-Item "$env:TEMP\SnipDo.msixbundle" -ErrorAction SilentlyContinue
   }
 }
+# ============================================================
+# WinSnap 실행 파일 확인 및 레지스트리 복원
+# ※ .dotfolders 내 단일 실행 파일 사용 (설치 불필요)
+# ============================================================
+$winSnapTarget = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\WinSnap_v6.2.2_x64_KO_단일.exe"
+$winSnapReg    = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\winsnap.reg"
+if (Test-Path $winSnapTarget) {
+  Unblock-File -Path $winSnapTarget
+  Write-LogOK "WinSnap 확인 완료: $winSnapTarget"
+} else {
+  Write-LogWarn "WinSnap 없음 (스킵): $winSnapTarget"
+}
+if (Test-Path $winSnapReg) {
+  $regContent = Get-Content $winSnapReg -Raw
+  $regContent = $regContent -replace "C:\\\\Users\\\\x\\\\", "C:\\\\Users\\\\${env:USERNAME}\\\\"
+  $tempReg = "$env:TEMP\winsnap_temp.reg"
+  Set-Content -Path $tempReg -Value $regContent -Encoding Unicode
+  reg import $tempReg
+  Remove-Item $tempReg -ErrorAction SilentlyContinue
+  Write-LogOK "WinSnap 레지스트리 복원 완료"
+} else {
+  Write-LogWarn "WinSnap 레지스트리 파일 없음 (스킵): $winSnapReg"
+}
 
 # ============================================================
 # GitHub Desktop 호환 - remote URL HTTPS로 변경
@@ -588,20 +600,6 @@ try {
 } catch {
   Write-LogErr ".dotfiles remote 변경 실패: $_"
 }
-
-# ============================================================
-# LazyVim 초기화 (Neovim 플러그인 동기화)
-# 1차: 플러그인 동기화
-# 2차: mason 패키지 설치 완료 대기 (1차 실행 시 nvim 종료로 설치 중단되는 경우 방지)
-# ============================================================
-# try {
-#   nvim --headless "+Lazy! sync" +qa 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
-#   Start-Sleep -Seconds 3
-#   nvim --headless "+Lazy! sync" +qa 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
-#   Write-LogOK "LazyVim 초기화 완료"
-# } catch {
-#   Write-LogErr "LazyVim 초기화 실패: $_  → neovim 설치 및 $REPO\neovim 심볼릭 링크 확인"
-# }
 
 # ============================================================
 # 시작 프로그램 및 스케줄 작업 등록 (startup_register.ps1)
@@ -617,24 +615,14 @@ if (Test-Path $startupScript) {
 } else {
   Write-LogWarn "startup_register.ps1 없음 (스킵): $startupScript"
 }
-# ============================================================
-# WinSnap Portable 실행 파일 확인
-# ※ .dotfolders 내 포터블 버전 직접 사용
-# ============================================================
-$winSnapTarget = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\WinSnap_v6.2.2_Portable\WinSnapPortable.exe"
-if (Test-Path $winSnapTarget) {
-  Unblock-File -Path $winSnapTarget
-  Write-LogOK "WinSnap Portable 확인 완료: $winSnapTarget"
-} else {
-  Write-LogWarn "WinSnap Portable 없음 (스킵): $winSnapTarget"
-}
+
 # ============================================================
 # 레지스트리 설정 복원 (현재 winsnap.reg 하나, 향후 추가 기재)
 # ============================================================
 # 레지스트리 설정 복원
-$registryFiles = @(
-    # "winsnap.reg"
-)
+# $registryFiles = @(
+#     "examlple.reg"
+# )
 
 # ============================================================
 # 마우스 커서 설치 (windows_11_cursors_concept_v2)
