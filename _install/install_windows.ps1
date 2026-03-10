@@ -405,13 +405,13 @@ $wingetApps = @(
     # "Bitwarden.Bitwarden",
     # "GitHub.GitHubDesktop",
     # "Microsoft.PowerToys",
-    # "Microsoft.PowerShell",
+    "Microsoft.PowerShell",
     # "Obsidian.Obsidian",
     # "Logseq.Logseq",
     # "appmakes.Typora",
-    # "Iterate.MountainDuck",
+    "Iterate.MountainDuck",
     # "Figma.Figma",
-    # "FastStone.Capture",   
+    "FastStone.Capture",   
     "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {
@@ -433,7 +433,7 @@ foreach ($app in $wingetApps) {
 
 # --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
-    # "ZedIndustries.Zed",
+    "ZedIndustries.Zed",
     # "NAVER.Whale",
     # "Bandisoft.Bandizip",
     # "Bandisoft.Honeyview",
@@ -716,7 +716,6 @@ Write-Host "    ln -sf ""`$REPO/Alias/Windows/GitBash/.bashrc"" ~/.bashrc"
 # ============================================================
 Write-Host ""
 Write-Log "INFO 수동 설치 필요 항목:"
-Write-Host "    UpNote            - https://download.getupnote.com/app/UpNote%20Setup.exe"
 Write-Host "    Jump Desktop      - https://jumpdesktop.com/download.html"
 Write-Host "    PhotoScape X Pro  - MS Store"
 Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"

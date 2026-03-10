@@ -238,9 +238,10 @@ function New-Symlink {
     Write-LogErr "심볼릭 링크 실패: $LinkPath → $TargetPath : $_"
   }
 }
-
-New-Symlink "$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" "$REPO\Alias\Windows\PowerShell\profile.ps1"
-New-Symlink "$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"        "$REPO\Alias\Windows\PowerShell\profile.ps1"
+New-Symlink $PROFILE "$REPO\Alias\Windows\PowerShell\profile.ps1"
+# New-Symlink $PROFILE "$REPO\Alias\Windows\PowerShell\profile.ps1"
+# New-Symlink "$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" "$REPO\Alias\Windows\PowerShell\profile.ps1"
+# New-Symlink "$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"        "$REPO\Alias\Windows\PowerShell\profile.ps1"
 
 $nvimTarget = "$HOME\AppData\Local\nvim"
 if (Test-Path $nvimTarget) { Remove-Item $nvimTarget -Recurse -Force }
@@ -305,6 +306,7 @@ try {
   cmd /c "ftype AutoHotkeyScript=`"$ahkExe`" `"%1`" %*" 2>&1 | Out-Null
   Write-LogOK ".ahk 파일 연결 등록 완료"
   scoop install python
+
   scoop install nodejs
   scoop install neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
   # C compiler (nvim-treesitter 요구사항)
@@ -403,13 +405,13 @@ $wingetApps = @(
     # "Bitwarden.Bitwarden",
     # "GitHub.GitHubDesktop",
     # "Microsoft.PowerToys",
-    # "Microsoft.PowerShell",
+    "Microsoft.PowerShell",
     # "Obsidian.Obsidian",
     # "Logseq.Logseq",
     # "appmakes.Typora",
-    # "Iterate.MountainDuck",
+    "Iterate.MountainDuck",
     # "Figma.Figma",
-    # "FastStone.Capture",   
+    "FastStone.Capture",   
     "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {
@@ -431,7 +433,7 @@ foreach ($app in $wingetApps) {
 
 # --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
-    # "ZedIndustries.Zed",
+    "ZedIndustries.Zed",
     # "NAVER.Whale",
     # "Bandisoft.Bandizip",
     # "Bandisoft.Honeyview",
@@ -504,20 +506,39 @@ try {
 }
 
 # ============================================================
+# UpNote 자동 설치
+# ============================================================
+# $upNoteTarget = "$env:LOCALAPPDATA\Programs\UpNote\UpNote.exe"
+$upNoteTarget = "C:\Program Files\UpNote\UpNote.exe"
+if (Test-Path $upNoteTarget) {
+  Write-LogOK "UpNote 이미 설치됨 (스킵)"
+} else {
+  try {
+    Write-Log "UpNote 다운로드 중..."
+    $upNoteInstaller = "$env:TEMP\UpNoteSetup.exe"
+    Invoke-WebRequest -Uri "https://download.getupnote.com/app/UpNote%20Setup.exe" -OutFile $upNoteInstaller -UseBasicParsing
+    Write-Log "UpNote 설치 중..."
+    Start-Process -FilePath $upNoteInstaller -ArgumentList "/S" -Wait
+    Write-LogOK "UpNote 설치 완료"
+  } catch {
+    Write-LogErr "UpNote 설치 실패: $_  → https://getupnote.com 수동 설치"
+  } finally {
+    Remove-Item $upNoteInstaller -ErrorAction SilentlyContinue
+  }
+}
+
+
+# ============================================================
 # WinSnap 자동 설치
 # ※ silent 옵션 미확인 → 설치 창이 뜰 수 있음
 # ============================================================
-$winSnapUrl    = "https://dl.srzst.com/WinSnap_v6.2.2.zip"
-$winSnapZip    = "$env:TEMP\WinSnap_v6.2.2.zip"
+$winSnapZip    = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2.zip"
 $winSnapExtDir = "$env:TEMP\WinSnap_v6.2.2"
 $winSnapTarget = "C:\Program Files\WinSnap\WinSnap.exe"
-
 if (Test-Path $winSnapTarget) {
   Write-LogOK "WinSnap 이미 설치됨 (스킵)"
 } else {
   try {
-    Write-Log "WinSnap 다운로드 중..."
-    Invoke-WebRequest -Uri $winSnapUrl -OutFile $winSnapZip -UseBasicParsing
     Expand-Archive -Path $winSnapZip -DestinationPath $winSnapExtDir -Force
     # 파일명 한글 인코딩 문제 방지: 실제 exe 파일 탐색
     $winSnapExeFound = Get-ChildItem -Path $winSnapExtDir -Filter "*x64*단일*.exe" -Recurse | Select-Object -First 1
@@ -529,12 +550,30 @@ if (Test-Path $winSnapTarget) {
     Start-Process -FilePath $winSnapExeFound.FullName -Wait
     Write-LogOK "WinSnap 설치 완료"
   } catch {
-    Write-LogErr "WinSnap 설치 실패: $_  → https://dl.srzst.com/WinSnap_v6.2.2.zip 수동 설치"
+    Write-LogErr "WinSnap 설치 실패: $_  → $winSnapZip 파일 확인 필요"
   } finally {
-    Remove-Item $winSnapZip    -ErrorAction SilentlyContinue
     Remove-Item $winSnapExtDir -Recurse -ErrorAction SilentlyContinue
   }
 }
+
+# ============================================================
+# Snipdo 자동 설치
+# ============================================================
+$snipDoInstaller = "$FOLDERS\windows\snipdo\SnipDo.appinstaller"
+$snipDoPackage   = "JohannesTscholl.Pantherbar"
+if (Get-AppxPackage -Name $snipDoPackage -ErrorAction SilentlyContinue) {
+  Write-LogOK "Snipdo 이미 설치됨 (스킵)"
+} else {
+  try {
+    if (-Not (Test-Path $snipDoInstaller)) { throw "SnipDo.appinstaller 파일 없음" }
+    Write-Log "Snipdo 설치 중..."
+    Add-AppxPackage -AppInstallerFile $snipDoInstaller
+    Write-LogOK "Snipdo 설치 완료"
+  } catch {
+    Write-LogErr "Snipdo 설치 실패: $_  → $snipDoInstaller 파일 확인 필요"
+  }
+}
+
 
 # ============================================================
 # GitHub Desktop 호환 - remote URL HTTPS로 변경
@@ -576,6 +615,93 @@ if (Test-Path $startupScript) {
 }
 
 # ============================================================
+# 레지스트리 설정 복원 (현재 winsnap.reg 하나, 향후 추가 기재)
+# ============================================================
+$registryFiles = @(
+    "winsnap.reg"
+)
+foreach ($regFile in $registryFiles) {
+  $regPath = "$HOME\.dotfolders\windows\winsnap\$regFile"
+  if (Test-Path $regPath) {
+    reg import $regPath
+    Write-LogOK "레지스트리 복원 완료: $regFile"
+  } else {
+    Write-LogWarn "레지스트리 파일 없음 (스킵): $regFile"
+  }
+}
+# ============================================================
+# 앱 설정 복원(현재 FastStone Capture 하나, 향후 추가 기재)
+# ============================================================
+# FastStone Capture 설정 복원
+$fscSrc = "$HOME\.dotfolders\windows\FastStone\FSC"
+$fscDst = "$env:APPDATA\FastStone\FSC"
+if (Test-Path $fscSrc) {
+  Remove-Item $fscDst -Recurse -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType SymbolicLink -Path $fscDst -Target $fscSrc | Out-Null
+  Write-LogOK "FastStone 설정 연결 완료"
+} else {
+  Write-LogWarn "FastStone 설정 파일 없음 (스킵): $fscSrc"
+}
+
+# Raycast 설정 복원
+$raycastSrc = "$HOME\.dotfolders\windows\Raycast"
+$raycastDst = "$env:LOCALAPPDATA\Raycast"
+@("settings.db", "settings_v2.db") | ForEach-Object {
+  $src = "$raycastSrc\$_"
+  if (Test-Path $src) {
+    Copy-Item $src "$raycastDst\" -Force
+    Write-LogOK "Raycast 설정 복원 완료: $_"
+  } else {
+    Write-LogWarn "Raycast 설정 파일 없음 (스킵): $src"
+  }
+}
+
+# Mountain Duck 설정 복원
+$mdSrc = "$HOME\.dotfolders\windows\MountainDuck"
+$mdDst = "$env:APPDATA\Cyberduck"
+if (Test-Path $mdSrc) {
+  Copy-Item "$mdSrc\*.mountainducklicense" $mdDst -Force
+  Copy-Item "$mdSrc\Mountain Duck.user.config" $mdDst -Force
+  if (Test-Path "$mdSrc\Bookmarks") {
+    Copy-Item "$mdSrc\Bookmarks" $mdDst -Recurse -Force
+  }
+  Write-LogOK "Mountain Duck 설정 복원 완료"
+} else {
+  Write-LogWarn "Mountain Duck 설정 파일 없음 (스킵): $mdSrc"
+}
+
+# Windows Terminal 설정 연결
+$wtSrc = "$HOME\.dotfolders\windows\terminal\settings.json"
+$wtDst = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+if (Test-Path $wtSrc) {
+  Remove-Item $wtDst -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType SymbolicLink -Path $wtDst -Target $wtSrc | Out-Null
+  Write-LogOK "Windows Terminal 설정 연결 완료"
+} else {
+  Write-LogWarn "Windows Terminal 설정 파일 없음 (스킵): $wtSrc"
+}
+
+# Tabby 설정 연결
+$tabbySrc = "$HOME\.dotfolders\windows\Tabby\config.yaml"
+$tabbyDst = "$env:APPDATA\tabby\config.yaml"
+if (Test-Path $tabbySrc) {
+  Remove-Item $tabbyDst -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType SymbolicLink -Path $tabbyDst -Target $tabbySrc | Out-Null
+  Write-LogOK "Tabby 설정 연결 완료"
+} else {
+  Write-LogWarn "Tabby 설정 파일 없음 (스킵): $tabbySrc"
+}
+
+# Snipdo 설정 복원
+$snipSrc = "$HOME\.dotfolders\windows\snipdo"
+$snipDst = "$env:LOCALAPPDATA\Packages\JohannesTscholl.Pantherbar_3hp4skfxf5x2g\LocalState"
+if (Test-Path $snipSrc) {
+  Copy-Item "$snipSrc\*" $snipDst -Force -Recurse -Exclude "*.appinstaller"
+  Write-LogOK "Snipdo 설정 복원 완료"
+} else {
+  Write-LogWarn "Snipdo 설정 파일 없음 (스킵): $snipSrc"
+}
+# ============================================================
 # GitBash .bashrc 안내
 # ============================================================
 Write-Host ""
@@ -590,10 +716,8 @@ Write-Host "    ln -sf ""`$REPO/Alias/Windows/GitBash/.bashrc"" ~/.bashrc"
 # ============================================================
 Write-Host ""
 Write-Log "INFO 수동 설치 필요 항목:"
-Write-Host "    UpNote            - https://download.getupnote.com/app/UpNote%20Setup.exe"
 Write-Host "    Jump Desktop      - https://jumpdesktop.com/download.html"
 Write-Host "    PhotoScape X Pro  - MS Store"
-Write-Host "    Snipdo            - https://snipdo-app.com"
 Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"
 Write-Host "    Blip              - https://www.blip.com"
 
