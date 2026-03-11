@@ -564,29 +564,69 @@ if (Get-AppxPackage -Name $snipDoPackage -ErrorAction SilentlyContinue) {
     Remove-Item "$env:TEMP\SnipDo.msixbundle" -ErrorAction SilentlyContinue
   }
 }
+# # ============================================================
+# # WinSnap 실행 파일 확인 및 레지스트리 복원
+# # ※ .dotfolders 내 단일 실행 파일 사용 (설치 불필요)
+# # ============================================================
+# $winSnapTarget = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\WinSnap_v6.2.2_x64_KO_단일.exe"
+# $winSnapReg    = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\winsnap.reg"
+# if (Test-Path $winSnapTarget) {
+#   Unblock-File -Path $winSnapTarget
+#   Write-LogOK "WinSnap 확인 완료: $winSnapTarget"
+# } else {
+#   Write-LogWarn "WinSnap 없음 (스킵): $winSnapTarget"
+# }
+# if (Test-Path $winSnapReg) {
+#   $regContent = Get-Content $winSnapReg -Raw
+#   $regContent = $regContent -replace "C:\\\\Users\\\\x\\\\", "C:\\\\Users\\\\${env:USERNAME}\\\\"
+#   $tempReg = "$env:TEMP\winsnap_temp.reg"
+#   Set-Content -Path $tempReg -Value $regContent -Encoding Unicode
+#   reg import $tempReg
+#   Remove-Item $tempReg -ErrorAction SilentlyContinue
+#   Write-LogOK "WinSnap 레지스트리 복원 완료"
+# } else {
+#   Write-LogWarn "WinSnap 레지스트리 파일 없음 (스킵): $winSnapReg"
+# }
 # ============================================================
-# WinSnap 실행 파일 확인 및 레지스트리 복원
-# ※ .dotfolders 내 단일 실행 파일 사용 (설치 불필요)
+# WinSnap 설치 및 레지스트리 복원
+# ※ 셋업 파일을 이용한 정적 설치(/S) 및 설정 복원
 # ============================================================
-$winSnapTarget = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\WinSnap_v6.2.2_x64_KO_단일.exe"
-$winSnapReg    = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\winsnap.reg"
+$winSnapInstaller = "$FOLDERS\windows\winsnap\WinSnap_6.2.2-setup.exe"
+$winSnapTarget    = "C:\Program Files\WinSnap\WinSnap.exe"
+$winSnapReg       = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\winsnap.reg"
+
+# 1. WinSnap 설치
 if (Test-Path $winSnapTarget) {
-  Unblock-File -Path $winSnapTarget
-  Write-LogOK "WinSnap 확인 완료: $winSnapTarget"
+    Write-LogOK "WinSnap 이미 설치됨 (스킵)"
+} elseif (Test-Path $winSnapInstaller) {
+    Write-Log "WinSnap 설치 중 (정적 모드)..."
+    # /S 파라미터로 무음 설치 진행 및 완료 대기
+    Start-Process -FilePath $winSnapInstaller -ArgumentList "/S" -Wait
+    Write-LogOK "WinSnap 설치 완료"
 } else {
-  Write-LogWarn "WinSnap 없음 (스킵): $winSnapTarget"
+    Write-LogWarn "WinSnap 설치 파일 없음 (스킵): $winSnapInstaller"
 }
+
+# 2. 레지스트리 설정 복원 (사용자 경로 치환 후 병합)
 if (Test-Path $winSnapReg) {
-  $regContent = Get-Content $winSnapReg -Raw
-  $regContent = $regContent -replace "C:\\\\Users\\\\x\\\\", "C:\\\\Users\\\\${env:USERNAME}\\\\"
-  $tempReg = "$env:TEMP\winsnap_temp.reg"
-  Set-Content -Path $tempReg -Value $regContent -Encoding Unicode
-  reg import $tempReg
-  Remove-Item $tempReg -ErrorAction SilentlyContinue
-  Write-LogOK "WinSnap 레지스트리 복원 완료"
+    $regContent = Get-Content $winSnapReg -Raw
+    # 레지스트리 내의 사용자명(x)을 현재 환경에 맞게 동적 치환
+    $regContent = $regContent -replace "C:\\\\Users\\\\x\\\\", "C:\\\\Users\\\\${env:USERNAME}\\\\"
+    
+    $tempReg = "$env:TEMP\winsnap_temp.reg"
+    Set-Content -Path $tempReg -Value $regContent -Encoding Unicode
+    
+    # 레지스트리 병합
+    reg import $tempReg
+    Remove-Item $tempReg -ErrorAction SilentlyContinue
+
+    # 수동 설정 리마인드 메시지 추가
+    Write-LogOK "WinSnap 레지스트리 복원 완료 (※ 도움말에서 라이센스 등록, 단축키 미사용 옵션 해제 필요)"
 } else {
-  Write-LogWarn "WinSnap 레지스트리 파일 없음 (스킵): $winSnapReg"
+    Write-LogWarn "WinSnap 레지스트리 파일 없음 (스킵): $winSnapReg"
 }
+
+
 # ============================================================
 # FastStone Capture 설치
 # ※ .dotfolders 내 설치 파일 사용 
