@@ -16,8 +16,7 @@ shopt -s checkwinsize
 # Infisical secrets 함수
 infs() {
     local path="${1:-/}"
-
-    infisical secrets \
+    INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets \
         --projectId=bc893247-af3f-4118-a8ec-bcb429338acb \
         --env=dev \
         --path="$path"
