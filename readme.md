@@ -38,11 +38,6 @@
 ├── zed/
 │   └── settings.json
 ├── _install/
-│   ├── bak/
-│   ├── mac/
-│   │   ├── KeyBindings/
-│   │   │   └── DefaultKeyBinding.dict
-│   │   └── LaunchAgents/
 │   ├── install_mac.sh
 │   ├── install_ubuntu.sh
 │   ├── install_ubuntu_sv.sh

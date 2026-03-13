@@ -8,16 +8,7 @@ $FOLDERS = "$HOME\.dotfolders"
 # ============================================================
 
 # ============================================================
-# 버전 변수 (업데이트 시 여기만 수정)
-# ※ 버전 확인: https://github.com/bitwarden/sdk-sm/releases
-# ※ 2026-03 기준 최신: 2.0.0 (2025-02-05 릴리스, 1년 이상 유지 중)
-# ============================================================
-$BWS_VERSION = "2.0.0"
-$BWS_URL_WIN  = "https://github.com/bitwarden/sdk-sm/releases/download/bws-v${BWS_VERSION}/bws-x86_64-pc-windows-msvc-${BWS_VERSION}.zip"
-
-# ============================================================
 # 로그 설정
-# 로그 위치: $HOME\install_windows_<날짜시간>.log
 # ============================================================
 $LOG_FILE     = "$HOME\install_windows_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 $FAILED_ITEMS = [System.Collections.Generic.List[string]]::new()
@@ -43,18 +34,23 @@ $MACHINE_TYPE = "main"
 Write-LogOK "머신 타입: $MACHINE_TYPE"
 
 # ============================================================
-# BWS 액세스 토큰 입력
+# Infisical 설정
 # ============================================================
-$existingToken = [System.Environment]::GetEnvironmentVariable("BWS_ACCESS_TOKEN", "User")
+$INFISICAL_PROJECT_ID = "bc893247-af3f-4118-a8ec-bcb429338acb"
+$INFISICAL_ENV        = "dev"
+$existingToken = [System.Environment]::GetEnvironmentVariable("INFISICAL_TOKEN", "User")
 if (-Not $existingToken) {
   Write-Host ""
-  $bwsToken = Read-Host "BWS 액세스 토큰을 입력하세요"
-  [System.Environment]::SetEnvironmentVariable("BWS_ACCESS_TOKEN", $bwsToken, "User")
-  $env:BWS_ACCESS_TOKEN = $bwsToken
-  Write-LogOK "BWS_ACCESS_TOKEN 사용자 환경변수 등록 완료"
+  # $tokenUrl = Read-Host "토큰 URL을 입력하세요"
+  # $inputToken = (Invoke-WebRequest -Uri $tokenUrl -UseBasicParsing).Content.Trim()
+  #----
+  $inputToken = Read-Host "Infisical 서비스 토큰을 입력하세요"
+  [System.Environment]::SetEnvironmentVariable("INFISICAL_TOKEN", $inputToken, "User")
+  $env:INFISICAL_TOKEN = $inputToken
+  Write-LogOK "INFISICAL_TOKEN 등록 완료"
 } else {
-  $env:BWS_ACCESS_TOKEN = $existingToken
-  Write-LogOK "BWS_ACCESS_TOKEN 이미 존재 (스킵)"
+  $env:INFISICAL_TOKEN = $existingToken
+  Write-LogOK "INFISICAL_TOKEN 이미 존재 (스킵)"
 }
 
 # Git 설정
@@ -67,26 +63,22 @@ try {
 }
 
 # ============================================================
-# bws CLI 설치
+# Infisical CLI 설치
 # ============================================================
-$BWS_BIN = "$HOME\bws\bws.exe"
-if (-Not (Test-Path $BWS_BIN)) {
-  Write-Log "bws CLI 설치 중... (v$BWS_VERSION)"
+if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
+  Write-Log "Infisical CLI 설치 중..."
   try {
-    New-Item -ItemType Directory -Force -Path "$HOME\bws" | Out-Null
-    Invoke-WebRequest -Uri $BWS_URL_WIN -OutFile "$HOME\bws\bws.zip"
-    Expand-Archive -Path "$HOME\bws\bws.zip" -DestinationPath "$HOME\bws" -Force
-    Remove-Item "$HOME\bws\bws.zip"
-    Write-LogOK "bws CLI 설치 완료"
+    winget install --id Infisical.infisical -e --accept-package-agreements --accept-source-agreements
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+    Write-LogOK "Infisical CLI 설치 완료"
   } catch {
-    Write-LogErr "bws CLI 설치 실패: $_  → 네트워크 또는 URL 확인: $BWS_URL_WIN"
+    Write-LogErr "Infisical CLI 설치 실패: $_  → https://infisical.com/docs/cli/overview 수동 설치"
     exit 1
   }
 } else {
-  Write-LogOK "bws CLI 이미 설치됨 (스킵)"
-  $bwsVer = & $BWS_BIN --version 2>$null
-  if ($bwsVer) { Write-Log "현재 bws 버전: $bwsVer" }
-  else          { Write-LogWarn "bws --version 실행 실패 → 실행 파일 손상 가능성, 수동 확인 권장" }
+  Write-LogOK "Infisical CLI 이미 설치됨 (스킵)"
+  $infisicalVer = infisical --version 2>$null
+  if ($infisicalVer) { Write-Log "현재 Infisical 버전: $infisicalVer" }
 }
 
 # 글로벌 gitignore 설정
@@ -95,46 +87,123 @@ git config --global core.excludesfile $gitignorePath
 $existingContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath } else { @() }
 if ($existingContent -notcontains '*_secrets*') { Add-Content -Path $gitignorePath -Value '*_secrets*' }
 Write-LogOK "글로벌 gitignore 설정 완료"
+# ============================================================
+# Infisical Secrets 복원
+# ============================================================
 
-# ============================================================
-# BWS secrets 복원 함수
-# 실패 시 $null 반환 + 로그 기록 (스크립트 중단 없음)
-# 중요 secrets 실패 시 호출부에서 직접 exit 처리
-# ============================================================
-function Get-BwsSecret($id) {
-  try {
-    $raw = & $BWS_BIN secret get $id 2>&1
-    if (-Not $?) {
-      Write-LogErr "bws secret get 실패 (id: $id) → BWS 토큰 또는 secret ID 확인 필요"
-      return $null
+# ------------------------------------------------------------
+# 환경변수 주입 (단일 값)
+# 추가 시 @{ Key="키이름"; Path="/폴더" } 형식으로 추가
+# ------------------------------------------------------------
+$envSecrets = @(
+    @{ Key = "tailscale_authkey";       Path = "/"       },
+    @{ Key = "gistup_md_manual_srzst";  Path = "/github" },
+    @{ Key = "token_gist_sndzin";       Path = "/github" },
+    @{ Key = "token_gist_srzst";        Path = "/github" }
+)
+
+foreach ($s in $envSecrets) {
+    $val = Get-InfisicalSecret $s.Key $s.Path
+    if ($val) {
+        [System.Environment]::SetEnvironmentVariable($s.Key, $val, "User")
+        Write-LogOK "환경변수 주입 완료: $($s.Key)"
+    } else {
+        Write-LogWarn "환경변수 주입 실패: $($s.Key)"
     }
-    $json = $raw | ConvertFrom-Json
-    return $json.value
-  } catch {
-    Write-LogErr "bws secret get 예외 발생 (id: $id): $_"
-    return $null
-  }
+}
+
+# ------------------------------------------------------------
+# 파일 복원 (멀티라인)
+# 추가 시 @{ Key="키이름"; Path="/폴더"; Dest="저장경로"; Critical=$false } 형식으로 추가
+# Critical=$true 시 실패하면 스크립트 중단
+# ------------------------------------------------------------
+$fileSecrets = @(
+    @{ Key = "github_private_ssh_os_srzst"; Path = "/github";    Dest = "$HOME\.ssh\id_ed25519";          Critical = $true  },
+    @{ Key = "config";                      Path = "/aws";        Dest = "$HOME\.aws\config";              Critical = $false },
+    @{ Key = "credentials";                 Path = "/aws";        Dest = "$HOME\.aws\credentials";         Critical = $false },
+    @{ Key = "backblazeapi";                Path = "/backblaze";  Dest = "$HOME\.backblaze\backblazeapi";  Critical = $false },
+    @{ Key = "git_credentials";             Path = "/github";     Dest = "$HOME\.git-credentials";         Critical = $false }
+)
+
+foreach ($s in $fileSecrets) {
+    New-Item -ItemType Directory -Force -Path (Split-Path $s.Dest) | Out-Null
+    $val = Get-InfisicalSecret $s.Key $s.Path
+    if ($val) {
+        Set-Content -Path $s.Dest -Value $val -NoNewline
+        Write-LogOK "파일 복원 완료: $($s.Key) → $($s.Dest)"
+    } else {
+        if ($s.Critical) {
+            Write-LogErr "파일 복원 실패 (Critical): $($s.Key) → 토큰 및 키 이름 확인 후 재실행"
+            exit 1
+        } else {
+            Write-LogWarn "파일 복원 실패 (스킵): $($s.Key)"
+        }
+    }
+}
+
+# SSH 개인키 권한 설정
+try {
+    icacls "$HOME\.ssh\id_ed25519" /inheritance:r /grant:r "${env:USERNAME}:F" | Out-Null
+    Write-LogOK "SSH 개인키 권한 설정 완료"
+} catch {
+    Write-LogWarn "SSH 키 권한 설정 실패: $_  → 수동 확인 필요"
+}
+
+# .git-credentials credential helper 설정
+if (Test-Path "$HOME\.git-credentials") {
+    git config --system credential.helper store
+    git config --global credential.helper store
+    Write-LogOK "credential.helper store 설정 완료"
+}
+
+# SSH config 설정
+$sshConfigPath = "$HOME\.ssh\config"
+if (-Not (Test-Path $sshConfigPath)) { New-Item -ItemType File -Force -Path $sshConfigPath | Out-Null }
+if (-Not (Select-String -Path $sshConfigPath -Pattern "Host github.com" -Quiet -ErrorAction SilentlyContinue)) {
+    Add-Content -Path $sshConfigPath -Value "`nHost github.com`n  IdentityFile ~/.ssh/id_ed25519`n  User git`n  StrictHostKeyChecking no"
+    Write-LogOK "SSH config 설정 완료"
+} else {
+    Write-LogOK "SSH config 이미 존재 (스킵)"
+}
+
+# GitHub known_hosts 등록
+try {
+    $githubKey = ssh-keyscan -t ed25519 github.com 2>$null
+    if ($githubKey) {
+        Add-Content -Path "$HOME\.ssh\known_hosts" -Value $githubKey
+        Write-LogOK "GitHub known_hosts 등록 완료"
+    } else {
+        Write-LogWarn "GitHub known_hosts 등록 실패 → 네트워크 확인"
+    }
+} catch {
+    Write-LogWarn "GitHub known_hosts 등록 중 오류: $_"
+}
+
+# GitHub SSH 연결 테스트
+$sshTest = ssh -T git@github.com 2>&1
+if ($sshTest -match "successfully authenticated") {
+    Write-LogOK "GitHub SSH 인증 성공"
+} else {
+    Write-LogWarn "GitHub SSH 인증 실패 → Infisical 키 또는 GitHub 등록 확인 필요"
 }
 
 # ============================================================
-# SSH 개인키 복원 (BWS)
+# SSH 개인키 복원
 # ============================================================
-Write-Log "SSH 개인키 복원 중 (BWS: github_private_ssh_os_srzst)..."
+Write-Log "SSH 개인키 복원 중..."
 New-Item -ItemType Directory -Force -Path "$HOME\.ssh" | Out-Null
-$sshKey = Get-BwsSecret "1eb6113c-83a3-4500-8d6c-b401000f48e3"
+$sshKey = Get-InfisicalSecret "github_private_ssh_os_srzst" "/github"
 if (-Not $sshKey) {
-  Write-LogErr "SSH 개인키 복원 실패 → BWS 토큰 및 secret ID 확인 후 재실행"
+  Write-LogErr "SSH 개인키 복원 실패 → 토큰 및 키 이름 확인 후 재실행"
   exit 1
 }
 Set-Content -Path "$HOME\.ssh\id_ed25519" -Value $sshKey -NoNewline
 
-# SSH 키 권한 강화 (상속 제거, 사용자 전용)
-# → 없으면 "bad permissions" / "Permissions ... are too open" 오류 발생
 try {
   icacls "$HOME\.ssh\id_ed25519" /inheritance:r /grant:r "${env:USERNAME}:F" | Out-Null
-  Write-LogOK "SSH 개인키 권한 설정 완료 (사용자 전용)"
+  Write-LogOK "SSH 개인키 권한 설정 완료"
 } catch {
-  Write-LogWarn "SSH 키 권한 설정 실패: $_  → 수동으로 권한 확인 필요"
+  Write-LogWarn "SSH 키 권한 설정 실패: $_  → 수동 확인 필요"
 }
 Write-LogOK "SSH 개인키 복원 완료"
 
@@ -142,7 +211,6 @@ Write-LogOK "SSH 개인키 복원 완료"
 $sshConfigPath = "$HOME\.ssh\config"
 if (-Not (Test-Path $sshConfigPath)) {
   New-Item -ItemType File -Force -Path $sshConfigPath | Out-Null
-  Write-LogOK "SSH config 파일 생성 완료"
 }
 if (-Not (Select-String -Path $sshConfigPath -Pattern "Host github.com" -Quiet -ErrorAction SilentlyContinue)) {
   Add-Content -Path $sshConfigPath -Value "`nHost github.com`n  IdentityFile ~/.ssh/id_ed25519`n  User git`n  StrictHostKeyChecking no"
@@ -151,7 +219,7 @@ if (-Not (Select-String -Path $sshConfigPath -Pattern "Host github.com" -Quiet -
   Write-LogOK "SSH config 이미 존재 (스킵)"
 }
 
-# GitHub known_hosts 미리 등록 (연결 테스트 시 yes/no 프롬프트 방지)
+# GitHub known_hosts 등록
 Write-Log "GitHub known_hosts 등록 중..."
 try {
   $knownHostsPath = "$HOME\.ssh\known_hosts"
@@ -166,51 +234,43 @@ try {
   Write-LogWarn "GitHub known_hosts 등록 중 오류: $_"
 }
 
-# GitHub 연결 테스트
+# GitHub SSH 연결 테스트
 Write-Log "GitHub SSH 연결 테스트 중..."
 $sshTest = ssh -T git@github.com 2>&1
 if ($sshTest -match "successfully authenticated") {
   Write-LogOK "GitHub SSH 인증 성공"
 } else {
-  Write-LogWarn "GitHub SSH 인증 실패 → BWS 키 또는 GitHub 등록 확인 필요 / 이후 clone 단계 실패 가능"
+  Write-LogWarn "GitHub SSH 인증 실패 → Infisical 키 또는 GitHub 등록 확인 필요"
 }
 
 # ============================================================
-# 나머지 BWS secrets 복원
+# 나머지 secrets 복원
 # ============================================================
 New-Item -ItemType Directory -Force -Path "$HOME\.aws" | Out-Null
-$awsConfig      = Get-BwsSecret "95831a03-5ddd-46de-ac7c-b40000d57326"
-$awsCredentials = Get-BwsSecret "96f60cf0-88f7-474d-9336-b40000d54799"
+$awsConfig      = Get-InfisicalSecret "config" "/aws"
+$awsCredentials = Get-InfisicalSecret "credentials" "/aws"
 if ($awsConfig)      { Set-Content -Path "$HOME\.aws\config"      -Value $awsConfig      -NoNewline; Write-LogOK ".aws/config 복원 완료" }
 else                 { Write-LogWarn ".aws/config 복원 실패 (스킵)" }
 if ($awsCredentials) { Set-Content -Path "$HOME\.aws\credentials"  -Value $awsCredentials -NoNewline; Write-LogOK ".aws/credentials 복원 완료" }
 else                 { Write-LogWarn ".aws/credentials 복원 실패 (스킵)" }
 
 New-Item -ItemType Directory -Force -Path "$HOME\.backblaze" | Out-Null
-$bbApi = Get-BwsSecret "fd5852f6-8474-4fac-9888-b40000d8ea90"
+$bbApi = Get-InfisicalSecret "backblazeapi" "/backblaze"
 if ($bbApi) { Set-Content -Path "$HOME\.backblaze\backblazeapi" -Value $bbApi -NoNewline; Write-LogOK ".backblaze 복원 완료" }
 else        { Write-LogWarn ".backblaze 복원 실패 (스킵)" }
 
-$gitCreds = Get-BwsSecret "711d2b06-8271-4470-8e63-b40000d9129f"
+$gitCreds = Get-InfisicalSecret "git_credentials" "/github"
 if ($gitCreds) {
   Set-Content -Path "$HOME\.git-credentials" -Value $gitCreds -NoNewline
-  # GCM 대신 .git-credentials 파일 직접 사용 (clone 시 팝업 방지)
-  # system 레벨 먼저 설정 (GCM이 system 레벨에서 우선순위 높게 동작하므로)
   git config --system credential.helper store
   git config --global credential.helper store
-  Write-LogOK ".git-credentials 복원 완료 (credential.helper store 설정)"
+  Write-LogOK ".git-credentials 복원 완료"
 } else {
   Write-LogWarn ".git-credentials 복원 실패 (스킵)"
 }
 
 # ============================================================
-# .dotfolders clone (SSH 키 복원 후)
-# .dotfiles는 스크립트 실행 전 수동 clone 전제
-# .dotfolders 구조:
-#   common/   - 운영체제 공통
-#   windows/  - Windows 전용
-#   linux/    - Linux 전용
-#   mac/      - macOS 전용
+# .dotfolders clone
 # ============================================================
 Write-Log ".dotfolders clone 중..."
 if (-Not (Test-Path $FOLDERS)) {
@@ -252,28 +312,13 @@ New-Item -ItemType Directory -Force -Path "$env:APPDATA\yazi" | Out-Null
 New-Symlink $yaziTarget "$REPO\yazi"
 
 New-Symlink "$HOME\AppData\Roaming\Zed\settings.json" "$REPO\zed\settings.json"
-
 New-Symlink "$HOME\.gitattributes_global" "$REPO\.gitattributes"
 git config --global core.attributesFile "$HOME\.gitattributes_global"
 Write-LogOK "Git 글로벌 attributes 연결 완료"
 
 # ============================================================
 # Scoop 설치 및 패키지
-# (CLI / 개발 도구 – portable + .dotfiles 연동 최적)
 # ============================================================
-# 설치 목록:
-#   git, gsudo, vim, curl
-#   python, nodejs
-#   neovim, neovide, lazygit, tree-sitter
-#   yazi, ffmpeg, 7zip, jq, poppler
-#   fd, ripgrep, fzf, zoxide, imagemagick
-#   tabby, tectonic, pipx
-#   autohotkey1.1 ← versions bucket, upgrade 시 v2 설치 방지
-#   Hack-NF       ← nerd-fonts bucket
-# ------------------------------------------------------------
-# ※ msys2 제외: scoop 설치 시 mingw64 PATH 충돌 발생 가능
-#   필요 시: scoop install msys2  또는  https://msys2.org
-# ------------------------------------------------------------
 if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
   Write-Log "Scoop 설치 중..."
   try {
@@ -294,39 +339,33 @@ if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
 }
 
 try {
-  scoop install git gsudo vim curl
+  scoop install gsudo vim curl
   scoop bucket add extras
   scoop bucket add nerd-fonts
   scoop bucket add versions
   scoop update
   scoop install Hack-NF Hack-NF-Mono
   scoop install autohotkey1.1
-  # .ahk 파일 연결 등록 (Scoop은 자동 등록 안 함)
   $ahkExe = "$HOME\scoop\apps\autohotkey1.1\current\AutoHotkeyU64.exe"
   cmd /c "assoc .ahk=AutoHotkeyScript" 2>&1 | Out-Null
   cmd /c "ftype AutoHotkeyScript=`"$ahkExe`" `"%1`" %*" 2>&1 | Out-Null
   Write-LogOK ".ahk 파일 연결 등록 완료"
-  scoop install python
-
-  scoop install nodejs
+  scoop install python nodejs
   scoop install neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
-  # C compiler (nvim-treesitter 요구사항)
   winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
   Write-LogOK "Scoop 패키지 설치 완료"
 } catch {
-  Write-LogErr "Scoop 패키지 설치 중 오류: $_  → 개별 패키지 수동 설치 필요 여부 확인"
+  Write-LogErr "Scoop 패키지 설치 중 오류: $_"
 }
 
 # ============================================================
-# Chocolatey 설치 (패키지 없이 - 비상용 보조 패키지 매니저)
-# 평소 Scoop/winget 사용. Chocolatey는 두 곳 모두 미지원 패키지 대비용.
+# Chocolatey 설치
 # ============================================================
 if (-Not (Get-Command choco -ErrorAction SilentlyContinue)) {
   Write-Log "Chocolatey 설치 중..."
   try {
     Set-ExecutionPolicy Bypass -Scope Process -Force
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-    # $result 변수 충돌 방지: 임시 파일로 저장 후 실행
     $chocoScript = "$env:TEMP\install_choco.ps1"
     (New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1') | Set-Content $chocoScript
     & $chocoScript
@@ -340,57 +379,27 @@ if (-Not (Get-Command choco -ErrorAction SilentlyContinue)) {
 }
 
 # ============================================================
-# Python UTF-8 모드 설정 (한글 인코딩 오류 방지)
+# Python UTF-8 모드 설정
 # ============================================================
-Write-Log "Python UTF-8 모드 설정 중..."
 $utf8Status = [System.Environment]::GetEnvironmentVariable("PYTHONUTF8", "User")
 if ($utf8Status -ne "1") {
   [System.Environment]::SetEnvironmentVariable("PYTHONUTF8", "1", "User")
   $env:PYTHONUTF8 = "1"
-  Write-LogOK "PYTHONUTF8 사용자 환경변수 등록 완료"
+  Write-LogOK "PYTHONUTF8 등록 완료"
 } else {
   Write-LogOK "PYTHONUTF8 이미 설정됨 (스킵)"
 }
 
 # ============================================================
 # Winget 패키지 설치
-# (GUI 앱 + 일반 앱)
 # ============================================================
-# 설치 목록:
-#   Microsoft.VisualStudiocode    ← 에디터
-#   ZedIndustries.Zed             ← 에디터
-#   Anysphere.Cursor              ← ai 코딩 에디터 (실패 시 winget search Cursor 재확인)
-#   Google.Chrome                 ← 브라우저
-#   Brave.Brave                   ← 브라우저
-#   Vivaldi.Vivaldi               ← 브라우저
-#   NAVER.Whale                   ← 브라우저 (해외 IP 사용 시 실패 가능)
-#   Bitwarden.Bitwarden           ← 비밀번호 관리자
-#   GitHub.GitHubDesktop          ← git GUI
-#   Microsoft.PowerToys           ← 시스템 유틸리티
-#   Microsoft.PowerShell          ← powerShell Core
-#   Bandisoft.Bandizip            ← 압축 관리자
-#   Bandisoft.Honeyview           ← 이미지 뷰어
-#   Obsidian.Obsidian             ← 문서 관리
-#   Logseq.Logseq                 ← 문서 관리
-#   CopyQ.CopyQ                   ← 클립보드 관리자
-#   LocalSend.LocalSend           ← 로컬 파일 전송
-#   Kakao.KakaoTalk               ← 메신저
-#   Raycast                       ← 런처 (공식 권장: winget install raycast)
-# ------------------------------------------------------------
-# ※ --silent 미사용: 일부 앱 설치 실패를 숨기는 경우 있음
-# ※ cloudinary 1.26.x → urllib3 1.x 전용
-#   cloudinary 2.x 업그레이드 시 urllib3<2.0.0 고정 제거 필요
-# ------------------------------------------------------------
-
-# winget PATH 누락 방지
 $wingetPath = "$env:LOCAlappdata\microsoft\WindowsApps"
 if ($env:PATH -notlike "*windowsapps*") {
-  $env:PATH += ";$wingetpath"
-  Write-Log "winget PATH 강제 주입 완료: $wingetPath"
+  $env:PATH += ";$wingetPath"
+  Write-Log "winget PATH 강제 주입 완료"
 }
 
-# winget 소스 업데이트 및 기존 앱 업그레이드
-Write-Log "winget 소스 업데이트 및 기존 앱 업그레이드 시도..."
+Write-Log "winget 소스 업데이트 및 기존 앱 업그레이드..."
 try {
   winget upgrade --all --accept-package-agreements --accept-source-agreements 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
   Write-LogOK "winget 업그레이드 완료"
@@ -415,24 +424,19 @@ $wingetApps = @(
     "Figma.Figma",
     "LocalSend.LocalSend"
 )
-foreach ($app in $wingetapps) {
+foreach ($app in $wingetApps) {
   try {
     $result = winget install --id $app --exact `
       --accept-package-agreements --accept-source-agreements --scope user 2>&1
-    Add-Content -Path $Log_file -value ($result | Out-String)
-    if ($LASTEXITCODE -eq 0) {
-      Write-LogOK "winget 설치 완료: $app"
-    } elseif ($LASTEXITCode -eq -1978335189) {
-      Write-LogOK "winget 이미 설치됨 (스킵): $app"
-    } else {
-      Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app  → 수동 설치 또는 ID 재확인"
-    }
+    Add-Content -Path $LOG_FILE -Value ($result | Out-String)
+    if ($LASTEXITCODE -eq 0)            { Write-LogOK "winget 설치 완료: $app" }
+    elseif ($LASTEXITCODE -eq -1978335189) { Write-LogOK "winget 이미 설치됨 (스킵): $app" }
+    else                                { Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app" }
   } catch {
     Write-LogErr "winget 예외 발생: $app : $_"
   }
 }
 
-# --scope user 제외 목록 (설치 실패 이력 있는 앱)
 $wingetAppsNoScope = @(
     "ZedIndustries.Zed",
     "NAVER.Whale",
@@ -447,38 +451,32 @@ foreach ($app in $wingetAppsNoScope) {
     $result = winget install -e --id $app `
       --accept-package-agreements --accept-source-agreements 2>&1
     Add-Content -Path $LOG_FILE -Value ($result | Out-String)
-    if ($LASTEXITCODE -eq 0) {
-      Write-LogOK "winget 설치 완료: $app"
-    } elseif ($LASTEXITCODE -eq -1978335189) {
-      Write-LogOK "winget 이미 설치됨 (스킵): $app"
-    } else {
-      Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app  → 수동 설치 또는 ID 재확인"
-    }
+    if ($LASTEXITCODE -eq 0)            { Write-LogOK "winget 설치 완료: $app" }
+    elseif ($LASTEXITCODE -eq -1978335189) { Write-LogOK "winget 이미 설치됨 (스킵): $app" }
+    else                                { Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app" }
   } catch {
     Write-LogErr "winget 예외 발생: $app : $_"
   }
 }
-# Raycast 별도 설치 (MS Store 런처 방식)
-# ※ winget 미지원 — .dotfolders 내 설치 파일 사용
+
+# Raycast 설치
 $raycastExe = "$FOLDERS\windows\Raycast\Raycast Installer.exe"
 if (Get-AppxPackage -Name "*Raycast*" -ErrorAction SilentlyContinue) {
   Write-LogOK "Raycast 이미 설치됨 (스킵)"
 } elseif (Test-Path $raycastExe) {
-  Write-Log "Raycast 설치 중... (MS Store 창이 잠시 뜰 수 있음)"
+  Write-Log "Raycast 설치 중..."
   Start-Process $raycastExe -Wait
   Write-LogOK "Raycast 설치 완료"
 } else {
   Write-LogWarn "Raycast 설치 파일 없음 → $raycastExe 확인 또는 https://raycast.com/windows 수동 설치"
 }
 Write-LogOK "Winget 패키지 설치 완료"
+
 # ============================================================
 # pip / pipx / npm 패키지 설치
 # ============================================================
 Write-Log "pip 패키지 설치 중..."
 try {
-  # Scoop python은 scoop update python으로 업데이트하므로 pip upgrade 불필요
-  # urllib3<2.0.0: cloudinary 1.26.x 호환성 고정
-  # cloudinary 2.x 업그레이드 시 이 고정 제거 필요
   python -m pip install "urllib3<2.0.0" | Tee-Object -Append -FilePath $LOG_FILE
   python -m pip install `
     pyperclip regex requests mistune boto3 clipboard pillow win10toast pywin32 plyer `
@@ -487,22 +485,18 @@ try {
     | Tee-Object -Append -FilePath $LOG_FILE
   Write-LogOK "pip 패키지 설치 완료"
 } catch {
-  Write-LogErr "pip 패키지 설치 실패: $_  → python 설치 여부 및 PATH 확인"
+  Write-LogErr "pip 패키지 설치 실패: $_"
 }
 
-# 기존 사용자 Python Scripts 경로 제거 (PATH 충돌 및 "Unable to create process" 오류 방지)
 $userPath  = [System.Environment]::GetEnvironmentVariable("PATH", "User")
 $cleanPath = ($userPath -split ';' | Where-Object { $_.ToLower() -notlike "*\roaming\python\*" }) -join ';'
 [System.Environment]::SetEnvironmentVariable("PATH", $cleanPath, "User")
 $env:PATH  = ($env:PATH -split ';' | Where-Object { $_.ToLower() -notlike "*\roaming\python\*" }) -join ';'
-
-# Scoop PATH 즉시 반영 (pipx 인식 안됨 방지)
-$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+$env:PATH  = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
 
 try {
   pipx install gita | Tee-Object -Append -FilePath $LOG_FILE
   pipx ensurepath
-  # pipx 기본 경로 직접 추가 (ensurepath 후 환경변수 즉시 미반영 문제 방지)
   $env:PATH = "$HOME\.local\bin;" + $env:PATH
   gita add $REPO 2>$null
   Write-LogOK "pipx/gita 설치 및 .dotfiles 등록 완료"
@@ -514,21 +508,19 @@ try {
   npm install -g electron | Tee-Object -Append -FilePath $LOG_FILE
   Write-LogOK "npm 패키지 설치 완료"
 } catch {
-  Write-LogErr "npm 패키지 설치 실패: $_  → nodejs 설치 여부 확인"
+  Write-LogErr "npm 패키지 설치 실패: $_"
 }
 
 # ============================================================
-# UpNote 자동 설치
+# UpNote 설치
 # ============================================================
 $upNoteTarget = "C:\Program Files\UpNote\UpNote.exe"
 if (Test-Path $upNoteTarget) {
   Write-LogOK "UpNote 이미 설치됨 (스킵)"
 } else {
   try {
-    Write-Log "UpNote 다운로드 중..."
     $upNoteInstaller = "$env:TEMP\UpNoteSetup.exe"
     Invoke-WebRequest -Uri "https://download.getupnote.com/app/UpNote%20Setup.exe" -OutFile $upNoteInstaller -UseBasicParsing
-    Write-Log "UpNote 설치 중..."
     Start-Process -FilePath $upNoteInstaller -ArgumentList "/S" -Wait
     Write-LogOK "UpNote 설치 완료"
   } catch {
@@ -537,10 +529,9 @@ if (Test-Path $upNoteTarget) {
     Remove-Item $upNoteInstaller -ErrorAction SilentlyContinue
   }
 }
+
 # ============================================================
-# Snipdo 자동 설치
-# ※ .appinstaller는 버전 업데이트 시 불일치 오류 발생
-#   → .appinstaller에서 실제 msixbundle URL 파싱 후 직접 설치
+# Snipdo 설치
 # ============================================================
 $snipDoPackage = "JohannesTscholl.Pantherbar"
 if (Get-AppxPackage -Name $snipDoPackage -ErrorAction SilentlyContinue) {
@@ -548,14 +539,11 @@ if (Get-AppxPackage -Name $snipDoPackage -ErrorAction SilentlyContinue) {
 } else {
   try {
     $appInstallerUrl = "https://snipdo-app.com/wp-content/uploads/bins/SnipDo.appinstaller"
-    Write-Log "Snipdo .appinstaller 파싱 중..."
     $xmlContent = Invoke-RestMethod -Uri $appInstallerUrl -UseBasicParsing
     $msixUrl = ([xml]$xmlContent).AppInstaller.MainBundle.Uri
     if (-Not $msixUrl) { throw ".appinstaller에서 msixbundle URL 파싱 실패" }
-    Write-Log "Snipdo msixbundle 다운로드 중: $msixUrl"
     $snipDoBundle = "$env:TEMP\SnipDo.msixbundle"
     Invoke-WebRequest -Uri $msixUrl -OutFile $snipDoBundle -UseBasicParsing
-    Write-Log "Snipdo 설치 중..."
     Add-AppxPackage -Path $snipDoBundle
     Write-LogOK "Snipdo 설치 완료"
   } catch {
@@ -564,86 +552,53 @@ if (Get-AppxPackage -Name $snipDoPackage -ErrorAction SilentlyContinue) {
     Remove-Item "$env:TEMP\SnipDo.msixbundle" -ErrorAction SilentlyContinue
   }
 }
-# # ============================================================
-# # WinSnap 실행 파일 확인 및 레지스트리 복원
-# # ※ .dotfolders 내 단일 실행 파일 사용 (설치 불필요)
-# # ============================================================
-# $winSnapTarget = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\WinSnap_v6.2.2_x64_KO_단일.exe"
-# $winSnapReg    = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\winsnap.reg"
-# if (Test-Path $winSnapTarget) {
-#   Unblock-File -Path $winSnapTarget
-#   Write-LogOK "WinSnap 확인 완료: $winSnapTarget"
-# } else {
-#   Write-LogWarn "WinSnap 없음 (스킵): $winSnapTarget"
-# }
-# if (Test-Path $winSnapReg) {
-#   $regContent = Get-Content $winSnapReg -Raw
-#   $regContent = $regContent -replace "C:\\\\Users\\\\x\\\\", "C:\\\\Users\\\\${env:USERNAME}\\\\"
-#   $tempReg = "$env:TEMP\winsnap_temp.reg"
-#   Set-Content -Path $tempReg -Value $regContent -Encoding Unicode
-#   reg import $tempReg
-#   Remove-Item $tempReg -ErrorAction SilentlyContinue
-#   Write-LogOK "WinSnap 레지스트리 복원 완료"
-# } else {
-#   Write-LogWarn "WinSnap 레지스트리 파일 없음 (스킵): $winSnapReg"
-# }
+
 # ============================================================
 # WinSnap 설치 및 레지스트리 복원
-# ※ 셋업 파일을 이용한 정적 설치(/S) 및 설정 복원
 # ============================================================
-$winSnapInstaller = "$FOLDERS\windows\winsnap\WinSnap_6.2.2-setup.exe"
+$winSnapInstaller = "$FOLDERS\windows\winsnap\v6.2.2_main\6.2.2-setup.exe"
+$winSnapReg       = "$FOLDERS\windows\winsnap\v6.2.2_main\registry_backup.reg"
 $winSnapTarget    = "C:\Program Files\WinSnap\WinSnap.exe"
-$winSnapReg       = "$FOLDERS\windows\winsnap\WinSnap_v6.2.2\winsnap.reg"
+$winSnapStartup   = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 
-# 1. WinSnap 설치
 if (Test-Path $winSnapTarget) {
-    Write-LogOK "WinSnap 이미 설치됨 (스킵)"
+  Write-LogOK "WinSnap 이미 설치됨 (스킵)"
 } elseif (Test-Path $winSnapInstaller) {
-    Write-Log "WinSnap 설치 중 (정적 모드)..."
-    # /S 파라미터로 무음 설치 진행 및 완료 대기
-    Start-Process -FilePath $winSnapInstaller -ArgumentList "/S" -Wait
-    Write-LogOK "WinSnap 설치 완료"
+  Start-Process -FilePath $winSnapInstaller -ArgumentList "/S" -Wait
+  Start-Sleep -Seconds 2
+  Write-LogOK "WinSnap 설치 완료"
 } else {
-    Write-LogWarn "WinSnap 설치 파일 없음 (스킵): $winSnapInstaller"
+  Write-LogWarn "WinSnap 설치 파일 없음 (스킵): $winSnapInstaller"
 }
 
-# 2. 레지스트리 설정 복원 (사용자 경로 치환 후 병합)
 if (Test-Path $winSnapReg) {
-    $regContent = Get-Content $winSnapReg -Raw
-    # 레지스트리 내의 사용자명(x)을 현재 환경에 맞게 동적 치환
-    $regContent = $regContent -replace "C:\\\\Users\\\\x\\\\", "C:\\\\Users\\\\${env:USERNAME}\\\\"
-    
-    $tempReg = "$env:TEMP\winsnap_temp.reg"
-    Set-Content -Path $tempReg -Value $regContent -Encoding Unicode
-    
-    # 레지스트리 병합
-    reg import $tempReg
-    Remove-Item $tempReg -ErrorAction SilentlyContinue
-
-    # 수동 설정 리마인드 메시지 추가
-    Write-LogOK "WinSnap 레지스트리 복원 완료 (※ 도움말에서 라이센스 등록, 단축키 미사용 옵션 해제 필요)"
+  $regContent = Get-Content $winSnapReg -Raw
+  $regContent = $regContent -replace "C:\\\\Users\\\\x\\\\", "C:\\\\Users\\\\${env:USERNAME}\\\\"
+  $tempReg = "$env:TEMP\winsnap_temp.reg"
+  Set-Content -Path $tempReg -Value $regContent -Encoding Unicode
+  reg import $tempReg
+  Remove-Item $tempReg -ErrorAction SilentlyContinue
+  Write-LogOK "WinSnap 레지스트리 복원 완료"
 } else {
-    Write-LogWarn "WinSnap 레지스트리 파일 없음 (스킵): $winSnapReg"
+  Write-LogWarn "WinSnap 레지스트리 파일 없음 (스킵): $winSnapReg"
 }
-
 
 # ============================================================
 # FastStone Capture 설치
-# ※ .dotfolders 내 설치 파일 사용 
 # ============================================================
 $fscInstaller = "$FOLDERS\windows\FastStone\FSCaptureSetup112.exe"
 $fscTarget    = "C:\Program Files (x86)\FastStone Capture\FSCapture.exe"
 if (Test-Path $fscTarget) {
   Write-LogOK "FastStone Capture 이미 설치됨 (스킵)"
 } elseif (Test-Path $fscInstaller) {
-  Write-Log "FastStone Capture 설치 중..."
   Start-Process -FilePath $fscInstaller -ArgumentList "/S" -Wait
   Write-LogOK "FastStone Capture 설치 완료"
 } else {
   Write-LogWarn "FastStone Capture 설치 파일 없음 (스킵): $fscInstaller"
 }
+
 # ============================================================
-# GitHub Desktop 호환 - remote URL HTTPS로 변경
+# GitHub Desktop 호환 - remote HTTPS 변경
 # ============================================================
 try {
   git -C $REPO remote set-url origin "https://github.com/srzst/.dotfiles.git" 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
@@ -653,7 +608,7 @@ try {
 }
 
 # ============================================================
-# 시작 프로그램 및 스케줄 작업 등록 (startup_register.ps1)
+# 시작 프로그램 및 스케줄 작업 등록
 # ============================================================
 $startupScript = "$FOLDERS\windows\ps1\startup_register.ps1"
 if (Test-Path $startupScript) {
@@ -667,16 +622,14 @@ if (Test-Path $startupScript) {
   Write-LogWarn "startup_register.ps1 없음 (스킵): $startupScript"
 }
 
-
 # ============================================================
 # 레지스트리 설정 복원
 # ============================================================
-
-# 이전 버전의 Microsoft IME 사용 (AHK 한영 전환 호환성)
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\InputMethod\Settings\KOR" -Name "EnableCompatibilityMode" -Value 1 -Type DWord
 Write-LogOK "Microsoft IME 이전 버전 호환 모드 설정 완료"
+
 # ============================================================
-# 마우스 커서 설치 (windows_11_cursors_concept_v2)
+# 마우스 커서 설치
 # ============================================================
 $cursorZip    = "$FOLDERS\windows\etc\windows_11_cursors_concept_v2_by_jepricreations_densjkc.zip"
 $cursorExtDir = "$env:TEMP\cursors_install"
@@ -685,9 +638,7 @@ $cursorInf    = "$cursorExtDir\light\cursor\Install.inf"
 if (Test-Path $cursorZip) {
   try {
     Expand-Archive -Path $cursorZip -DestinationPath $cursorExtDir -Force
-    # 128: UI 없이 자동 설치 (132는 마우스 속성 창 팝업 발생)
     rundll32 setupapi.dll,InstallHinfSection DefaultInstall 128 $cursorInf
-    # 변경 사항 즉시 반영
     $CursorReload = Add-Type -MemberDefinition @"
       [DllImport("user32.dll")]
       public static extern bool SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
@@ -707,7 +658,7 @@ if (Test-Path $cursorZip) {
 # 앱 설정 복원
 # ============================================================
 
-# FastStone Capture 설정 복원
+# FastStone Capture
 $fscSrc = "$HOME\.dotfolders\windows\FastStone\FSC"
 $fscDst = "$env:APPDATA\FastStone\FSC"
 if (Test-Path $fscSrc) {
@@ -719,24 +670,18 @@ if (Test-Path $fscSrc) {
   Write-LogWarn "FastStone 설정 파일 없음 (스킵): $fscSrc"
 }
 
-# Raycast 설정 복원
-# ※ Raycast 미설치 시 대상 경로가 없으므로 존재 여부 확인 후 복원
+# Raycast
 $raycastSrc = "$HOME\.dotfolders\windows\Raycast"
 $raycastDst = "$env:LOCALAPPDATA\Raycast"
 @("settings.db", "settings_v2.db") | ForEach-Object {
   $src = "$raycastSrc\$_"
-  if (-Not (Test-Path $src)) {
-    Write-LogWarn "Raycast 설정 파일 없음 (스킵): $src"
-    return
-  }
-  if (-Not (Test-Path $raycastDst)) {
-    Write-LogWarn "Raycast 미설치 — 설정 복원 건너뜀: $_ (설치 후 재실행 필요)"
-    return
-  }
+  if (-Not (Test-Path $src)) { Write-LogWarn "Raycast 설정 파일 없음 (스킵): $src"; return }
+  if (-Not (Test-Path $raycastDst)) { Write-LogWarn "Raycast 미설치 — 설정 복원 건너뜀: $_ (설치 후 재실행 필요)"; return }
   Copy-Item $src $raycastDst -Force
   Write-LogOK "Raycast 설정 복원 완료: $_"
 }
-# Mountain Duck 설정 복원
+
+# Mountain Duck
 $mdSrc = "$HOME\.dotfolders\windows\MountainDuck"
 $mdDst = "$env:APPDATA\Cyberduck"
 if (Test-Path $mdSrc) {
@@ -753,8 +698,7 @@ if (Test-Path $mdSrc) {
   Write-LogWarn "Mountain Duck 설정 파일 없음 (스킵): $mdSrc"
 }
 
-
-# Windows Terminal 설정 연결
+# Windows Terminal
 $wtSrc = "$HOME\.dotfolders\windows\terminal\settings.json"
 $wtDst = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
 if (Test-Path $wtSrc) {
@@ -765,7 +709,7 @@ if (Test-Path $wtSrc) {
   Write-LogWarn "Windows Terminal 설정 파일 없음 (스킵): $wtSrc"
 }
 
-# Tabby 설정 연결
+# Tabby
 $tabbySrc = "$HOME\.dotfolders\windows\Tabby\config.yaml"
 $tabbyDst = "$env:APPDATA\tabby\config.yaml"
 if (Test-Path $tabbySrc) {
@@ -777,8 +721,7 @@ if (Test-Path $tabbySrc) {
   Write-LogWarn "Tabby 설정 파일 없음 (스킵): $tabbySrc"
 }
 
-# Snipdo 설정 복원
-# ※ Snipdo 미설치 시 패키지 경로가 없으므로 존재 여부 확인 후 복원
+# Snipdo
 $snipSrc = "$HOME\.dotfolders\windows\snipdo"
 $snipDst = "$env:LOCALAPPDATA\Packages\JohannesTscholl.Pantherbar_3hp4skfxf5x2g\LocalState"
 if (-Not (Test-Path $snipSrc)) {
@@ -789,6 +732,7 @@ if (-Not (Test-Path $snipSrc)) {
   Copy-Item "$snipSrc\*" $snipDst -Force -Recurse -Exclude "*.appinstaller"
   Write-LogOK "Snipdo 설정 복원 완료"
 }
+
 # ============================================================
 # GitBash .bashrc 안내
 # ============================================================
@@ -800,7 +744,6 @@ Write-Host "    ln -sf ""`$REPO/Alias/Windows/GitBash/.bashrc"" ~/.bashrc"
 
 # ============================================================
 # 수동 설치 필요 항목 안내
-# (패키지 매니저 미지원 / 유료 / MS Store 전용)
 # ============================================================
 Write-Host ""
 Write-Log "INFO 수동 설치 필요 항목:"
@@ -811,7 +754,6 @@ Write-Host "    Blip              - https://www.blip.com"
 
 # ============================================================
 # Raycast 설정 복원 안내
-# ※ 튜토리얼 완료 후 아래 명령 실행
 # ============================================================
 Write-Host ""
 Write-Log "INFO Raycast 튜토리얼 완료 후 아래 명령 실행:"
@@ -820,7 +762,7 @@ Write-Host "    Copy-Item `"$HOME\.dotfolders\windows\Raycast\settings.db`" `"$e
 Write-Host "    Copy-Item `"$HOME\.dotfolders\windows\Raycast\settings_v2.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
 
 # ============================================================
-# 최종 요약: WARN / ERR 발생 항목 출력
+# 최종 요약
 # ============================================================
 Write-Host ""
 Write-Log "========== 설치 중 WARN/ERR 발생 항목 요약 =========="
