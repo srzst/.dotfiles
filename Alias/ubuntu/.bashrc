@@ -13,7 +13,15 @@ HISTSIZE=1000
 HISTFILESIZE=2000
 shopt -s checkwinsize
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+# Infisical secrets 함수
+infs() {
+    local path="${1:-/}"
 
+    infisical secrets \
+        --projectId=bc893247-af3f-4118-a8ec-bcb429338acb \
+        --env=dev \
+        --path="$path"
+}
 # ============================================================
 # 프롬프트 설정
 # ============================================================

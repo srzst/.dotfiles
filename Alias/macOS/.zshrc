@@ -24,7 +24,15 @@ export PATH="$PATH:$HOME/.local/bin"
 alias python="/opt/homebrew/bin/python3"
 alias python3="/opt/homebrew/bin/python3"
 pip() { /opt/homebrew/opt/python@3.12/bin/python3.12 -m pip "$@" --break-system-packages; }
+# Infisical secrets 함수
+infs() {
+    local path="${1:-/}"          # 인자 없으면 / (루트), 있으면 /$1
 
+    infisical secrets \
+        --projectId=bc893247-af3f-4118-a8ec-bcb429338acb \
+        --env=dev \
+        --path="$path"
+}
 # ============================================================
 # 에디터 및 설정 파일 관리
 # ============================================================

@@ -14,6 +14,21 @@ if ((Test-Path $nvimPath) -and ($env:Path -notlike "*$nvimPath*")) {
 $chocoProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path $chocoProfile) { Import-Module $chocoProfile }
 
+# Infisical secrets 함수
+function infs {
+    param(
+        [string]$Path = ""  # 기본: 루트
+    )
+
+    # 경로가 비어있으면 루트(/)로, 아니면 /$Path
+    $finalPath = if ($Path) { "/$Path" } else { "/" }
+
+    infisical secrets `
+        --projectId=bc893247-af3f-4118-a8ec-bcb429338acb `
+        --env=dev `
+        --path=$finalPath
+}
+
 # ============================================================
 # 에디터 및 설정 파일 관리
 # ============================================================
