@@ -43,37 +43,20 @@ $MACHINE_TYPE = "main"
 Write-LogOK "머신 타입: $MACHINE_TYPE"
 
 # ============================================================
-# BWS 액세스 토큰 입력 infisical login
+# BWS 액세스 토큰 입력
 # ============================================================
-# $existingToken = [System.Environment]::GetEnvironmentVariable("BWS_ACCESS_TOKEN", "User")
-# if (-Not $existingToken) {
-#   Write-Host ""
-#   $bwsToken = Read-Host "BWS 액세스 토큰을 입력하세요"
-#   [System.Environment]::SetEnvironmentVariable("BWS_ACCESS_TOKEN", $bwsToken, "User")
-#   $env:BWS_ACCESS_TOKEN = $bwsToken
-#   Write-LogOK "BWS_ACCESS_TOKEN 사용자 환경변수 등록 완료"
-# } else {
-#   $env:BWS_ACCESS_TOKEN = $existingToken
-#   Write-LogOK "BWS_ACCESS_TOKEN 이미 존재 (스킵)"
-# }
-# ============================================================
-# Infisical 토큰 설정 (Universal Auth)
-# ============================================================
-$INFISICAL_PROJECT_ID = "bc893247-af3f-4118-a8ec-bcb429338acb"
-$INFISICAL_ENV        = "dev"
-$INFISICAL_CLIENT_ID  = "여기에_client_id_하드코딩"
-
-$existingSecret = [System.Environment]::GetEnvironmentVariable("INFISICAL_CLIENT_SECRET", "User")
-if (-Not $existingSecret) {
+$existingToken = [System.Environment]::GetEnvironmentVariable("BWS_ACCESS_TOKEN", "User")
+if (-Not $existingToken) {
   Write-Host ""
-  $clientSecret = Read-Host "Infisical Client Secret을 입력하세요"
-  [System.Environment]::SetEnvironmentVariable("INFISICAL_CLIENT_SECRET", $clientSecret, "User")
-  $env:INFISICAL_CLIENT_SECRET = $clientSecret
-  Write-LogOK "Infisical Client Secret 등록 완료"
+  $bwsToken = Read-Host "BWS 액세스 토큰을 입력하세요"
+  [System.Environment]::SetEnvironmentVariable("BWS_ACCESS_TOKEN", $bwsToken, "User")
+  $env:BWS_ACCESS_TOKEN = $bwsToken
+  Write-LogOK "BWS_ACCESS_TOKEN 사용자 환경변수 등록 완료"
 } else {
-  $env:INFISICAL_CLIENT_SECRET = $existingSecret
-  Write-LogOK "Infisical Client Secret 이미 존재 (스킵)"
+  $env:BWS_ACCESS_TOKEN = $existingToken
+  Write-LogOK "BWS_ACCESS_TOKEN 이미 존재 (스킵)"
 }
+
 # Git 설정
 try {
   git config --global user.email "x@srzst.com"
@@ -83,53 +66,27 @@ try {
   Write-LogErr "Git 설정 실패: $_  → git 설치 여부 확인"
 }
 
-# # ============================================================
-# # bws CLI 설치
-# # ============================================================
-# $BWS_BIN = "$HOME\bws\bws.exe"
-# if (-Not (Test-Path $BWS_BIN)) {
-#   Write-Log "bws CLI 설치 중... (v$BWS_VERSION)"
-#   try {
-#     New-Item -ItemType Directory -Force -Path "$HOME\bws" | Out-Null
-#     Invoke-WebRequest -Uri $BWS_URL_WIN -OutFile "$HOME\bws\bws.zip"
-#     Expand-Archive -Path "$HOME\bws\bws.zip" -DestinationPath "$HOME\bws" -Force
-#     Remove-Item "$HOME\bws\bws.zip"
-#     Write-LogOK "bws CLI 설치 완료"
-#   } catch {
-#     Write-LogErr "bws CLI 설치 실패: $_  → 네트워크 또는 URL 확인: $BWS_URL_WIN"
-#     exit 1
-#   }
-# } else {
-#   Write-LogOK "bws CLI 이미 설치됨 (스킵)"
-#   $bwsVer = & $BWS_BIN --version 2>$null
-#   if ($bwsVer) { Write-Log "현재 bws 버전: $bwsVer" }
-#   else          { Write-LogWarn "bws --version 실행 실패 → 실행 파일 손상 가능성, 수동 확인 권장" }
-# }
-
-# # 글로벌 gitignore 설정
-# $gitignorePath = "$HOME\.gitignore_global"
-# git config --global core.excludesfile $gitignorePath
-# $existingContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath } else { @() }
-# if ($existingContent -notcontains '*_secrets*') { Add-Content -Path $gitignorePath -Value '*_secrets*' }
-# Write-LogOK "글로벌 gitignore 설정 완료"
-
 # ============================================================
-# Infisical CLI 설치
+# bws CLI 설치
 # ============================================================
-if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
-  Write-Log "Infisical CLI 설치 중..."
+$BWS_BIN = "$HOME\bws\bws.exe"
+if (-Not (Test-Path $BWS_BIN)) {
+  Write-Log "bws CLI 설치 중... (v$BWS_VERSION)"
   try {
-    winget install --id Infisical.infisical -e --accept-package-agreements --accept-source-agreements
-    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
-    Write-LogOK "Infisical CLI 설치 완료"
+    New-Item -ItemType Directory -Force -Path "$HOME\bws" | Out-Null
+    Invoke-WebRequest -Uri $BWS_URL_WIN -OutFile "$HOME\bws\bws.zip"
+    Expand-Archive -Path "$HOME\bws\bws.zip" -DestinationPath "$HOME\bws" -Force
+    Remove-Item "$HOME\bws\bws.zip"
+    Write-LogOK "bws CLI 설치 완료"
   } catch {
-    Write-LogErr "Infisical CLI 설치 실패: $_  → https://infisical.com/docs/cli/overview 수동 설치"
+    Write-LogErr "bws CLI 설치 실패: $_  → 네트워크 또는 URL 확인: $BWS_URL_WIN"
     exit 1
   }
 } else {
-  Write-LogOK "Infisical CLI 이미 설치됨 (스킵)"
-  $infisicalVer = infisical --version 2>$null
-  if ($infisicalVer) { Write-Log "현재 Infisical 버전: $infisicalVer" }
+  Write-LogOK "bws CLI 이미 설치됨 (스킵)"
+  $bwsVer = & $BWS_BIN --version 2>$null
+  if ($bwsVer) { Write-Log "현재 bws 버전: $bwsVer" }
+  else          { Write-LogWarn "bws --version 실행 실패 → 실행 파일 손상 가능성, 수동 확인 권장" }
 }
 
 # 글로벌 gitignore 설정
@@ -139,38 +96,34 @@ $existingContent = if (Test-Path $gitignorePath) { Get-Content $gitignorePath } 
 if ($existingContent -notcontains '*_secrets*') { Add-Content -Path $gitignorePath -Value '*_secrets*' }
 Write-LogOK "글로벌 gitignore 설정 완료"
 
-# ------------------------------------------------------------
-
 # ============================================================
-# Infisical secrets 복원 함수
+# BWS secrets 복원 함수
 # 실패 시 $null 반환 + 로그 기록 (스크립트 중단 없음)
 # 중요 secrets 실패 시 호출부에서 직접 exit 처리
 # ============================================================
-function Get-InfisicalSecret($keyName) {
+function Get-BwsSecret($id) {
   try {
-    $val = infisical secrets get $keyName `
-      --projectId=$INFISICAL_PROJECT_ID `
-      --env=$INFISICAL_ENV `
-      --plain --silent 2>&1
-    if ($LASTEXITCODE -ne 0) {
-      Write-LogErr "Infisical secret get 실패 (key: $keyName) → Client Credentials 또는 키 이름 확인 필요"
+    $raw = & $BWS_BIN secret get $id 2>&1
+    if (-Not $?) {
+      Write-LogErr "bws secret get 실패 (id: $id) → BWS 토큰 또는 secret ID 확인 필요"
       return $null
     }
-    return $val
+    $json = $raw | ConvertFrom-Json
+    return $json.value
   } catch {
-    Write-LogErr "Infisical secret get 예외 발생 (key: $keyName): $_"
+    Write-LogErr "bws secret get 예외 발생 (id: $id): $_"
     return $null
   }
 }
 
 # ============================================================
-# SSH 개인키 복원 (Infisical)
+# SSH 개인키 복원 (BWS)
 # ============================================================
-Write-Log "SSH 개인키 복원 중 (Infisical: github/github_private_ssh_os_srzst)..."
+Write-Log "SSH 개인키 복원 중 (BWS: github_private_ssh_os_srzst)..."
 New-Item -ItemType Directory -Force -Path "$HOME\.ssh" | Out-Null
-$sshKey = Get-InfisicalSecret "github_private_ssh_os_srzst" --path="/github"
+$sshKey = Get-BwsSecret "1eb6113c-83a3-4500-8d6c-b401000f48e3"
 if (-Not $sshKey) {
-  Write-LogErr "SSH 개인키 복원 실패 → Infisical Client Credentials 및 키 이름 확인 후 재실행"
+  Write-LogErr "SSH 개인키 복원 실패 → BWS 토큰 및 secret ID 확인 후 재실행"
   exit 1
 }
 Set-Content -Path "$HOME\.ssh\id_ed25519" -Value $sshKey -NoNewline
@@ -219,35 +172,36 @@ $sshTest = ssh -T git@github.com 2>&1
 if ($sshTest -match "successfully authenticated") {
   Write-LogOK "GitHub SSH 인증 성공"
 } else {
-  Write-LogWarn "GitHub SSH 인증 실패 → Infisical 키 또는 GitHub 등록 확인 필요 / 이후 clone 단계 실패 가능"
+  Write-LogWarn "GitHub SSH 인증 실패 → BWS 키 또는 GitHub 등록 확인 필요 / 이후 clone 단계 실패 가능"
 }
 
 # ============================================================
-# 나머지 Infisical secrets 복원
+# 나머지 BWS secrets 복원
 # ============================================================
 New-Item -ItemType Directory -Force -Path "$HOME\.aws" | Out-Null
-$awsConfig      = Get-InfisicalSecret "config" --path="/.aws"
-$awsCredentials = Get-InfisicalSecret "credentials" --path="/.aws"
-if ($awsConfig)      { Set-Content -Path "$HOME\.aws\config"       -Value $awsConfig      -NoNewline; Write-LogOK ".aws/config 복원 완료" }
+$awsConfig      = Get-BwsSecret "95831a03-5ddd-46de-ac7c-b40000d57326"
+$awsCredentials = Get-BwsSecret "96f60cf0-88f7-474d-9336-b40000d54799"
+if ($awsConfig)      { Set-Content -Path "$HOME\.aws\config"      -Value $awsConfig      -NoNewline; Write-LogOK ".aws/config 복원 완료" }
 else                 { Write-LogWarn ".aws/config 복원 실패 (스킵)" }
-if ($awsCredentials) { Set-Content -Path "$HOME\.aws\credentials"   -Value $awsCredentials -NoNewline; Write-LogOK ".aws/credentials 복원 완료" }
+if ($awsCredentials) { Set-Content -Path "$HOME\.aws\credentials"  -Value $awsCredentials -NoNewline; Write-LogOK ".aws/credentials 복원 완료" }
 else                 { Write-LogWarn ".aws/credentials 복원 실패 (스킵)" }
 
 New-Item -ItemType Directory -Force -Path "$HOME\.backblaze" | Out-Null
-$bbApi = Get-InfisicalSecret "backblazeapi"
+$bbApi = Get-BwsSecret "fd5852f6-8474-4fac-9888-b40000d8ea90"
 if ($bbApi) { Set-Content -Path "$HOME\.backblaze\backblazeapi" -Value $bbApi -NoNewline; Write-LogOK ".backblaze 복원 완료" }
 else        { Write-LogWarn ".backblaze 복원 실패 (스킵)" }
 
-$gitCreds = Get-InfisicalSecret "git_credentials" --path="/github"
+$gitCreds = Get-BwsSecret "711d2b06-8271-4470-8e63-b40000d9129f"
 if ($gitCreds) {
   Set-Content -Path "$HOME\.git-credentials" -Value $gitCreds -NoNewline
+  # GCM 대신 .git-credentials 파일 직접 사용 (clone 시 팝업 방지)
+  # system 레벨 먼저 설정 (GCM이 system 레벨에서 우선순위 높게 동작하므로)
   git config --system credential.helper store
   git config --global credential.helper store
   Write-LogOK ".git-credentials 복원 완료 (credential.helper store 설정)"
 } else {
   Write-LogWarn ".git-credentials 복원 실패 (스킵)"
 }
-
 
 # ============================================================
 # .dotfolders clone (SSH 키 복원 후)
