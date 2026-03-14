@@ -246,7 +246,7 @@ brew install --cask \
   visual-studio-code cursor zed \
   github hammerspoon karabiner-elements \
   obsidian tabby shottr mountain-duck \
-  popclip keka dockdoor raycast hiddenbar \
+  popclip keka dockdoor raycast hiddenbar alt-tab\
   font-hack-nerd-font font-symbols-only-nerd-font
 echo "OK Homebrew 앱 설치 완료"
 
