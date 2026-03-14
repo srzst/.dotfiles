@@ -12,6 +12,9 @@ FOLDERS="$HOME/.dotfolders"
 INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV="dev"
 
+
+
+
 # Infisical 토큰 입력 (가장 먼저)
 
 if [ ! -f ~/.zshrc_secrets ]; then
@@ -271,7 +274,7 @@ echo "OK gita .dotfiles 등록 완료"
 # LaunchAgents 설정
 echo ""
 echo "LaunchAgents 설정 중..."
-LAUNCH_AGENTS_SRC="$REPO/_install/mac/LaunchAgents"
+LAUNCH_AGENTS_SRC="$FOLDERS/mac/LaunchAgents"
 LAUNCH_AGENTS_DST="$HOME/Library/LaunchAgents"
 mkdir -p "$LAUNCH_AGENTS_DST"
 if [ -d "$LAUNCH_AGENTS_SRC" ]; then
@@ -283,7 +286,7 @@ if [ -d "$LAUNCH_AGENTS_SRC" ]; then
 fi
 
 # KeyBindings 설정
-KEYBINDINGS_SRC="$REPO/_install/mac/KeyBindings/DefaultKeyBinding.dict"
+KEYBINDINGS_SRC="$FOLDERS/mac/KeyBindings/DefaultKeyBinding.dict"
 KEYBINDINGS_DST="$HOME/Library/KeyBindings"
 if [ -f "$KEYBINDINGS_SRC" ]; then
   mkdir -p "$KEYBINDINGS_DST"
@@ -297,7 +300,6 @@ echo "macOS 시스템 설정 중..."
 defaults write com.apple.finder AppleShowAllFiles -bool true
 killall Finder
 echo "OK Finder 숨김 파일 표시 완료"
-sudo nvram StartupMute=%01
 sudo nvram SystemAudioVolume=%80 2>/dev/null
 echo "OK 부팅음 끄기 완료"
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
@@ -314,10 +316,6 @@ defaults write NSGlobalDomain com.apple.keyboard.fnState -bool true
 echo "OK 기능키 활성화 완료"
 defaults write com.apple.menuextra.battery ShowPercent -string "YES"
 echo "OK 배터리 퍼센트 표시 완료"
-defaults write NSGlobalDomain com.apple.swipescrolldirection -bool false
-echo "OK 스크롤 방향 변경 완료"
-defaults write com.apple.universalaccess reduceMotion -bool true
-echo "OK 가상데스크탑 전환 애니메이션 끄기 완료"
 
 # GitHub Desktop 호환 - remote URL HTTPS로 변경
 declare -A https_repos=(

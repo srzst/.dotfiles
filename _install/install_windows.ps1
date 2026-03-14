@@ -98,8 +98,8 @@ Write-LogOK "글로벌 gitignore 설정 완료"
 $envSecrets = @(
     @{ Key = "tailscale_authkey";       Path = "/"       },
     @{ Key = "gistup_md_manual_srzst";  Path = "/github" },
-    @{ Key = "token_gist_sndzin";       Path = "/github" },
-    @{ Key = "token_gist_srzst";        Path = "/github" }
+    @{ Key = "personal_access_tokens_classic_sndzin";       Path = "/github" },
+    @{ Key = "personal_access_tokens_classic_srzst";        Path = "/github" }
 )
 
 foreach ($s in $envSecrets) {
@@ -129,7 +129,7 @@ foreach ($s in $fileSecrets) {
     New-Item -ItemType Directory -Force -Path (Split-Path $s.Dest) | Out-Null
     $val = Get-InfisicalSecret $s.Key $s.Path
     if ($val) {
-        Set-Content -Path $s.Dest -Value $val -NoNewline
+        Set-Content -Path $s.Dest -Value $valnue
         Write-LogOK "파일 복원 완료: $($s.Key) → $($s.Dest)"
     } else {
         if ($s.Critical) {
