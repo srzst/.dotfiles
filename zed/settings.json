@@ -7,16 +7,19 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
-  "session": {
-    "trust_all_worktrees": true
-  },
   "vim_mode": true,
+  "active_pane_modifiers": {
+    "inactive_opacity": 0.3,
+  },
+  "session": {
+    "trust_all_worktrees": true,
+  },
   "ui_font_size": 16,
   "buffer_font_size": 15,
   "theme": {
-    "mode": "system",
+    "mode": "dark",
     "light": "One Light",
-    "dark": "One Dark",
+    "dark": "Catppuccin Espresso (Blur)",
   },
 
   // 폰트
@@ -27,7 +30,7 @@
   "word_wrap": "on",
   "show_whitespaces": "selection",
   "indent_guides": {
-    "enabled": true
+    "enabled": true,
   },
 
   // 저장
@@ -37,13 +40,9 @@
   // 터미널
   "terminal": {
     "font_family": "Hack Nerd Font Mono",
-    "font_size": 15
+    "font_size": 15,
   },
 
   // 파일 탐색기
-  "file_scan_exclusions": [
-    "**/.git",
-    "**/node_modules",
-    "**/.DS_Store"
-  ]
+  "file_scan_exclusions": ["**/.git", "**/node_modules", "**/.DS_Store"],
 }
