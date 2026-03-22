@@ -238,7 +238,7 @@ fi
 
 echo ""
 echo "Homebrew 앱 설치 중..."
-brew install git python python-tk node ffmpeg yt-dlp pngpaste wget terminal-notifier pipx
+brew install git python python-tk node ffmpeg yt-dlp pngpaste wget terminal-notifier pipx rclone
 brew install neovim lazygit
 brew install yazi sevenzip jq poppler fd ripgrep fzf zoxide imagemagick
 brew install --cask \

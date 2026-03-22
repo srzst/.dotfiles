@@ -339,7 +339,7 @@ if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
 }
 
 try {
-  scoop install gsudo vim curl
+  scoop install gsudo vim curl rclone
   scoop bucket add extras
   scoop bucket add nerd-fonts
   scoop bucket add versions

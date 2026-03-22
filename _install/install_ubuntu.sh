@@ -85,7 +85,7 @@ echo "패키지 설치 중..."
 sudo apt install -y \
   curl wget vim git htop net-tools sudo \
   python3 python3-pip pipx \
-  build-essential unzip zip \
+  build-essential unzip zip rclone\
   tree tmux
 echo "OK 패키지 설치 완료"
 
