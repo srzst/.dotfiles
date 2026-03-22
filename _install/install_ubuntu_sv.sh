@@ -121,6 +121,11 @@ fetch_secret "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
 chmod 600 ~/.ssh/id_ed25519
 echo "OK SSH 개인키 복원 완료"
 
+mkdir -p ~/.config/rclone
+fetch_secret "rclone_onedrive_sv" "/rclone" > ~/.config/rclone/rclone.conf
+chmod 600 ~/.config/rclone/rclone.conf
+echo "OK rclone.conf 복원 완료"
+
 # 시간대 설정
 sudo timedatectl set-timezone Asia/Seoul
 echo "OK 시간대 설정 완료: Asia/Seoul"

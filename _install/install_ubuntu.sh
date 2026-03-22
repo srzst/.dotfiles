@@ -174,7 +174,11 @@ echo "OK .backblaze 완료"
 fetch_secret "git_credentials" "/github" > ~/.git-credentials
 chmod 600 ~/.git-credentials
 echo "OK .git-credentials 완료"
-
+# secrets 복원 (기존 코드 아래에 추가)
+mkdir -p ~/.config/rclone
+fetch_secret "rclone_onedrive_sv" "/rclone" > ~/.config/rclone/rclone.conf
+chmod 600 ~/.config/rclone/rclone.conf
+echo "OK rclone.conf 복원 완료"
 # 시간대 설정
 sudo timedatectl set-timezone Asia/Seoul
 echo "OK 시간대 설정 완료: Asia/Seoul"

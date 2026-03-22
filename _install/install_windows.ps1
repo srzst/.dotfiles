@@ -122,7 +122,8 @@ $fileSecrets = @(
     @{ Key = "config";                      Path = "/aws";        Dest = "$HOME\.aws\config";              Critical = $false },
     @{ Key = "credentials";                 Path = "/aws";        Dest = "$HOME\.aws\credentials";         Critical = $false },
     @{ Key = "backblazeapi";                Path = "/backblaze";  Dest = "$HOME\.backblaze\backblazeapi";  Critical = $false },
-    @{ Key = "git_credentials";             Path = "/github";     Dest = "$HOME\.git-credentials";         Critical = $false }
+    @{ Key = "git_credentials";             Path = "/github";     Dest = "$HOME\.git-credentials";         Critical = $false },
+    @{ Key = "rclone_onedrive_sv"; Path = "/rclone"; Dest = "$HOME\.config\rclone\rclone.conf"; Critical = $false }
 )
 
 foreach ($s in $fileSecrets) {
