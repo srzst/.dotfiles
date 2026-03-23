@@ -71,18 +71,30 @@ echo "OK 패키지 설치 완료"
 
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
+# # ============================================================
+# # Infisical CLI 설치
+# # ============================================================
+# sudo apt install -y apt-transport-https
+# if ! command -v infisical &>/dev/null; then
+#   echo "Infisical CLI 설치 중..."
+#   curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo bash
+#   sudo apt install -y infisical
+#   echo "OK Infisical CLI 설치 완료"
+# else
+#   echo "OK Infisical CLI 이미 설치됨 (스킵)"
+# fi
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
 if ! command -v infisical &>/dev/null; then
   echo "Infisical CLI 설치 중..."
-  curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo bash
-  sudo apt install -y infisical
+  curl -fsSL https://dl.cloudsmith.io/public/infisical/infisical-cli/gpg.6B5DC5F45B52DAE3.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/infisical.gpg
+  echo "deb https://dl.cloudsmith.io/public/infisical/infisical-cli/deb/ubuntu noble main" | sudo tee /etc/apt/sources.list.d/infisical.list
+  sudo apt update && sudo apt install -y infisical
   echo "OK Infisical CLI 설치 완료"
 else
   echo "OK Infisical CLI 이미 설치됨 (스킵)"
 fi
-
 # ============================================================
 # fetch_secret 함수
 # ============================================================

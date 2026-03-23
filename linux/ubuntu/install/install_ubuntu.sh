@@ -88,17 +88,17 @@ sudo apt install -y \
   tree tmux
 echo "OK 패키지 설치 완료"
 
+
 # ============================================================
 # PowerShell 설치
 # ============================================================
 echo "PowerShell 설치 중..."
-curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
 curl -sSL https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list \
   | sudo tee /etc/apt/sources.list.d/microsoft-prod.list
 sudo apt update
 sudo apt install -y powershell
 echo "OK PowerShell 설치 완료"
-
 # ============================================================
 # Yazi 의존성 설치
 # ============================================================
