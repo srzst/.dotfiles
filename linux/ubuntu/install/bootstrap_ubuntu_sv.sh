@@ -3,9 +3,9 @@
 # ============================================================
 # CONFIG
 # ============================================================
-MODE=1    # 1: install  2: bootstrap
-MIRROR=2  # 1: 기본(archive.ubuntu.com)  2: 카카오(mirror.kakao.com)
-TARGET=1  # 1: server  2: dev
+MODE=2    # 1: install  2: bootstrap
+MIRROR=1  # 1: 기본(archive.ubuntu.com)  2: 카카오(mirror.kakao.com)
+TARGET=2  # 1: server  2: dev
 
 BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.age"
 INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
@@ -60,6 +60,7 @@ echo "export INFISICAL_TOKEN=\"$INFISICAL_INPUT_TOKEN\"" > ~/.bashrc_secrets
 chmod 600 ~/.bashrc_secrets
 export INFISICAL_TOKEN="$INFISICAL_INPUT_TOKEN"
 echo "OK 토큰 주입 완료"
+
 # ============================================================
 # root 암호 결정
 # ============================================================

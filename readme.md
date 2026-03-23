@@ -34,17 +34,16 @@
 
 ## 설치
 
-OS별 README 참고.
+설치 명령어 확인:
 
-- [Windows](Windows/README.md)
-- [macOS](mac/README.md)
-- [Ubuntu](linux/ubuntu/README.md)
+- **Ubuntu / macOS**: `curl https://srz.st/iii`
+- **Windows (PowerShell)**: `irm https://srz.st/iii`
 
 ---
 
 ## 공통 설정
 
-[Common](Common/) — Neovim, Vim, VSCode, Yazi, Zed 설정 포함. 모든 OS에서 공유.
+[common/](common/) — Neovim, Vim, VSCode, Yazi, Zed 설정 포함. 모든 OS에서 공유.
 
 ---
 

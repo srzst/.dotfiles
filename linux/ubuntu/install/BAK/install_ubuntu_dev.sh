@@ -5,7 +5,6 @@
 # ============================================================
 MODE=1    # 1: install  2: bootstrap
 MIRROR=2  # 1: 기본(archive.ubuntu.com)  2: 카카오(mirror.kakao.com)
-TARGET=1  # 1: server  2: dev
 
 BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.age"
 INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
@@ -19,33 +18,40 @@ REPO="$HOME/.dotfiles"
 sudo apt-get update -qq
 sudo apt-get install -y curl wget git apt-transport-https
 echo "OK 기본 패키지 설치 완료"
+
 # ============================================================
 # 사전 입력
 # ============================================================
 exec < /dev/tty
 read -s -p "서버 암호: " USER_PASSWORD; echo ""
+
 echo "$USER_PASSWORD" | sudo -S -v 2>/dev/null
 echo "OK sudo 인증 완료"
+
 SUDO_PASS_FILE=$(mktemp); chmod 600 "$SUDO_PASS_FILE"
 echo "$USER_PASSWORD" > "$SUDO_PASS_FILE"
 while true; do sudo -S -v < "$SUDO_PASS_FILE" 2>/dev/null; sleep 50; done &
 SUDO_KEEPALIVE_PID=$!
 trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null; rm -f $SUDO_PASS_FILE" EXIT
+
 if [ "$MODE" = "2" ]; then
   # ── bootstrap: age 복호화로 토큰 획득 ──
-  PASS="$USER_PASSWORD"
+  read -s -p "age 패스워드: " PASS; echo ""
+
   if ! command -v age &>/dev/null; then
     AGE_VERSION=$(curl -sL https://api.github.com/repos/FiloSottile/age/releases/latest | grep tag_name | cut -d'"' -f4)
     curl -sL "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-linux-amd64.tar.gz" | \
       sudo tar -xz -C /usr/local/bin --strip-components=1 age/age age/age-keygen
     echo "OK age 설치 완료"
   fi
+
   TMP_ENC=$(mktemp /tmp/t_XXXXXX.age)
   curl -sL "$BOOTSTRAP_TOKEN_URL" -o "$TMP_ENC"
   INFISICAL_INPUT_TOKEN=$(echo "$PASS" | age -d "$TMP_ENC" 2>/dev/null)
   rm -f "$TMP_ENC"
   [ -z "$INFISICAL_INPUT_TOKEN" ] && echo "ERR 토큰 복호화 실패" && exit 1
   echo "OK 토큰 복호화 완료"
+
 else
   # ── install: 토큰 직접 입력 ──
   if [ -f ~/.bashrc_secrets ]; then
@@ -56,10 +62,12 @@ else
     read -p "Infisical 서비스 토큰: " -r INFISICAL_INPUT_TOKEN
   fi
 fi
+
 echo "export INFISICAL_TOKEN=\"$INFISICAL_INPUT_TOKEN\"" > ~/.bashrc_secrets
 chmod 600 ~/.bashrc_secrets
 export INFISICAL_TOKEN="$INFISICAL_INPUT_TOKEN"
 echo "OK 토큰 주입 완료"
+
 # ============================================================
 # root 암호 결정
 # ============================================================
@@ -96,7 +104,7 @@ sudo apt update && sudo apt upgrade -y
 echo "OK 시스템 업데이트 완료"
 
 # ============================================================
-# 공통 패키지 설치
+# 기본 패키지 설치
 # ============================================================
 echo "패키지 설치 중..."
 sudo apt install -y \
@@ -104,32 +112,36 @@ sudo apt install -y \
   python3 python3-pip pipx \
   build-essential unzip zip rclone \
   tree tmux apt-transport-https
-echo "OK 공통 패키지 설치 완료"
+echo "OK 패키지 설치 완료"
 
 # ============================================================
-# dev 전용 패키지 설치
+# PowerShell 설치
 # ============================================================
-if [ "$TARGET" = "2" ]; then
-  echo "PowerShell 설치 중..."
-  curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
-  curl -sSL https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list \
-    | sudo tee /etc/apt/sources.list.d/microsoft-prod.list
-  sudo apt update
-  sudo apt install -y powershell
-  echo "OK PowerShell 설치 완료"
+echo "PowerShell 설치 중..."
+curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
+curl -sSL https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list \
+  | sudo tee /etc/apt/sources.list.d/microsoft-prod.list
+sudo apt update
+sudo apt install -y powershell
+echo "OK PowerShell 설치 완료"
 
-  echo "Yazi 의존성 설치 중..."
-  sudo apt install -y ffmpeg 7zip jq poppler-utils fd-find ripgrep fzf zoxide imagemagick
-  echo "OK Yazi 의존성 설치 완료"
+# ============================================================
+# Yazi 의존성 설치
+# ============================================================
+echo "Yazi 의존성 설치 중..."
+sudo apt install -y ffmpeg 7zip jq poppler-utils fd-find ripgrep fzf zoxide imagemagick
+echo "OK Yazi 의존성 설치 완료"
 
-  echo "Yazi 설치 중..."
-  wget -qO yazi.zip https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip
-  unzip -q yazi.zip -d yazi-temp
-  sudo mv yazi-temp/*/yazi /usr/local/bin/
-  sudo mv yazi-temp/*/ya /usr/local/bin/
-  rm -rf yazi.zip yazi-temp
-  echo "OK Yazi 설치 완료"
-fi
+# ============================================================
+# Yazi 설치
+# ============================================================
+echo "Yazi 설치 중..."
+wget -qO yazi.zip https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip
+unzip -q yazi.zip -d yazi-temp
+sudo mv yazi-temp/*/yazi /usr/local/bin/
+sudo mv yazi-temp/*/ya /usr/local/bin/
+rm -rf yazi.zip yazi-temp
+echo "OK Yazi 설치 완료"
 
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
@@ -169,26 +181,24 @@ fetch_secret_multiline() {
 }
 
 # ============================================================
-# dev 전용 환경변수 주입
+# 환경변수 주입 (단일 값)
 # ============================================================
-if [ "$TARGET" = "2" ]; then
-  declare -A env_secrets=(
-    ["tailscale_authkey"]="/"
-    ["gistup_md_manual_srzst"]="/github"
-    ["token_gist_sndzin"]="/github"
-    ["token_gist_srzst"]="/github"
-  )
-  for key in "${!env_secrets[@]}"; do
-    path="${env_secrets[$key]}"
-    val=$(fetch_secret "$key" "$path")
-    if [ -n "$val" ]; then
-      echo "export $key=\"$val\"" >> ~/.bashrc_secrets
-      echo "OK 환경변수 주입 완료: $key"
-    else
-      echo "WARN 환경변수 주입 실패: $key"
-    fi
-  done
-fi
+declare -A env_secrets=(
+  ["tailscale_authkey"]="/"
+  ["gistup_md_manual_srzst"]="/github"
+  ["token_gist_sndzin"]="/github"
+  ["token_gist_srzst"]="/github"
+)
+for key in "${!env_secrets[@]}"; do
+  path="${env_secrets[$key]}"
+  val=$(fetch_secret "$key" "$path")
+  if [ -n "$val" ]; then
+    echo "export $key=\"$val\"" >> ~/.bashrc_secrets
+    echo "OK 환경변수 주입 완료: $key"
+  else
+    echo "WARN 환경변수 주입 실패: $key"
+  fi
+done
 
 # ============================================================
 # 파일 시크릿 복원
@@ -313,7 +323,7 @@ if ! grep -q 'bashrc_secrets' "$REPO/linux/ubuntu/Alias/.bashrc" 2>/dev/null; th
 fi
 
 # ============================================================
-# 공통 심볼릭 링크
+# 심볼릭 링크
 # ============================================================
 rm -f ~/.bashrc
 ln -sf "$REPO/linux/ubuntu/Alias/.bashrc" ~/.bashrc
@@ -323,19 +333,14 @@ rm -f ~/.vimrc
 ln -sf "$REPO/common/Vim/.vimrc" ~/.vimrc
 echo "OK .vimrc 연결 완료"
 
-# ============================================================
-# dev 전용 심볼릭 링크
-# ============================================================
-if [ "$TARGET" = "2" ]; then
-  rm -rf ~/.config/nvim
-  mkdir -p ~/.config
-  ln -sf "$REPO/common/neovim" ~/.config/nvim
-  echo "OK Neovim 연결 완료"
+rm -rf ~/.config/nvim
+mkdir -p ~/.config
+ln -sf "$REPO/common/neovim" ~/.config/nvim
+echo "OK Neovim 연결 완료"
 
-  rm -rf ~/.config/yazi
-  ln -sf "$REPO/common/yazi" ~/.config/yazi
-  echo "OK Yazi 설정 연결 완료"
-fi
+rm -rf ~/.config/yazi
+ln -sf "$REPO/common/yazi" ~/.config/yazi
+echo "OK Yazi 설정 연결 완료"
 
 # ============================================================
 # 글로벌 gitattributes 설정
@@ -345,25 +350,26 @@ git config --global core.attributesFile ~/.gitattributes_global
 echo "OK Git 글로벌 attributes 연결 완료"
 
 # ============================================================
-# dev 전용 바이너리 설치
+# Neovim 설치
 # ============================================================
-if [ "$TARGET" = "2" ]; then
-  echo ""
-  echo "Neovim 설치 중..."
-  curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-  sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
-  sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
-  rm nvim-linux-x86_64.tar.gz
-  echo "OK Neovim 설치 완료"
+echo ""
+echo "Neovim 설치 중..."
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
+sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
+rm nvim-linux-x86_64.tar.gz
+echo "OK Neovim 설치 완료"
 
-  echo "lazygit 설치 중..."
-  LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
-  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
-  tar -xzf lazygit.tar.gz lazygit
-  sudo mv lazygit /usr/local/bin/
-  rm lazygit.tar.gz
-  echo "OK lazygit 설치 완료"
-fi
+# ============================================================
+# lazygit 설치
+# ============================================================
+echo "lazygit 설치 중..."
+LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
+curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+tar -xzf lazygit.tar.gz lazygit
+sudo mv lazygit /usr/local/bin/
+rm lazygit.tar.gz
+echo "OK lazygit 설치 완료"
 
 # ============================================================
 # Cron 등록
@@ -373,19 +379,17 @@ fi
 echo "OK Cron 등록 완료 (3시간마다 pull)"
 
 # ============================================================
-# dev 전용 pip 패키지 설치
+# pip 패키지 설치
 # ============================================================
-if [ "$TARGET" = "2" ]; then
-  echo ""
-  echo "pip 패키지 설치 중..."
-  pip3 install --break-system-packages \
-    boto3 pillow requests mistune \
-    b2sdk \
-    pygments pandas tabulate \
-    oauth2client gspread google-api-python-client \
-    google-auth-oauthlib
-  echo "OK pip 패키지 설치 완료"
-fi
+echo ""
+echo "pip 패키지 설치 중..."
+pip3 install --break-system-packages \
+  boto3 pillow requests mistune \
+  b2sdk \
+  pygments pandas tabulate \
+  oauth2client gspread google-api-python-client \
+  google-auth-oauthlib
+echo "OK pip 패키지 설치 완료"
 
 # ============================================================
 # pipx / gita 설치
@@ -428,10 +432,8 @@ sudo mkdir -p /root/.config
 sudo ln -sf "$REPO/linux/ubuntu/Alias/.bashrc" /root/.bashrc
 sudo ln -sf "$HOME/.bashrc_secrets" /root/.bashrc_secrets
 sudo ln -sf "$REPO/common/Vim/.vimrc" /root/.vimrc
-if [ "$TARGET" = "2" ]; then
-  sudo ln -sf "$REPO/common/neovim" /root/.config/nvim
-  sudo ln -sf "$REPO/common/yazi" /root/.config/yazi
-fi
+sudo ln -sf "$REPO/common/neovim" /root/.config/nvim
+sudo ln -sf "$REPO/common/yazi" /root/.config/yazi
 echo "OK root 환경 동기화 완료"
 
 echo ""
