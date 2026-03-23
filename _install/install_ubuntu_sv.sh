@@ -76,14 +76,14 @@ sudo apt install -y \
   tree tmux
 echo "OK 패키지 설치 완료"
 
-# PowerShell 7+ 설치
-echo "PowerShell 설치 중..."
-curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-curl -sSL https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list \
-  | sudo tee /etc/apt/sources.list.d/microsoft-prod.list
-sudo apt update
-sudo apt install -y powershell
-echo "OK PowerShell 설치 완료"
+# # PowerShell 7+ 설치
+# echo "PowerShell 설치 중..."
+# curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+# curl -sSL https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list \
+#   | sudo tee /etc/apt/sources.list.d/microsoft-prod.list
+# sudo apt update
+# sudo apt install -y powershell
+# echo "OK PowerShell 설치 완료"
 
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 
