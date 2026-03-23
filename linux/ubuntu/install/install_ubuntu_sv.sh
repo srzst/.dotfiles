@@ -82,6 +82,7 @@ if ! command -v infisical &>/dev/null; then
 else
   echo "OK Infisical CLI 이미 설치됨 (스킵)"
 fi
+
 # ============================================================
 # fetch_secret 함수
 # ============================================================
@@ -95,6 +96,15 @@ fetch_secret() {
     --plain --silent 2>/dev/null | tr -d '\n'
 }
 
+fetch_secret_multiline() {
+  local key="$1"
+  local path="${2:-/}"
+  INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get "$key" \
+    --projectId="$INFISICAL_PROJECT_ID" \
+    --env="$INFISICAL_ENV" \
+    --path="$path" \
+    --plain --silent 2>/dev/null
+}
 # ============================================================
 # Secrets 복원
 # ============================================================
@@ -114,7 +124,8 @@ chmod 600 ~/.git-credentials
 echo "OK .git-credentials 완료"
 
 mkdir -p ~/.ssh
-fetch_secret "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
+# fetch_secret "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
+fetch_secret_multiline "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
 chmod 600 ~/.ssh/id_ed25519
 echo "OK SSH 개인키 복원 완료"
 
