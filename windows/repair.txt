@@ -1,0 +1,12 @@
+$REPO = "$HOME\.dotfiles"
+
+New-Item -ItemType SymbolicLink -Force -Path "$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" -Target "$REPO\Windows\Alias\PowerShell\profile.ps1"
+New-Item -ItemType SymbolicLink -Force -Path "$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1" -Target "$REPO\Windows\Alias\PowerShell\profile.ps1"
+
+Remove-Item "$HOME\AppData\Local\nvim" -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType SymbolicLink -Force -Path "$HOME\AppData\Local\nvim" -Target "$REPO\Common\neovim"
+
+Remove-Item "$env:APPDATA\yazi\config" -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType SymbolicLink -Force -Path "$env:APPDATA\yazi\config" -Target "$REPO\Common\yazi"
+
+New-Item -ItemType SymbolicLink -Force -Path "$HOME\AppData\Roaming\Zed\settings.json" -Target "$REPO\Common\zed\settings.json"

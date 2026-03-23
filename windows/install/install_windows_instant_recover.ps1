@@ -1,10 +1,9 @@
 ﻿# ============================================================
-# cleanup_windows_tmp.ps1
+# install_windows_instant_recover.ps1
 # 임시 세팅 원상복구 스크립트
 # 관리자 PowerShell에서 실행:
-# & ".\cleanup_windows_tmp.ps1"
+# & "$HOME\.dotfiles\windows\install\install_windows_instant_recover.ps1"
 # ============================================================
-
 Write-Host "========== 임시 세팅 정리 시작 =========="
 
 # ============================================================

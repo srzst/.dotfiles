@@ -1,0 +1,18 @@
+REPO="$HOME/.dotfiles"
+
+rm -f ~/.zshrc
+ln -sf "$REPO/mac/Alias/.zshrc" ~/.zshrc
+
+rm -f ~/.vimrc
+ln -sf "$REPO/Common/Vim/.vimrc" ~/.vimrc
+
+rm -rf ~/.config/nvim
+ln -sf "$REPO/Common/neovim" ~/.config/nvim
+
+rm -rf ~/.config/yazi
+ln -sf "$REPO/Common/yazi" ~/.config/yazi
+
+ln -sf "$REPO/Common/vscode/keybindings.json" "$HOME/Library/Application Support/Code/User/keybindings.json"
+ln -sf "$REPO/Common/vscode/keybindings.json" "$HOME/Library/Application Support/Cursor/User/keybindings.json"
+
+ln -sf "$REPO/Common/zed/settings.json" ~/.config/zed/settings.json

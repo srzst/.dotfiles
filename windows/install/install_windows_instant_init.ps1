@@ -1,10 +1,9 @@
 ﻿# ============================================================
-# install_windows_tmp.ps1
+# install_windows_instant_init.ps1
 # 임시 PC 빠른 세팅 스크립트
 # 관리자 PowerShell에서 실행:
-# & "$HOME\.dotfiles\_install\install_windows_tmp.ps1"
+# & "$HOME\.dotfiles\windows\install\install_windows_instant_init.ps1"
 # ============================================================
-
 $INFISICAL_PROJECT_ID = "bc893247-af3f-4118-a8ec-bcb429338acb"
 $INFISICAL_ENV        = "dev"
 

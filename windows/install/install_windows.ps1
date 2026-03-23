@@ -299,20 +299,22 @@ function New-Symlink {
     Write-LogErr "심볼릭 링크 실패: $LinkPath → $TargetPath : $_"
   }
 }
-New-Symlink $PROFILE "$REPO\Alias\Windows\PowerShell\profile.ps1"
-New-Symlink "$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" "$REPO\Alias\Windows\PowerShell\profile.ps1"
-New-Symlink "$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"        "$REPO\Alias\Windows\PowerShell\profile.ps1"
+
+New-Symlink $PROFILE "$REPO\windows\Alias\PowerShell\profile.ps1"
+New-Symlink "$HOME\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" "$REPO\windows\Alias\PowerShell\profile.ps1"
+New-Symlink "$HOME\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"        "$REPO\windows\Alias\PowerShell\profile.ps1"
 
 $nvimTarget = "$HOME\AppData\Local\nvim"
 if (Test-Path $nvimTarget) { Remove-Item $nvimTarget -Recurse -Force }
-New-Symlink $nvimTarget "$REPO\neovim"
+New-Symlink $nvimTarget "$REPO\Common\neovim"
 
 $yaziTarget = "$env:APPDATA\yazi\config"
 if (Test-Path $yaziTarget) { Remove-Item $yaziTarget -Recurse -Force }
 New-Item -ItemType Directory -Force -Path "$env:APPDATA\yazi" | Out-Null
-New-Symlink $yaziTarget "$REPO\yazi"
+New-Symlink $yaziTarget "$REPO\Common\yazi"
 
-New-Symlink "$HOME\AppData\Roaming\Zed\settings.json" "$REPO\zed\settings.json"
+New-Symlink "$HOME\AppData\Roaming\Zed\settings.json" "$REPO\Common\zed\settings.json"
+
 New-Symlink "$HOME\.gitattributes_global" "$REPO\.gitattributes"
 git config --global core.attributesFile "$HOME\.gitattributes_global"
 Write-LogOK "Git 글로벌 attributes 연결 완료"
@@ -741,8 +743,7 @@ Write-Host ""
 Write-Log "INFO GitBash .bashrc 는 GitBash 터미널에서 아래 명령 실행:"
 Write-Host "    REPO=""/c/Users/$env:USERNAME/.dotfiles"""
 Write-Host "    rm ~/.bashrc"
-Write-Host "    ln -sf ""`$REPO/Alias/Windows/GitBash/.bashrc"" ~/.bashrc"
-
+Write-Host "    ln -sf ""`$REPO/windows/Alias/GitBash/.bashrc"" ~/.bashrc"
 # ============================================================
 # 수동 설치 필요 항목 안내
 # ============================================================
