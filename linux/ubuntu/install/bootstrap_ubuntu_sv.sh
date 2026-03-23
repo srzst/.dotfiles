@@ -12,12 +12,12 @@ INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV="dev"
 REPO="$HOME/.dotfiles"
 # ============================================================
-
 # ============================================================
 # 사전 입력
 # ============================================================
 exec < /dev/tty
 read -s -p "서버 암호: " USER_PASSWORD; echo ""
+SAVED_PASSWORD="$USER_PASSWORD"
 
 echo "$USER_PASSWORD" | sudo -S -v 2>/dev/null
 echo "OK sudo 인증 완료"
@@ -34,13 +34,12 @@ trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null; rm -f $SUDO_PASS_FILE" EXIT
 sudo apt-get update -qq
 sudo apt-get install -y curl wget git apt-transport-https
 echo "OK 기본 패키지 설치 완료"
-
 # ============================================================
 # 토큰 획득
 # ============================================================
 if [ "$MODE" = "2" ]; then
   # ── bootstrap: age 복호화로 토큰 획득 ──
-  PASS="$USER_PASSWORD"
+  PASS="$SAVED_PASSWORD"
 
   if ! command -v age &>/dev/null; then
     AGE_VERSION=$(curl -sL https://api.github.com/repos/FiloSottile/age/releases/latest | grep tag_name | cut -d'"' -f4)
@@ -71,7 +70,6 @@ echo "export INFISICAL_TOKEN=\"$INFISICAL_INPUT_TOKEN\"" > ~/.bashrc_secrets
 chmod 600 ~/.bashrc_secrets
 export INFISICAL_TOKEN="$INFISICAL_INPUT_TOKEN"
 echo "OK 토큰 주입 완료"
-
 # ============================================================
 # 미러 서버 적용
 # ============================================================
@@ -140,7 +138,6 @@ if ! command -v infisical &>/dev/null; then
 else
   echo "OK Infisical CLI 이미 설치됨 (스킵)"
 fi
-
 # ============================================================
 # root 암호 결정
 # ============================================================
@@ -151,12 +148,11 @@ if [ "$MODE" = "2" ]; then
   [ -z "$ROOT_PASSWORD" ] && echo "ERR main_password 복원 실패" && exit 1
   echo "OK root 암호 로드 완료"
 else
-  ROOT_PASSWORD="$USER_PASSWORD"
+  ROOT_PASSWORD="$SAVED_PASSWORD"
 fi
 
-unset USER_PASSWORD
+unset USER_PASSWORD SAVED_PASSWORD
 echo "OK 입력값 확인 완료 - 설치를 시작합니다."
-
 # ============================================================
 # fetch_secret 함수
 # ============================================================
