@@ -9,6 +9,14 @@ https://srz.st/qiP
 경량 서버 전용. GUI/개발 도구 미포함.
 
 ```bash
+sudo apt update && sudo apt install -y git
+```
+
+```bash
+git clone https://github.com/srzst/.dotfiles.git ~/.dotfiles
+```
+
+```bash
 bash ~/.dotfiles/linux/ubuntu/install/install_ubuntu_sv.sh
 ```
 
