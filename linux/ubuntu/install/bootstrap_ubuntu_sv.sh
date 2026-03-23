@@ -5,7 +5,7 @@
 # ============================================================
 MODE=2    # 1: install  2: bootstrap
 MIRROR=1  # 1: 기본(archive.ubuntu.com)  2: 카카오(mirror.kakao.com)
-TARGET=2  # 1: server  2: dev
+TARGET=1  # 1: server  2: dev
 
 BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.age"
 INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
@@ -14,38 +14,48 @@ REPO="$HOME/.dotfiles"
 # ============================================================
 
 # ============================================================
-# 기본 패키지 설치 (선행)
-# ============================================================
-sudo apt-get update -qq
-sudo apt-get install -y curl wget git apt-transport-https
-echo "OK 기본 패키지 설치 완료"
-# ============================================================
 # 사전 입력
 # ============================================================
 exec < /dev/tty
 read -s -p "서버 암호: " USER_PASSWORD; echo ""
+
 echo "$USER_PASSWORD" | sudo -S -v 2>/dev/null
 echo "OK sudo 인증 완료"
+
 SUDO_PASS_FILE=$(mktemp); chmod 600 "$SUDO_PASS_FILE"
 echo "$USER_PASSWORD" > "$SUDO_PASS_FILE"
 while true; do sudo -S -v < "$SUDO_PASS_FILE" 2>/dev/null; sleep 50; done &
 SUDO_KEEPALIVE_PID=$!
 trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null; rm -f $SUDO_PASS_FILE" EXIT
+
+# ============================================================
+# 기본 패키지 설치 (선행)
+# ============================================================
+sudo apt-get update -qq
+sudo apt-get install -y curl wget git apt-transport-https
+echo "OK 기본 패키지 설치 완료"
+
+# ============================================================
+# 토큰 획득
+# ============================================================
 if [ "$MODE" = "2" ]; then
   # ── bootstrap: age 복호화로 토큰 획득 ──
   PASS="$USER_PASSWORD"
+
   if ! command -v age &>/dev/null; then
     AGE_VERSION=$(curl -sL https://api.github.com/repos/FiloSottile/age/releases/latest | grep tag_name | cut -d'"' -f4)
     curl -sL "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-linux-amd64.tar.gz" | \
       sudo tar -xz -C /usr/local/bin --strip-components=1 age/age age/age-keygen
     echo "OK age 설치 완료"
   fi
+
   TMP_ENC=$(mktemp /tmp/t_XXXXXX.age)
   curl -sL "$BOOTSTRAP_TOKEN_URL" -o "$TMP_ENC"
   INFISICAL_INPUT_TOKEN=$(echo "$PASS" | age -d "$TMP_ENC" 2>/dev/null)
   rm -f "$TMP_ENC"
   [ -z "$INFISICAL_INPUT_TOKEN" ] && echo "ERR 토큰 복호화 실패" && exit 1
   echo "OK 토큰 복호화 완료"
+
 else
   # ── install: 토큰 직접 입력 ──
   if [ -f ~/.bashrc_secrets ]; then
@@ -56,26 +66,11 @@ else
     read -p "Infisical 서비스 토큰: " -r INFISICAL_INPUT_TOKEN
   fi
 fi
+
 echo "export INFISICAL_TOKEN=\"$INFISICAL_INPUT_TOKEN\"" > ~/.bashrc_secrets
 chmod 600 ~/.bashrc_secrets
 export INFISICAL_TOKEN="$INFISICAL_INPUT_TOKEN"
 echo "OK 토큰 주입 완료"
-
-# ============================================================
-# root 암호 결정
-# ============================================================
-if [ "$MODE" = "2" ]; then
-  ROOT_PASSWORD=$(INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get "main_password" \
-    --projectId="$INFISICAL_PROJECT_ID" --env="$INFISICAL_ENV" --path="/" \
-    --plain --silent 2>/dev/null | tr -d '\n')
-  [ -z "$ROOT_PASSWORD" ] && echo "ERR main_password 복원 실패" && exit 1
-  echo "OK root 암호 로드 완료"
-else
-  ROOT_PASSWORD="$USER_PASSWORD"
-fi
-
-unset USER_PASSWORD
-echo "OK 입력값 확인 완료 - 설치를 시작합니다."
 
 # ============================================================
 # 미러 서버 적용
@@ -145,6 +140,22 @@ if ! command -v infisical &>/dev/null; then
 else
   echo "OK Infisical CLI 이미 설치됨 (스킵)"
 fi
+
+# ============================================================
+# root 암호 결정
+# ============================================================
+if [ "$MODE" = "2" ]; then
+  ROOT_PASSWORD=$(INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get "main_password" \
+    --projectId="$INFISICAL_PROJECT_ID" --env="$INFISICAL_ENV" --path="/" \
+    --plain --silent 2>/dev/null | tr -d '\n')
+  [ -z "$ROOT_PASSWORD" ] && echo "ERR main_password 복원 실패" && exit 1
+  echo "OK root 암호 로드 완료"
+else
+  ROOT_PASSWORD="$USER_PASSWORD"
+fi
+
+unset USER_PASSWORD
+echo "OK 입력값 확인 완료 - 설치를 시작합니다."
 
 # ============================================================
 # fetch_secret 함수

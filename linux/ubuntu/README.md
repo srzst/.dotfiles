@@ -2,6 +2,15 @@
 
 https://srz.st/qiP
 
+```powershell
+$file = "$HOME\.dotfiles\linux\ubuntu\install\bootstrap_ubuntu_sv.sh"
+$content = [System.IO.File]::ReadAllText($file) -replace "`r`n", "`n"
+[System.IO.File]::WriteAllText($file, $content, [System.Text.UTF8Encoding]::new($false))
+
+$dest = "$HOME\Desktop\u.sh"
+[System.IO.File]::WriteAllText($dest, $content, [System.Text.UTF8Encoding]::new($false))
+```
+
 설치 명령어 확인:
 
 - **Ubuntu / macOS**:
