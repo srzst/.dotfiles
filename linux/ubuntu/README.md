@@ -1,5 +1,7 @@
 # Ubuntu 설치 가이드
 
+https://srz.st/qiP
+
 ---
 
 ## 서버 (install_ubuntu_sv.sh)
