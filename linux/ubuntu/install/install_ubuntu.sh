@@ -85,7 +85,7 @@ sudo apt install -y \
   curl wget vim git htop net-tools sudo \
   python3 python3-pip pipx \
   build-essential unzip zip rclone \
-  tree tmux
+  tree tmux apt-transport-https
 echo "OK 패키지 설치 완료"
 
 
@@ -124,13 +124,12 @@ export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 # ============================================================
 if ! command -v infisical &>/dev/null; then
   echo "Infisical CLI 설치 중..."
-  curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo bash
-  sudo apt install -y infisical
+  curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
+  sudo apt-get install -y infisical
   echo "OK Infisical CLI 설치 완료"
 else
   echo "OK Infisical CLI 이미 설치됨 (스킵)"
 fi
-
 # ============================================================
 # fetch_secret 함수
 # ============================================================
