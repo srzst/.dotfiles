@@ -118,7 +118,6 @@ rm -rf yazi.zip yazi-temp
 echo "OK Yazi 설치 완료"
 
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
@@ -130,6 +129,7 @@ if ! command -v infisical &>/dev/null; then
 else
   echo "OK Infisical CLI 이미 설치됨 (스킵)"
 fi
+
 # ============================================================
 # fetch_secret 함수
 # ============================================================
@@ -141,6 +141,16 @@ fetch_secret() {
     --env="$INFISICAL_ENV" \
     --path="$path" \
     --plain --silent 2>/dev/null | tr -d '\n'
+}
+
+fetch_secret_multiline() {
+  local key="$1"
+  local path="${2:-/}"
+  INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get "$key" \
+    --projectId="$INFISICAL_PROJECT_ID" \
+    --env="$INFISICAL_ENV" \
+    --path="$path" \
+    --plain --silent 2>/dev/null
 }
 
 # ============================================================
@@ -162,13 +172,12 @@ for key in "${!env_secrets[@]}"; do
     echo "WARN 환경변수 주입 실패: $key"
   fi
 done
-
 # ============================================================
 # 파일 시크릿 복원
 # ============================================================
 mkdir -p ~/.ssh ~/.aws ~/.backblaze
 
-fetch_secret "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
+fetch_secret_multiline "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
 if [ ! -s ~/.ssh/id_ed25519 ]; then
   echo "ERROR SSH 개인키 복원 실패 → 토큰 및 키 이름 확인 후 재실행"
   exit 1
@@ -176,21 +185,21 @@ fi
 chmod 600 ~/.ssh/id_ed25519
 echo "OK SSH 개인키 복원 완료"
 
-fetch_secret "config" "/aws" > ~/.aws/config
-fetch_secret "credentials" "/aws" > ~/.aws/credentials
+fetch_secret_multiline "config" "/aws" > ~/.aws/config
+fetch_secret_multiline "credentials" "/aws" > ~/.aws/credentials
 chmod 600 ~/.aws/credentials
 echo "OK .aws 완료"
 
-fetch_secret "backblazeapi" "/backblaze" > ~/.backblaze/backblazeapi
+fetch_secret_multiline "backblazeapi" "/backblaze" > ~/.backblaze/backblazeapi
 chmod 600 ~/.backblaze/backblazeapi
 echo "OK .backblaze 완료"
 
-fetch_secret "git_credentials" "/github" > ~/.git-credentials
+fetch_secret_multiline "git_credentials" "/github" > ~/.git-credentials
 chmod 600 ~/.git-credentials
 echo "OK .git-credentials 완료"
 
 mkdir -p ~/.config/rclone
-fetch_secret "rclone_onedrive_sv" "/rclone" > ~/.config/rclone/rclone.conf
+fetch_secret_multiline "rclone_onedrive_sv" "/rclone" > ~/.config/rclone/rclone.conf
 chmod 600 ~/.config/rclone/rclone.conf
 echo "OK rclone.conf 복원 완료"
 

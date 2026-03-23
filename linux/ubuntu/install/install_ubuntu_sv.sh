@@ -109,28 +109,27 @@ fetch_secret_multiline() {
 # Secrets 복원
 # ============================================================
 mkdir -p ~/.aws
-fetch_secret "config" "/aws" > ~/.aws/config
-fetch_secret "credentials" "/aws" > ~/.aws/credentials
+fetch_secret_multiline "config" "/aws" > ~/.aws/config
+fetch_secret_multiline "credentials" "/aws" > ~/.aws/credentials
 chmod 600 ~/.aws/credentials
 echo "OK .aws 완료"
 
 mkdir -p ~/.backblaze
-fetch_secret "backblazeapi" "/backblaze" > ~/.backblaze/backblazeapi
+fetch_secret_multiline "backblazeapi" "/backblaze" > ~/.backblaze/backblazeapi
 chmod 600 ~/.backblaze/backblazeapi
 echo "OK .backblaze 완료"
 
-fetch_secret "git_credentials" "/github" > ~/.git-credentials
+fetch_secret_multiline "git_credentials" "/github" > ~/.git-credentials
 chmod 600 ~/.git-credentials
 echo "OK .git-credentials 완료"
 
 mkdir -p ~/.ssh
-# fetch_secret "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
 fetch_secret_multiline "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
 chmod 600 ~/.ssh/id_ed25519
 echo "OK SSH 개인키 복원 완료"
 
 mkdir -p ~/.config/rclone
-fetch_secret "rclone_onedrive_sv" "/rclone" > ~/.config/rclone/rclone.conf
+fetch_secret_multiline "rclone_onedrive_sv" "/rclone" > ~/.config/rclone/rclone.conf
 chmod 600 ~/.config/rclone/rclone.conf
 echo "OK rclone.conf 복원 완료"
 
