@@ -326,7 +326,7 @@ if (-Not (Select-String -Path $sshConfigPath -Pattern "Host github.com" -Quiet -
 
 # GitHub known_hosts
 try {
-    $githubKey = ssh-keyscan -t ed25519 github.com 2>$null
+    $githubKey = ssh-keyscan -T 5 -t ed25519 github.com 2>$null
     if ($githubKey) {
         Add-Content -Path "$HOME\.ssh\known_hosts" -Value $githubKey
         Write-LogOK "GitHub known_hosts 등록 완료"
@@ -424,7 +424,7 @@ Write-LogOK "Git 글로벌 attributes 연결 완료"
 # Scoop 패키지 설치
 # ============================================================
 try {
-    scoop install gsudo vim curl rclone
+    scoop install gsudo vim curl rclone copyq
     scoop bucket add extras
     scoop bucket add nerd-fonts
     scoop bucket add versions
@@ -509,7 +509,6 @@ if ([System.Environment]::GetEnvironmentVariable("PYTHONUTF8", "User") -ne "1") 
 } else {
     Write-LogOK "PYTHONUTF8 이미 설정됨 (스킵)"
 }
-
 # ============================================================
 # Winget 패키지 설치
 # ============================================================
@@ -517,8 +516,14 @@ $wingetPath = "$env:LOCALAPPDATA\microsoft\WindowsApps"
 if ($env:PATH -notlike "*windowsapps*") {
     $env:PATH += ";$wingetPath"
 }
-
 try {
+    gsudo winget settings --enable InstallerHashOverride 2>&1 | Out-Null
+    Write-LogOK "InstallerHashOverride 활성화 완료"
+} catch {
+    Write-LogWarn "InstallerHashOverride 활성화 실패 (무시하고 계속): $_"
+}
+try {
+    winget source update --accept-source-agreements 2>&1 | Out-Null
     winget upgrade --all --accept-package-agreements --accept-source-agreements 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
     Write-LogOK "winget 업그레이드 완료"
 } catch {
@@ -553,20 +558,16 @@ foreach ($app in $wingetApps) {
         Write-LogErr "winget 예외 발생: $app : $_"
     }
 }
-
 $wingetAppsNoScope = @(
     "ZedIndustries.Zed",
-    "NAVER.Whale",
     "Bandisoft.Bandizip",
-    "Bandisoft.Honeyview",
-    "CopyQ.CopyQ",
     "Kakao.KakaoTalk",
     "Google.Chrome"
 )
 foreach ($app in $wingetAppsNoScope) {
     try {
         $result = winget install -e --id $app `
-            --accept-package-agreements --accept-source-agreements 2>&1
+            --accept-package-agreements --accept-source-agreements --ignore-security-hash 2>&1
         Add-Content -Path $LOG_FILE -Value ($result | Out-String)
         if ($LASTEXITCODE -eq 0)               { Write-LogOK "winget 설치 완료: $app" }
         elseif ($LASTEXITCODE -eq -1978335189) { Write-LogOK "winget 이미 설치됨 (스킵): $app" }
