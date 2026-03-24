@@ -1,31 +1,22 @@
+<!-- Linux\Ubuntu\README.md -->
+
 # Ubuntu 설치 가이드
 
 https://srz.st/qiP
 
-```powershell
-$file = "$HOME\.dotfiles\linux\ubuntu\install\bootstrap_ubuntu_sv.sh"
-$content = [System.IO.File]::ReadAllText($file) -replace "`r`n", "`n"
-[System.IO.File]::WriteAllText($file, $content, [System.Text.UTF8Encoding]::new($false))
-
-$dest = "$HOME\Desktop\u.sh"
-[System.IO.File]::WriteAllText($dest, $content, [System.Text.UTF8Encoding]::new($false))
-```
-
-설치 명령어 확인:
+### 설치 명령어 확인
 
 - **Ubuntu / macOS**:
 
-  ```python
-  curl dl.srz.st/i
+  ```bash
+  curl dl.srz.st/ui
   ```
 
 - **Windows (PowerShell)**:
 
-  ```python
-  irm dl.srz.st/i
+  ```powershell
+  irm dl.srz.st/ui
   ```
-
-# Ubuntu 설치 가이드
 
 ---
 
@@ -47,7 +38,7 @@ $dest = "$HOME\Desktop\u.sh"
 **bootstrap (신규 서버):**
 
 ```bash
-curl -O https://dl.srz.st/u.sh && bash u.sh
+curl -s https://raw.githubusercontent.com/srzst/.dotfiles/main/linux/ubuntu/install/bootstrap_ubuntu_sv.sh | bash
 ```
 
 **install:**
@@ -66,11 +57,23 @@ bash ~/.dotfiles/linux/ubuntu/install/install_ubuntu.sh
 | 변수     | 값           | 설명                                                            |
 | -------- | ------------ | --------------------------------------------------------------- |
 | `MODE`   | 1: install   | Infisical 토큰 직접 입력 (`~/.bashrc_secrets` 있으면 자동 로드) |
-|          | 2: bootstrap | age 암호화 파일로 토큰 자동 복호화                              |
+|          | 2: bootstrap | openssl 암호화 파일로 토큰 자동 복호화                          |
 | `MIRROR` | 1: 기본      | archive.ubuntu.com                                              |
 |          | 2: 카카오    | mirror.kakao.com                                                |
 | `TARGET` | 1: server    | 경량 설치                                                       |
 |          | 2: dev       | 개발 도구 포함                                                  |
+
+---
+
+## bootstrap 토큰 파일 생성 (t.enc)
+
+바탕화면의 `t.txt`에 Infisical 토큰 저장 후 실행:
+
+```powershell
+openssl enc -aes-256-cbc -pbkdf2 -in "$HOME\Desktop\t.txt" -out "$HOME\Desktop\t.enc" -pass pass:"서버암호"
+```
+
+생성된 `t.enc` → R2 (`dl.srz.st/t.enc`) 업로드.
 
 ---
 

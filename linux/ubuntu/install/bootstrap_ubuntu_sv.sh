@@ -7,7 +7,8 @@ MODE=2    # 1: install  2: bootstrap
 MIRROR=1  # 1: 기본(archive.ubuntu.com)  2: 카카오(mirror.kakao.com)
 TARGET=1  # 1: server  2: dev
 
-BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.age"
+# BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.age"
+BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.enc"
 INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV="dev"
 REPO="$HOME/.dotfiles"
@@ -38,19 +39,10 @@ echo "OK 기본 패키지 설치 완료"
 # 토큰 획득
 # ============================================================
 if [ "$MODE" = "2" ]; then
-  # ── bootstrap: age 복호화로 토큰 획득 ──
-  PASS="$SAVED_PASSWORD"
-
-  if ! command -v age &>/dev/null; then
-    AGE_VERSION=$(curl -sL https://api.github.com/repos/FiloSottile/age/releases/latest | grep tag_name | cut -d'"' -f4)
-    curl -sL "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/age-${AGE_VERSION}-linux-amd64.tar.gz" | \
-      sudo tar -xz -C /usr/local/bin --strip-components=1 age/age age/age-keygen
-    echo "OK age 설치 완료"
-  fi
-
-  TMP_ENC=$(mktemp /tmp/t_XXXXXX.age)
+  # ── bootstrap: openssl 복호화로 토큰 획득 ──
+  TMP_ENC=$(mktemp /tmp/t_XXXXXX.enc)
   curl -sL "$BOOTSTRAP_TOKEN_URL" -o "$TMP_ENC"
-  INFISICAL_INPUT_TOKEN=$(echo "$PASS" | age -d "$TMP_ENC" 2>/dev/null)
+  INFISICAL_INPUT_TOKEN=$(openssl enc -d -aes-256-cbc -pbkdf2 -in "$TMP_ENC" -pass pass:"$SAVED_PASSWORD" 2>/dev/null | tr -d '\n')
   rm -f "$TMP_ENC"
   [ -z "$INFISICAL_INPUT_TOKEN" ] && echo "ERR 토큰 복호화 실패" && exit 1
   echo "OK 토큰 복호화 완료"
