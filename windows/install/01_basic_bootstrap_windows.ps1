@@ -127,6 +127,25 @@ if ($TARGET -eq 0) {
 # PART 1 - 기본 / 경량 / 임시 공통
 # ============================================================
 # ============================================================
+# ============================================================
+# openssl 설치 (bootstrap 토큰 복호화 선행)
+# ============================================================
+if ($MODE -eq 2 -and -Not (Get-Command openssl -ErrorAction SilentlyContinue)) {
+    if (-Not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+        Write-Log "Scoop 선행 설치 중..."
+        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        $env:SCOOP = "$HOME\scoop"
+        [System.Environment]::SetEnvironmentVariable("SCOOP", "$HOME\scoop", "User")
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $scoopScript = Invoke-RestMethod -Uri "https://get.scoop.sh"
+        Invoke-Expression "& {$scoopScript} -RunAsAdmin"
+        $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+        Write-LogOK "Scoop 선행 설치 완료"
+    }
+    scoop install openssl
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+    Write-LogOK "openssl 설치 완료"
+}
 
 # ============================================================
 # Infisical 토큰
