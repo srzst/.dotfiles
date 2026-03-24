@@ -424,7 +424,7 @@ Write-LogOK "Git 글로벌 attributes 연결 완료"
 # Scoop 패키지 설치
 # ============================================================
 try {
-    scoop install gsudo vim curl rclone copyq
+    scoop install gsudo vim curl rclone copyq googlechrome honeyview
     scoop bucket add extras
     scoop bucket add nerd-fonts
     scoop bucket add versions
@@ -562,7 +562,7 @@ $wingetAppsNoScope = @(
     "ZedIndustries.Zed",
     "Bandisoft.Bandizip",
     "Kakao.KakaoTalk",
-    "Google.Chrome"
+    # "Google.Chrome"
 )
 foreach ($app in $wingetAppsNoScope) {
     try {
@@ -824,7 +824,6 @@ if (-Not (Test-Path $snipSrc)) {
     Copy-Item "$snipSrc\*" $snipDst -Force -Recurse -Exclude "*.appinstaller"
     Write-LogOK "Snipdo 설정 복원 완료"
 }
-
 # ============================================================
 # 안내 메시지
 # ============================================================
@@ -833,20 +832,18 @@ Write-Log "INFO GitBash .bashrc 는 GitBash 터미널에서 아래 명령 실행
 Write-Host "    REPO=""/c/Users/$env:USERNAME/.dotfiles"""
 Write-Host "    rm ~/.bashrc"
 Write-Host "    ln -sf ""`$REPO/windows/Alias/GitBash/.bashrc"" ~/.bashrc"
-
 Write-Host ""
 Write-Log "INFO 수동 설치 필요 항목:"
 Write-Host "    Jump Desktop      - https://jumpdesktop.com/download.html"
 Write-Host "    PhotoScape X Pro  - MS Store"
 Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"
 Write-Host "    Blip              - https://www.blip.com"
-
+Write-Host "    NAVER Whale       - https://whale.naver.com/ko/download"
 Write-Host ""
 Write-Log "INFO Raycast 튜토리얼 완료 후 아래 명령 실행:"
 Write-Host "    Stop-Process -Name 'Raycast' -Force -ErrorAction SilentlyContinue"
 Write-Host "    Copy-Item `"$FOLDERS\windows\Raycast\settings.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
 Write-Host "    Copy-Item `"$FOLDERS\windows\Raycast\settings_v2.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
-
 # ============================================================
 # 최종 요약
 # ============================================================
