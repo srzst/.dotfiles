@@ -239,8 +239,12 @@ if (-Not (Get-Command openssl -ErrorAction SilentlyContinue)) {
 if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
     Write-Log "Infisical CLI 설치 중..."
     try {
-        winget install --id Infisical.infisical -e --accept-package-agreements --accept-source-agreements
-        $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+        scoop bucket add infisical https://github.com/infisical/scoop-infisical
+        scoop install infisical
+        $env:PATH = "$HOME\scoop\shims;" + [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+        if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
+            throw "infisical 설치 후에도 명령어 없음"
+        }
         Write-LogOK "Infisical CLI 설치 완료"
     } catch {
         Write-LogErr "Infisical CLI 설치 실패: $_"
@@ -249,7 +253,6 @@ if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
 } else {
     Write-LogOK "Infisical CLI 이미 설치됨 (스킵)"
 }
-
 # ============================================================
 # Secrets 복원 - 환경변수
 # ============================================================
