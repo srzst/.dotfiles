@@ -357,6 +357,21 @@ if ($TARGET -eq 3) {
 # PART 2 - 기본 / 경량 공통
 # ============================================================
 # ============================================================
+# ============================================================
+# .dotfiles clone
+# ============================================================
+if (-Not (Test-Path $REPO)) {
+    try {
+        git clone "https://github.com/srzst/.dotfiles.git" $REPO 2>$null
+        Write-LogOK ".dotfiles clone 완료"
+    } catch {
+        Write-LogErr ".dotfiles clone 실패: $_"
+        exit 1
+    }
+} else {
+    Write-LogOK ".dotfiles 이미 존재 (스킵)"
+    git -C $REPO pull 2>$null
+}
 
 # ============================================================
 # .dotfolders clone
@@ -372,7 +387,6 @@ if (-Not (Test-Path $FOLDERS)) {
     Write-LogOK ".dotfolders 이미 존재 (스킵)"
     git -C $FOLDERS pull 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
 }
-
 # ============================================================
 # 심볼릭 링크
 # ============================================================
@@ -380,7 +394,7 @@ function New-Symlink {
     param([string]$LinkPath, [string]$TargetPath)
     try {
         Remove-Item $LinkPath -Force -Recurse -ErrorAction SilentlyContinue
-        New-Item -ItemType SymbolicLink -Force -Path $LinkPath -Target $TargetPath | Out-Null
+        New-Item -ItemType SymbolicLink -Force -Path $LinkPath -Target $TargetPath -ErrorAction Stop | Out-Null
         Write-LogOK "심볼릭 링크: $LinkPath → $TargetPath"
     } catch {
         Write-LogErr "심볼릭 링크 실패: $LinkPath → $TargetPath : $_"
