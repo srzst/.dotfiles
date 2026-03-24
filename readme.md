@@ -1,3 +1,5 @@
+<!-- readme.md -->
+
 # .dotfiles
 
 개인 개발 환경 설정 파일 모음.
@@ -36,8 +38,14 @@
 
 설치 명령어 확인:
 
-- **Ubuntu / macOS**: `curl https://srz.st/iii`
-- **Windows (PowerShell)**: `irm https://srz.st/iii`
+- **Ubuntu / macOS**: `curl dl.srz.st/ui`
+- **Windows (PowerShell)**: `irm dl.srz.st/wi`
+
+OS별 상세 가이드:
+
+- [Ubuntu](linux/ubuntu/README.md)
+- [Windows](windows/README.md)
+- [macOS](mac/README.md)
 
 ---
 
