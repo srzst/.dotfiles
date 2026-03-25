@@ -229,6 +229,7 @@ _cf_purge() {
     -H "Authorization: Bearer $token" \
     -H "Content-Type: application/json" \
     --data '{"purge_everything":true}'
+      echo ""
 }
 
 alias w1purge='_cf_purge 81717dea734982b7daf583287346f949'
