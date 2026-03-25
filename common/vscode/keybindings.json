@@ -58,16 +58,16 @@
     "command": "workbench.action.terminal.toggleTerminal"
   },
   // ── 버퍼(탭) 이동 ──────────────────────────────
-  {
-    "key": "shift+h",
-    "command": "workbench.action.previousEditor",
-    "when": "editorTextFocus"
-  },
-  {
-    "key": "shift+l",
-    "command": "workbench.action.nextEditor",
-    "when": "editorTextFocus"
-  },
+  // {
+  //   "key": "shift+h",
+  //   "command": "workbench.action.previousEditor",
+  //   "when": "editorTextFocus"
+  // },
+  // {
+  //   "key": "shift+l",
+  //   "command": "workbench.action.nextEditor",
+  //   "when": "editorTextFocus"
+  // },
   // ── 사이드바 ───────────────────────────────────
   {
     "key": "ctrl+e",
