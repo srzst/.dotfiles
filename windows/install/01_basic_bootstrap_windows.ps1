@@ -1,5 +1,4 @@
 ﻿# windows\install\bootstrap_windows.ps1
-# windows\install\install_windows.ps1
 
 # ============================================================
 # CONFIG
@@ -414,7 +413,13 @@ if (Test-Path $yaziTarget) { Remove-Item $yaziTarget -Recurse -Force }
 New-Item -ItemType Directory -Force -Path "$env:APPDATA\yazi" | Out-Null
 New-Symlink $yaziTarget "$REPO\common\yazi"
 
-New-Symlink "$HOME\AppData\Roaming\Zed\settings.json" "$REPO\common\zed\settings.json"
+New-Symlink "$HOME\AppData\Roaming\Zed\settings.json"        "$REPO\common\zed\settings.json"
+
+New-Symlink "$env:APPDATA\Code\User\keybindings.json"        "$REPO\common\vscode\keybindings.json"
+New-Symlink "$env:APPDATA\Code\User\settings.json"           "$REPO\common\vscode\settings.json"
+New-Symlink "$env:APPDATA\Cursor\User\keybindings.json"      "$REPO\common\cursor\keybindings.json"
+New-Symlink "$env:APPDATA\Cursor\User\settings.json"         "$REPO\common\cursor\settings.json"
+New-Symlink "$env:APPDATA\tabby\config.yaml"                 "$FOLDERS\common\tabby\config.yaml"
 
 New-Symlink "$HOME\.gitattributes_global" "$REPO\.gitattributes"
 git config --global core.attributesFile "$HOME\.gitattributes_global"

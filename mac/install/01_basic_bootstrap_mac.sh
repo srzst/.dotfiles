@@ -250,23 +250,33 @@ echo "심볼릭 링크 설정 중..."
 rm -f ~/.zshrc
 ln -sf "$REPO/mac/Alias/.zshrc" ~/.zshrc
 echo "OK .zshrc 연결 완료"
-
 rm -f ~/.vimrc
 ln -sf "$REPO/Common/Vim/.vimrc" ~/.vimrc
 echo "OK .vimrc 연결 완료"
-
 rm -rf ~/.config/nvim
 mkdir -p ~/.config
 ln -sf "$REPO/Common/neovim" ~/.config/nvim
 echo "OK Neovim 연결 완료"
-
 rm -rf ~/.config/yazi
 ln -sf "$REPO/Common/yazi" ~/.config/yazi
 echo "OK Yazi 설정 연결 완료"
-
 mkdir -p ~/.config/zed
 ln -sf "$REPO/Common/zed/settings.json" ~/.config/zed/settings.json
 echo "OK Zed 설정 연결 완료"
+mkdir -p "$HOME/Library/Application Support/Code/User"
+rm -f "$HOME/Library/Application Support/Code/User/keybindings.json"
+ln -sf "$REPO/common/vscode/keybindings.json" "$HOME/Library/Application Support/Code/User/keybindings.json"
+echo "OK VSCode keybindings 연결 완료"
+rm -f "$HOME/Library/Application Support/Code/User/settings.json"
+ln -sf "$REPO/common/vscode/settings.json" "$HOME/Library/Application Support/Code/User/settings.json"
+echo "OK VSCode settings 연결 완료"
+mkdir -p "$HOME/Library/Application Support/Cursor/User"
+rm -f "$HOME/Library/Application Support/Cursor/User/keybindings.json"
+ln -sf "$REPO/common/cursor/keybindings.json" "$HOME/Library/Application Support/Cursor/User/keybindings.json"
+echo "OK Cursor keybindings 연결 완료"
+rm -f "$HOME/Library/Application Support/Cursor/User/settings.json"
+ln -sf "$REPO/common/cursor/settings.json" "$HOME/Library/Application Support/Cursor/User/settings.json"
+echo "OK Cursor settings 연결 완료"
 
 # ============================================================
 # 심볼릭 링크 - .dotfolders/mac (기본/경량)
@@ -275,22 +285,19 @@ if [ "$TARGET" -le 2 ]; then
   rm -rf ~/.hammerspoon
   ln -sf "$FOLDERS/mac/.hammerspoon" ~/.hammerspoon
   echo "OK Hammerspoon 연결 완료"
-
   mkdir -p ~/.config/karabiner
   rm -f ~/.config/karabiner/karabiner.json
   ln -sf "$FOLDERS/mac/karabiner/karabiner.json" ~/.config/karabiner/karabiner.json
   echo "OK Karabiner 연결 완료"
-
   mkdir -p ~/.config/raycast
   rm -f ~/.config/raycast/config.json
   ln -sf "$FOLDERS/mac/raycast/config.json" ~/.config/raycast/config.json
   rm -rf ~/.config/raycast/extensions
   ln -sf "$FOLDERS/mac/raycast/extensions" ~/.config/raycast/extensions
   echo "OK Raycast 연결 완료"
-
   mkdir -p "$HOME/Library/Application Support/tabby"
   rm -f "$HOME/Library/Application Support/tabby/config.yaml"
-  ln -sf "$FOLDERS/mac/Tabby/config.yaml" "$HOME/Library/Application Support/tabby/config.yaml"
+  ln -sf "$FOLDERS/common/tabby/config.yaml" "$HOME/Library/Application Support/tabby/config.yaml"
   echo "OK Tabby 연결 완료"
 fi
 
