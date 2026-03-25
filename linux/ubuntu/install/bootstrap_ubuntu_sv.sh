@@ -28,7 +28,47 @@ echo "$USER_PASSWORD" > "$SUDO_PASS_FILE"
 while true; do sudo -S -v < "$SUDO_PASS_FILE" 2>/dev/null; sleep 50; done &
 SUDO_KEEPALIVE_PID=$!
 trap "kill $SUDO_KEEPALIVE_PID 2>/dev/null; rm -f $SUDO_PASS_FILE" EXIT
+# ============================================================
+# hostname 설정
+# ============================================================
+echo ""
+echo "============================================================"
+echo " hostname 을 선택하세요"
+echo "============================================================"
+echo " 1) W1"
+echo " 2) W2"
+echo " 3) W3"
+echo " 4) W5"
+echo " 5) shorten"
+echo " 6) 직접 입력"
+echo "------------------------------------------------------------"
+read -p " 선택 (1-6): " HOSTNAME_CHOICE
 
+case $HOSTNAME_CHOICE in
+    1) NEW_HOSTNAME="W1" ;;
+    2) NEW_HOSTNAME="W2" ;;
+    3) NEW_HOSTNAME="W3" ;;
+    4) NEW_HOSTNAME="W5" ;;
+    5) NEW_HOSTNAME="shorten" ;;
+    6) read -p " hostname 입력: " NEW_HOSTNAME ;;
+    *) echo "오류: 올바른 번호를 선택하세요."; exit 1 ;;
+esac
+
+sudo hostnamectl set-hostname "$NEW_HOSTNAME"
+sudo sed -i "s/127.0.1.1.*/127.0.1.1 $NEW_HOSTNAME/" /etc/hosts
+export HOSTNAME="$NEW_HOSTNAME"
+echo "OK hostname 설정 완료: $NEW_HOSTNAME"
+# ============================================================
+# QEMU Guest Agent 설치 (Proxmox VM 환경)
+# ============================================================
+read -p "Proxmox VM 환경입니까? qemu-guest-agent 설치 (y/N): " INSTALL_QEMU
+if [[ "$INSTALL_QEMU" =~ ^[Yy]$ ]]; then
+    sudo apt update && sudo apt install -y qemu-guest-agent
+    sudo systemctl enable --now qemu-guest-agent
+    echo "OK qemu-guest-agent 설치 완료"
+else
+    echo "qemu-guest-agent 설치 건너뜀"
+fi
 # ============================================================
 # 기본 패키지 설치 (선행)
 # ============================================================
