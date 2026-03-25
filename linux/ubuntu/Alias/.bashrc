@@ -242,3 +242,4 @@ alias allpurge='w1purge && w2purge && w3purge && w5purge'
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
+
