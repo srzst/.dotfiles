@@ -218,13 +218,14 @@ if command -v fzf > /dev/null; then
     alias fe='nvim $(fzf)'
 fi
 
-
 # ============================================================
 # Cloudflare 캐시 삭제 별칭
 # ============================================================
 _cf_purge() {
   local zone=$1
   sudo find /var/cache/nginx/wp -type f -delete 2>/dev/null && echo "Nginx 캐시 삭제 완료"
+  local redis_pass=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get main_password --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/ --plain --silent 2>/dev/null')
+  redis-cli -a "$redis_pass" --no-auth-warning FLUSHALL > /dev/null && echo "Redis 캐시 삭제 완료"
   local token=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get cf_cache_purge_token --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/cloudflare --plain --silent 2>/dev/null')
   curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone/purge_cache" \
     -H "Authorization: Bearer $token" \
@@ -237,6 +238,7 @@ alias w2purge='_cf_purge 0e5c7d391be06e7f8e0e5c4dfa88e8fc'
 alias w3purge='_cf_purge 0ebddc7bb5feb60e2e2eeac29dd14d7d'
 alias w5purge='_cf_purge 97155be9a57b0f9e31b0b1cd083154a2'
 alias allpurge='w1purge && w2purge && w3purge && w5purge'
+
 # ============================================================
 # 기타 별도 설정 로드
 # ============================================================
