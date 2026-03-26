@@ -224,14 +224,14 @@ fi
 # ============================================================
 _cf_purge() {
   local zone=$1
+  sudo find /var/cache/nginx/wp -type f -delete 2>/dev/null && echo "Nginx 캐시 삭제 완료"
   local token=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get cf_cache_purge_token --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/cloudflare --plain --silent 2>/dev/null')
   curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone/purge_cache" \
     -H "Authorization: Bearer $token" \
     -H "Content-Type: application/json" \
     --data '{"purge_everything":true}'
-      echo ""
+  echo ""
 }
-
 alias w1purge='_cf_purge 81717dea734982b7daf583287346f949'
 alias w2purge='_cf_purge 0e5c7d391be06e7f8e0e5c4dfa88e8fc'
 alias w3purge='_cf_purge 0ebddc7bb5feb60e2e2eeac29dd14d7d'
