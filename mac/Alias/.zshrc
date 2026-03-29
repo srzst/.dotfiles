@@ -17,13 +17,13 @@ export NVM_DIR="$HOME/.nvm"
 
 # PATH 설정
 # FIX: 하드코딩 /Users/x → $HOME 으로 변경
-export PATH="/opt/homebrew/bin:/opt/homebrew/opt/python@3.12/bin:$PATH"
+export PATH="/opt/homebrew/bin:/opt/homebrew/opt/python@3.14/bin:$PATH"
 export PATH="$PATH:$HOME/.local/bin"
-
+# pip 함수 수정 (3.14 경로로 업데이트)
+pip() { /opt/homebrew/opt/python@3.14/bin/python3.14 -m pip "$@" --break-system-packages; }
 # Python 관련 별칭 및 Pip 함수 (시스템 패키지 보호 우회)
 alias python="/opt/homebrew/bin/python3"
 alias python3="/opt/homebrew/bin/python3"
-pip() { /opt/homebrew/opt/python@3.12/bin/python3.12 -m pip "$@" --break-system-packages; }
 # Infisical secrets 함수
 
 infs() {
