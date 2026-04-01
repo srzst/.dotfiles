@@ -233,11 +233,25 @@ _cf_purge() {
     --data '{"purge_everything":true}'
   echo ""
 }
+
+# ============================================================
+# Cloudflare 캐시 삭제 별칭 (확장형)
+# ============================================================
+# 기본 purge 별칭
 alias w1purge='_cf_purge 81717dea734982b7daf583287346f949'
 alias w2purge='_cf_purge 0e5c7d391be06e7f8e0e5c4dfa88e8fc'
 alias w3purge='_cf_purge 0ebddc7bb5feb60e2e2eeac29dd14d7d'
 alias w5purge='_cf_purge 97155be9a57b0f9e31b0b1cd083154a2'
-alias allpurge='w1purge && w2purge && w3purge && w5purge'
+
+# 단축형 별칭 추가 (w1p, w2p 등)
+alias w1p='w1purge'
+alias w2p='w2purge'
+alias w3p='w3purge'
+alias w5p='w5purge'
+
+# 전체 삭제 단축어
+alias ap='allpurge'
+alias allpurge='w1p && w2p && w3p && w5p'
 
 # ============================================================
 # 기타 별도 설정 로드

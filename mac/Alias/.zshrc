@@ -244,3 +244,41 @@ fi
 [[ -f ~/.zshrc_secrets ]] && source ~/.zshrc_secrets
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin
+
+# ============================================================
+# SSH 접속 자동화 (Infisical + MagicDNS + sshpass)
+# ============================================================
+_ssh_connect() {
+    local user_name="$1"
+    local target_host="$2"
+    
+    # 1. macOS Keychain에서 토큰 로드 (브라우저 팝업 방지)
+    local token=$(/usr/bin/security find-generic-password -a "$USER" -s "INFISICAL_TOKEN" -w | /usr/bin/tr -d '\n')
+    
+    # 2. Infisical에서 main_password 추출
+    local PVE_PASS=$(INFISICAL_TOKEN="$token" /opt/homebrew/bin/infisical secrets get main_password \
+        --projectId=bc893247-af3f-4118-a8ec-bcb429338acb \
+        --env=dev --path="/" --plain --silent)
+
+    if [ -z "$PVE_PASS" ]; then
+        echo -e "\033[0;31m[Error]\033[0m Infisical에서 암호를 가져오지 못했습니다."
+        return 1
+    fi
+
+    # 3. 해당 호스트로 접속 (MagicDNS 이름 사용)
+    echo -e "\033[0;32mConnecting to $target_host as $user_name...\033[0m"
+    sshpass -p "$PVE_PASS" ssh -tt \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        -o PubkeyAuthentication=no \
+        -o PreferredAuthentications=password \
+        "$user_name@$target_host"
+}
+
+# 서버별 계정 및 명령어 등록
+pve() { _ssh_connect "root" "pve"; }
+w1()  { _ssh_connect "x" "w1"; }
+w2()  { _ssh_connect "x" "w2"; }
+w3()  { _ssh_connect "x" "w3"; }
+w5()  { _ssh_connect "x" "w5"; }
+# ============================================================
