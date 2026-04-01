@@ -254,6 +254,68 @@ alias ap='allpurge'
 alias allpurge='w1p && w2p && w3p && w5p'
 
 # ============================================================
+# 서버 자동 인식형 통합 캐시 삭제 (p)
+# ============================================================
+p() {
+  # 1. 현재 서버의 호스트네임(W1, W2...) 감지 (소문자로 변환)
+  local host=$(hostname | tr '[:upper:]' '[:lower:]')
+  local zone=""
+  local domain=""
+
+  # 2. 호스트네임별 도메인 및 Zone ID 매핑
+  case "$host" in
+    w1) 
+      zone="81717dea734982b7daf583287346f949"
+      domain="comeinsidebox.com"
+      ;;
+    w2) 
+      zone="0e5c7d391be06e7f8e0e5c4dfa88e8fc"
+      domain="iboxcomein.com"
+      ;;
+    w3) 
+      zone="0ebddc7bb5feb60e2e2eeac29dd14d7d"
+      domain="eazymanual.com"
+      ;;
+    w5) 
+      zone="97155be9a57b0f9e31b0b1cd083154a2"
+      domain="ezis.org"
+      ;;
+    *) 
+      echo "등록되지 않은 호스트($host)입니다."
+      return 1 
+      ;;
+  esac
+
+  echo -e "\033[0;32m==> [$host] $domain 캐시 삭제 시작...\033[0m"
+
+  # 3. Nginx 캐시 삭제
+  sudo find /var/cache/nginx/wp -type f -delete 2>/dev/null && echo "✔ Nginx 캐시 삭제 완료"
+
+  # 4. Redis 캐시 삭제 (Infisical에서 암호 로드)
+  local redis_pass=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get main_password --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/ --plain --silent 2>/dev/null')
+  redis-cli -a "$redis_pass" --no-auth-warning FLUSHALL > /dev/null && echo "✔ Redis 캐시 삭제 완료"
+
+  # 5. Cloudflare API 호출 (Infisical에서 토큰 로드)
+  local token=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get cf_cache_purge_token --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/cloudflare --plain --silent 2>/dev/null')
+  
+  local response=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone/purge_cache" \
+    -H "Authorization: Bearer $token" \
+    -H "Content-Type: application/json" \
+    --data '{"purge_everything":true}')
+
+  if [[ $response == *"\"success\":true"* ]]; then
+    echo -e "\033[0;34m✔ Cloudflare 캐시 삭제 완료 ($domain)\033[0m"
+  else
+    echo -e "\033[0;31m✘ Cloudflare 캐시 삭제 실패\033[0m"
+  fi
+}
+
+# 단축어 등록
+alias purge='p'
+
+
+
+# ============================================================
 # 기타 별도 설정 로드
 # ============================================================
 if [ -f ~/.bash_aliases ]; then
