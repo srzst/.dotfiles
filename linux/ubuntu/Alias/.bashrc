@@ -79,7 +79,9 @@ alias s='sudo systemctl'
 alias cron='crontab -e'
 alias port='sudo lsof -i -P | grep LISTEN'
 alias myip='curl -s ifconfig.me'
-
+# 사용자 지정 경로 이동
+alias qq='cd ~/.dotfiles'
+alias ww='cd ~/.dotfolders'
 # ============================================================
 # 패키지 업데이트 (u / uu)
 # ============================================================

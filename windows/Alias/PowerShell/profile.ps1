@@ -70,7 +70,9 @@ function mc { New-Item -ItemType Directory -Path $args[0] -Force; Set-Location $
 if (Test-Path "Alias:rm") { Remove-Item "Alias:rm" -Force }
 function Remove-Force { Remove-Item -Path $args -Force -Recurse -Verbose }
 Set-Alias -Name rm -Value Remove-Force -Option AllScope -Force
-
+# qq, ww 설정
+function qq { Set-Location ~/.dotfiles; ls }
+function ww { Set-Location ~/.dotfolders; ls }
 # ============================================================
 # 패키지 관리자 별칭 및 함수
 # ============================================================

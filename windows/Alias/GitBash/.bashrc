@@ -48,7 +48,9 @@ alias cddt='cd /c/Users/$USER/Desktop'
 
 # 디렉토리 생성 후 이동
 mc() { mkdir -p "$1" && cd "$1"; }
-
+# 사용자 지정 경로 이동
+alias qq='cd ~/.dotfiles'
+alias ww='cd ~/.dotfolders'
 # ============================================================
 # 패키지 업데이트 (u / uu)
 # FIX: Windows GitBash에서 apt-get 없음 → 제거
