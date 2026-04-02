@@ -231,6 +231,7 @@ if (-Not (Get-Command openssl -ErrorAction SilentlyContinue)) {
 } else {
     Write-LogOK "openssl 이미 설치됨 (스킵)"
 }
+
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
@@ -251,15 +252,14 @@ if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
 } else {
     Write-LogOK "Infisical CLI 이미 설치됨 (스킵)"
 }
-
 # ============================================================
 # Secrets 복원 - 환경변수
 # ============================================================
 $envSecrets = @(
-    @{ Key = "tailscale_authkey";                  Path = "/"        },
-    @{ Key = "gistup_md_manual_srzst";             Path = "/github"  },
-    @{ Key = "personal_access_tokens_classic_sndzin"; Path = "/github"  },
-    @{ Key = "personal_access_tokens_classic_srzst";  Path = "/github"  }
+    @{ Key = "tailscale_authkey";                          Path = "/"       },
+    @{ Key = "gistup_md_manual_srzst";                     Path = "/github" },
+    @{ Key = "personal_access_tokens_classic_sndzin";      Path = "/github" },
+    @{ Key = "personal_access_tokens_classic_srzst";       Path = "/github" }
 )
 foreach ($s in $envSecrets) {
     $val = Get-InfisicalSecret $s.Key $s.Path
@@ -275,25 +275,18 @@ foreach ($s in $envSecrets) {
 # Secrets 복원 - 파일
 # ============================================================
 $fileSecrets = @(
-    # 마스터 SSH 키 쌍
-    @{ Key = "main_ssh_private_key"; Path = "/";       Dest = "$HOME\.ssh\main_ssh_key";    Critical = $true  },
-    @{ Key = "main_ssh_public_key";  Path = "/";       Dest = "$HOME\.ssh\main_ssh_key.pub"; Critical = $true  },
-    # 기존 GitHub 키 및 설정들
-    @{ Key = "github_private_ssh_os_srzst"; Path = "/github"; Dest = "$HOME\.ssh\id_ed25519"; Critical = $true  },
-    @{ Key = "config";               Path = "/aws";    Dest = "$HOME\.aws\config";          Critical = $false },
-    @{ Key = "credentials";          Path = "/aws";    Dest = "$HOME\.aws\credentials";     Critical = $false },
-    @{ Key = "backblazeapi";         Path = "/backblaze"; Dest = "$HOME\.backblaze\backblazeapi"; Critical = $false },
-    @{ Key = "git_credentials";      Path = "/github"; Dest = "$HOME\.git-credentials";     Critical = $false },
-    @{ Key = "rclone_onedrive_sv";   Path = "/rclone"; Dest = "$HOME\.config\rclone\rclone.conf"; Critical = $false }
+    @{ Key = "github_private_ssh_os_srzst"; Path = "/github";   Dest = "$HOME\.ssh\id_ed25519";              Critical = $true  },
+    @{ Key = "config";                      Path = "/aws";       Dest = "$HOME\.aws\config";                  Critical = $false },
+    @{ Key = "credentials";                 Path = "/aws";       Dest = "$HOME\.aws\credentials";             Critical = $false },
+    @{ Key = "backblazeapi";                Path = "/backblaze"; Dest = "$HOME\.backblaze\backblazeapi";       Critical = $false },
+    @{ Key = "git_credentials";             Path = "/github";    Dest = "$HOME\.git-credentials";             Critical = $false },
+    @{ Key = "rclone_onedrive_sv";          Path = "/rclone";    Dest = "$HOME\.config\rclone\rclone.conf";   Critical = $false }
 )
-
 foreach ($s in $fileSecrets) {
     New-Item -ItemType Directory -Force -Path (Split-Path $s.Dest) | Out-Null
     $val = Get-InfisicalSecret $s.Key $s.Path
     if ($val) {
-        # [수정] Infisical의 \n 문자열을 실제 줄바꿈으로 치환하고 ASCII로 저장 (BOM 방지)
-        $cleanVal = $val -split '\\n' -join "`n"
-        [System.IO.File]::WriteAllText($s.Dest, $cleanVal.Trim() + "`n", [System.Text.Encoding]::ASCII)
+        Set-Content -Path $s.Dest -Value $val -NoNewline
         Write-LogOK "파일 복원 완료: $($s.Key) → $($s.Dest)"
     } else {
         if ($s.Critical) {
@@ -305,17 +298,12 @@ foreach ($s in $fileSecrets) {
     }
 }
 
-# SSH 개인키 권한 설정 (id_ed25519 및 main_ssh_key 통합 처리)
-$targetKeys = @("$HOME\.ssh\id_ed25519", "$HOME\.ssh\main_ssh_key")
-foreach ($keyPath in $targetKeys) {
-    if (Test-Path $keyPath) {
-        try {
-            icacls $keyPath /inheritance:r /grant:r "${env:USERNAME}:F" | Out-Null
-            Write-LogOK "SSH 권한 설정 완료: $(Split-Path $keyPath -Leaf)"
-        } catch {
-            Write-LogWarn "SSH 권한 설정 실패: $(Split-Path $keyPath -Leaf)"
-        }
-    }
+# SSH 개인키 권한
+try {
+    icacls "$HOME\.ssh\id_ed25519" /inheritance:r /grant:r "${env:USERNAME}:F" | Out-Null
+    Write-LogOK "SSH 개인키 권한 설정 완료"
+} catch {
+    Write-LogWarn "SSH 키 권한 설정 실패: $_"
 }
 
 # .git-credentials credential helper
@@ -325,45 +313,31 @@ if (Test-Path "$HOME\.git-credentials") {
     Write-LogOK "credential.helper store 설정 완료"
 }
 
-# SSH config 통합 설정 (Host * 및 github.com 분리)
+# SSH config
 $sshConfigPath = "$HOME\.ssh\config"
 if (-Not (Test-Path $sshConfigPath)) { New-Item -ItemType File -Force -Path $sshConfigPath | Out-Null }
-
-# main_ssh_key 설정이 없는 경우에만 추가
-if (-Not (Select-String -Path $sshConfigPath -Pattern "main_ssh_key" -Quiet -ErrorAction SilentlyContinue)) {
-    $configContent = @"
-
-# Infrastructure Management Key
-Host *
-  IdentityFile ~/.ssh/main_ssh_key
-  IdentityFile ~/.ssh/id_ed25519
-  StrictHostKeyChecking no
-
-Host github.com
-  HostName github.com
-  User git
-  IdentityFile ~/.ssh/id_ed25519
-"@
-    Add-Content -Path $sshConfigPath -Value $configContent
-    Write-LogOK "SSH config 통합 설정 완료"
+if (-Not (Select-String -Path $sshConfigPath -Pattern "Host github.com" -Quiet -ErrorAction SilentlyContinue)) {
+    Add-Content -Path $sshConfigPath -Value "`nHost github.com`n  IdentityFile ~/.ssh/id_ed25519`n  User git`n  StrictHostKeyChecking no"
+    Write-LogOK "SSH config 설정 완료"
+} else {
+    Write-LogOK "SSH config 이미 존재 (스킵)"
 }
 
 # GitHub known_hosts
 try {
     $githubKey = ssh-keyscan -T 5 -t ed25519 github.com 2>$null
     if ($githubKey) {
-        if (-Not (Test-Path "$HOME\.ssh\known_hosts")) { New-Item -ItemType File "$HOME\.ssh\known_hosts" | Out-Null }
-        if ((Get-Content "$HOME\.ssh\known_hosts" -Raw) -notlike "*github.com*") {
-            Add-Content -Path "$HOME\.ssh\known_hosts" -Value $githubKey
-            Write-LogOK "GitHub known_hosts 등록 완료"
-        }
+        Add-Content -Path "$HOME\.ssh\known_hosts" -Value $githubKey
+        Write-LogOK "GitHub known_hosts 등록 완료"
+    } else {
+        Write-LogWarn "GitHub known_hosts 등록 실패 → 네트워크 확인"
     }
 } catch {
     Write-LogWarn "GitHub known_hosts 등록 중 오류: $_"
 }
 
 # GitHub SSH 연결 테스트
-$sshTest = ssh -o BatchMode=yes -o ConnectTimeout=5 -T git@github.com 2>&1
+$sshTest = ssh -T git@github.com 2>&1
 if ($sshTest -match "successfully authenticated") {
     Write-LogOK "GitHub SSH 인증 성공"
 } else {
