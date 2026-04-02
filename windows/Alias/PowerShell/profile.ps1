@@ -1,7 +1,15 @@
 # ============================================================
 # Windows PowerShell 프로필
 # ============================================================
-
+# ============================================================
+# [FIX] Scoop Shims & Path Priority Sync (Warp & WT)
+# ============================================================
+$scoopShims = "$env:USERPROFILE\scoop\shims"
+if (Test-Path $scoopShims) {
+    $currentPaths = $env:PATH -split ';' | Where-Object { $_ -ne $scoopShims -and $_ -ne "" }
+    $env:PATH = ($scoopShims, ($currentPaths -join ';')) -join ';'
+}
+# ============================================================
 # ============================================================
 # 외부 도구 및 환경 변수 설정
 # ============================================================
@@ -210,20 +218,13 @@ function y {
         Remove-Item $tmp
     }
 }
-
-# zoxide 초기화
+# zoxide 초기화 (에러 방지 처리)
+# ============================================================
 if (Get-Command zoxide -ErrorAction SilentlyContinue) {
-    Invoke-Expression (& { zoxide init powershell | Out-String })
+    $zoxideInit = zoxide init powershell | Out-String
+    if ($zoxideInit) { Invoke-Expression $zoxideInit }
 }
+# ============================================================
 
 $env:PATH += ";C:\Users\x\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude-code\2.1.70"
 
-# Import the Chocolatey Profile that contains the necessary code to enable
-# tab-completions to function for `choco`.
-# Be aware that if you are missing these lines from your profile, tab completion
-# for `choco` will not function.
-# See https://ch0.co/tab-completion for details.
-$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-if (Test-Path($ChocolateyProfile)) {
-  Import-Module "$ChocolateyProfile"
-}
