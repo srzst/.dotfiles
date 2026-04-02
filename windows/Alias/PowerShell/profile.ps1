@@ -272,18 +272,6 @@ $env:PATH += ";C:\Users\x\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache
 $env:TERM = 'xterm-256color'
 # ============================================================
 
-# Set-PSReadLineOption -Colors @{
-#     Default   = '#ebdbb2'  # Gruvbox fg
-#     Command   = '#b8bb26'
-#     Parameter = '#fabd2f'
-#     String    = '#b8bb26'
-#     Variable  = '#fb4934'
-#     Comment   = '#a89984'
-#     Keyword   = '#fb4934'
-#     Error     = '#fb4934'
-# }
-
-
 Set-PSReadLineOption -Colors @{
     Default   = '#ffffff'
     Command = '#98c379'
