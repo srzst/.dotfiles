@@ -97,12 +97,21 @@ echo "OK Git 설정 완료"
 if [ "$TARGET" -ne 3 ]; then
   echo ""
   echo "파일 시크릿 복원 중..."
+  # declare -A file_secrets=(
+  #   ["github_private_ssh_os_srzst"]="/github:$HOME/.ssh/id_ed25519:600"
+  #   ["config"]="/aws:$HOME/.aws/config:644"
+  #   ["credentials"]="/aws:$HOME/.aws/credentials:600"
+  #   ["backblazeapi"]="/backblaze:$HOME/.backblaze/backblazeapi:600"
+  #   ["git_credentials"]="/github:$HOME/.git-credentials:600"
+  # )
   declare -A file_secrets=(
     ["github_private_ssh_os_srzst"]="/github:$HOME/.ssh/id_ed25519:600"
     ["config"]="/aws:$HOME/.aws/config:644"
     ["credentials"]="/aws:$HOME/.aws/credentials:600"
     ["backblazeapi"]="/backblaze:$HOME/.backblaze/backblazeapi:600"
     ["git_credentials"]="/github:$HOME/.git-credentials:600"
+    ["main_ssh_private_key"]="/:$HOME/.ssh/main_ssh_key:600"
+    ["main_ssh_public_key"]="/:$HOME/.ssh/main_ssh_key.pub:644"
   )
   for key in "${!file_secrets[@]}"; do
     IFS=':' read -r path dest perm <<< "${file_secrets[$key]}"
@@ -151,6 +160,22 @@ if [ "$TARGET" -eq 0 ]; then
   exit 0
 fi
 
+# # ============================================================
+# # SSH config 설정
+# # ============================================================
+# mkdir -p ~/.ssh
+# if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
+#   cat >> ~/.ssh/config << 'EOF'
+# Host github.com
+#   IdentityFile ~/.ssh/id_ed25519
+#   User git
+# EOF
+#   chmod 600 ~/.ssh/config
+#   echo "OK SSH config 설정 완료"
+# else
+#   sed -i '' '/Host github.com/,/^$/s|IdentityFile.*|IdentityFile ~/.ssh/id_ed25519|' ~/.ssh/config
+#   echo "OK SSH config 업데이트 완료"
+# fi
 # ============================================================
 # SSH config 설정
 # ============================================================
@@ -167,7 +192,15 @@ else
   sed -i '' '/Host github.com/,/^$/s|IdentityFile.*|IdentityFile ~/.ssh/id_ed25519|' ~/.ssh/config
   echo "OK SSH config 업데이트 완료"
 fi
+if ! grep -q "main_ssh_key" ~/.ssh/config 2>/dev/null; then
+  cat >> ~/.ssh/config << 'EOF'
 
+Host *
+  IdentityFile ~/.ssh/main_ssh_key
+  StrictHostKeyChecking no
+EOF
+  echo "OK SSH main_ssh_key config 추가 완료"
+fi
 # ============================================================
 # GitHub SSH 연결 테스트
 # ============================================================
@@ -299,6 +332,9 @@ if [ "$TARGET" -le 2 ]; then
   rm -f "$HOME/Library/Application Support/tabby/config.yaml"
   ln -sf "$FOLDERS/common/tabby/config.yaml" "$HOME/Library/Application Support/tabby/config.yaml"
   echo "OK Tabby 연결 완료"
+  rm -f ~/.wezterm.lua
+  ln -sf "$FOLDERS/common/wezterm/wezterm.lua" ~/.wezterm.lua
+  echo "OK WezTerm 연결 완료"
 fi
 
 # ============================================================
@@ -328,12 +364,12 @@ if [ "$TARGET" -eq 1 ]; then
     google-chrome brave-browser microsoft-edge \
     visual-studio-code cursor zed \
     github hammerspoon karabiner-elements \
-    obsidian tabby shottr mountain-duck \
+    obsidian tabby shottr mountain-duck wezterm\
     popclip keka dockdoor raycast hiddenbar alt-tab \
     font-hack-nerd-font font-symbols-only-nerd-font
 elif [ "$TARGET" -eq 2 ]; then
   brew install git python node wget pipx
-  brew install neovim lazygit
+  brew install neovim lazygit zsh-syntax-highlighting
   brew install yazi fd ripgrep fzf zoxide
   brew install --cask \
     visual-studio-code zed \
