@@ -447,6 +447,9 @@ New-Symlink "$env:APPDATA\Cursor\User\keybindings.json"      "$REPO\common\curso
 New-Symlink "$env:APPDATA\Cursor\User\settings.json"         "$REPO\common\cursor\settings.json"
 New-Symlink "$env:APPDATA\tabby\config.yaml"                 "$FOLDERS\common\tabby\config.yaml"
 
+New-Item -ItemType Directory -Force -Path "$HOME\.config\wezterm" | Out-Null
+New-Symlink "$HOME\.config\wezterm\wezterm.lua"              "$FOLDERS\common\wezterm\wezterm.lua"
+
 New-Symlink "$HOME\.gitattributes_global" "$REPO\.gitattributes"
 git config --global core.attributesFile "$HOME\.gitattributes_global"
 Write-LogOK "Git 글로벌 attributes 연결 완료"
@@ -575,6 +578,7 @@ $wingetApps = @(
     "appmakes.Typora",
     "Iterate.MountainDuck",
     "Figma.Figma",
+    "Wez.WezTerm",
     "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {

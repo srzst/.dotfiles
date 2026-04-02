@@ -266,8 +266,35 @@ $env:PATH += ";C:\Users\x\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache
 # ============================================================
 # WezTerm + PowerShell 컬러 활성화 (LS_COLORS 대체)
 # ============================================================
-$PSStyle.FileInfo.Directory = "`e[34m"     # 디렉토리 - 파랑
-$PSStyle.FileInfo.Executable = "`e[32m"    # 실행파일 - 녹색
-$PSStyle.FileInfo.Symlink = "`e[36m"       # 심볼릭링크 - 청록
+# $PSStyle.FileInfo.Directory = "`e[34m"     # 디렉토리 - 파랑
+# $PSStyle.FileInfo.Executable = "`e[32m"    # 실행파일 - 녹색
+# $PSStyle.FileInfo.Symlink = "`e[36m"       # 심볼릭링크 - 청록
 $env:TERM = 'xterm-256color'
 # ============================================================
+
+# Set-PSReadLineOption -Colors @{
+#     Default   = '#ebdbb2'  # Gruvbox fg
+#     Command   = '#b8bb26'
+#     Parameter = '#fabd2f'
+#     String    = '#b8bb26'
+#     Variable  = '#fb4934'
+#     Comment   = '#a89984'
+#     Keyword   = '#fb4934'
+#     Error     = '#fb4934'
+# }
+
+
+Set-PSReadLineOption -Colors @{
+    Default   = '#ffffff'
+    Command = '#98c379'
+    # Command   = '#00ff00'
+    Parameter = '#ffff00'
+    String    = '#00ffff'
+    Variable  = '#ff6e6e'
+    Comment   = '#888888'
+    Keyword   = '#ff0000'
+    Error     = '#ff0000'
+}
+$env:EZA_COLORS = "di=1;34:ln=1;36:ex=1;32:*.zip=1;31:*.ps1=1;33:*.lua=1;32:*.md=1;35:*.json=1;33"
+
+Set-PSReadLineKeyHandler -Chord Ctrl+U -Function BackwardDeleteLine
