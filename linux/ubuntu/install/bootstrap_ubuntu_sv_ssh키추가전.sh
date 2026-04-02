@@ -201,13 +201,13 @@ fetch_secret() {
 fetch_secret_multiline() {
   local key="$1"
   local path="${2:-/}"
-  # 여기서 raw 값을 그대로 가져옵니다.
   INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get "$key" \
     --projectId="$INFISICAL_PROJECT_ID" \
     --env="$INFISICAL_ENV" \
     --path="$path" \
     --plain --silent 2>/dev/null
 }
+
 # ============================================================
 # dev 전용 환경변수 주입
 # ============================================================
@@ -229,15 +229,16 @@ if [ "$TARGET" = "2" ]; then
     fi
   done
 fi
+
 # ============================================================
 # 파일 시크릿 복원 (Master SSH Key & Cloud Secrets)
 # ============================================================
 mkdir -p ~/.ssh ~/.aws ~/.backblaze
 chmod 700 ~/.ssh
 
-# 1. 범용 마스터 키 로드 (printf %b로 \n 문자열 대응)
-printf "%b" "$(fetch_secret_multiline "main_ssh_private_key" "/")" > ~/.ssh/main_ssh_key
-printf "%b" "$(fetch_secret_multiline "main_ssh_public_key" "/")" > ~/.ssh/main_ssh_key.pub
+# 1. Infisical 루트(/)에서 범용 마스터 키 로드
+fetch_secret_multiline "main_ssh_private_key" "/" > ~/.ssh/main_ssh_key
+fetch_secret_multiline "main_ssh_public_key" "/" > ~/.ssh/main_ssh_key.pub
 
 if [ ! -s ~/.ssh/main_ssh_key ]; then
     echo "ERROR 마스터 개인키 복원 실패 → Infisical 설정을 확인하세요."
@@ -268,30 +269,60 @@ if ! grep -q "main_ssh_key" ~/.ssh/config 2>/dev/null; then
 Host *
     IdentityFile ~/.ssh/main_ssh_key
     IdentityFile ~/.ssh/id_ed25519
-    StrictHostKeyChecking no
 EOF
     echo "OK SSH Config 마스터 키 등록 완료"
 fi
 
-# 4. 기타 클라우드 시크릿 복원 (기존 방식에 printf %b만 추가하여 안전성 확보)
-printf "%b" "$(fetch_secret_multiline "config" "/aws")" > ~/.aws/config
-printf "%b" "$(fetch_secret_multiline "credentials" "/aws")" > ~/.aws/credentials
+# 4. 기타 클라우드 시크릿 복원
+fetch_secret_multiline "config" "/aws" > ~/.aws/config
+fetch_secret_multiline "credentials" "/aws" > ~/.aws/credentials
 chmod 600 ~/.aws/credentials
 echo "OK .aws 완료"
 
-printf "%b" "$(fetch_secret_multiline "backblazeapi" "/backblaze")" > ~/.backblaze/backblazeapi
+fetch_secret_multiline "backblazeapi" "/backblaze" > ~/.backblaze/backblazeapi
 chmod 600 ~/.backblaze/backblazeapi
 echo "OK .backblaze 완료"
 
-printf "%b" "$(fetch_secret_multiline "git_credentials" "/github")" > ~/.git-credentials
+fetch_secret_multiline "git_credentials" "/github" > ~/.git-credentials
 chmod 600 ~/.git-credentials
 echo "OK .git-credentials 완료"
 
 mkdir -p ~/.config/rclone
-printf "%b" "$(fetch_secret_multiline "rclone_onedrive_sv" "/rclone")" > ~/.config/rclone/rclone.conf
+fetch_secret_multiline "rclone_onedrive_sv" "/rclone" > ~/.config/rclone/rclone.conf
 chmod 600 ~/.config/rclone/rclone.conf
 echo "OK rclone.conf 복원 완료"
 
+
+# # ============================================================
+# # 파일 시크릿 복원
+# # ============================================================
+# mkdir -p ~/.ssh ~/.aws ~/.backblaze
+
+# fetch_secret_multiline "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519
+# if [ ! -s ~/.ssh/id_ed25519 ]; then
+#   echo "ERROR SSH 개인키 복원 실패 → 토큰 및 키 이름 확인 후 재실행"
+#   exit 1
+# fi
+# chmod 600 ~/.ssh/id_ed25519
+# echo "OK SSH 개인키 복원 완료"
+
+# fetch_secret_multiline "config" "/aws" > ~/.aws/config
+# fetch_secret_multiline "credentials" "/aws" > ~/.aws/credentials
+# chmod 600 ~/.aws/credentials
+# echo "OK .aws 완료"
+
+# fetch_secret_multiline "backblazeapi" "/backblaze" > ~/.backblaze/backblazeapi
+# chmod 600 ~/.backblaze/backblazeapi
+# echo "OK .backblaze 완료"
+
+# fetch_secret_multiline "git_credentials" "/github" > ~/.git-credentials
+# chmod 600 ~/.git-credentials
+# echo "OK .git-credentials 완료"
+
+# mkdir -p ~/.config/rclone
+# fetch_secret_multiline "rclone_onedrive_sv" "/rclone" > ~/.config/rclone/rclone.conf
+# chmod 600 ~/.config/rclone/rclone.conf
+# echo "OK rclone.conf 복원 완료"
 
 # ============================================================
 # 시간대 설정

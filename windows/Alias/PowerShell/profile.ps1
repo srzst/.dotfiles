@@ -201,7 +201,40 @@ function ff {
     Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue |
         Where-Object { $_.FullName -notmatch '\\(node_modules|\.git|go\\pkg\\mod)\\' }
 }
+# ============================================================
+# SSH 접속 자동화 (Master SSH Key 방식)
+# ============================================================
+function _ssh_connect {
+    param (
+        [string]$user_name,
+        [string]$target_host
+    )
+    
+    $key_path = "$HOME\.ssh\main_ssh_key"
 
+    # 마스터 키 존재 확인
+    if (!(Test-Path $key_path)) {
+        Write-Host "[Error] 마스터 키($key_path)가 없습니다." -ForegroundColor Red
+        return
+    }
+
+    Write-Host "Connecting to $target_host as $user_name (via Master Key)..." -ForegroundColor Green
+    
+    ssh -i "$key_path" `
+        -o StrictHostKeyChecking=no `
+        -o UserKnownHostsFile=/dev/null `
+        -o IdentitiesOnly=yes `
+        "$user_name@$target_host"
+}
+
+# 서버별 함수 등록
+function pve { _ssh_connect "root" "pve" }
+function w1  { _ssh_connect "x" "w1" }
+function w2  { _ssh_connect "x" "w2" }
+function w3  { _ssh_connect "x" "w3" }
+function w5  { _ssh_connect "x" "w5" }
+function shorten { _ssh_connect "x" "shorten" }
+function stn { _ssh_connect "x" "shorten" }
 # ============================================================
 # 외부 도구 초기화 (Yazi, zoxide)
 # ============================================================
