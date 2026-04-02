@@ -263,3 +263,11 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
 
 $env:PATH += ";C:\Users\x\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude-code\2.1.70"
 
+# ============================================================
+# WezTerm + PowerShell 컬러 활성화 (LS_COLORS 대체)
+# ============================================================
+$PSStyle.FileInfo.Directory = "`e[34m"     # 디렉토리 - 파랑
+$PSStyle.FileInfo.Executable = "`e[32m"    # 실행파일 - 녹색
+$PSStyle.FileInfo.Symlink = "`e[36m"       # 심볼릭링크 - 청록
+$env:TERM = 'xterm-256color'
+# ============================================================

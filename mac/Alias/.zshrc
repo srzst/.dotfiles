@@ -281,3 +281,10 @@ w3()  { _ssh_connect "x" "w3"; }
 w5()  { _ssh_connect "x" "w5"; }
 shorten() { _ssh_connect "x" "shorten"; }
 stn() { _ssh_connect "x" "shorten"; }
+
+# zsh-syntax-highlighting
+source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# LS_COLORS for colorful ls
+export CLICOLOR=1
+export LSCOLORS="ExFxCxDxBxegedabagacad"   # 기본 예쁜 색상 (Catppuccin 느낌에 가까움)
