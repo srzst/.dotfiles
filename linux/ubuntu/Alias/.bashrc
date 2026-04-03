@@ -151,7 +151,7 @@ function gacp {
     git add . && git commit -m "${*:-auto commit}" && git push
 }
 
-function go {
+function gfo {
     local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
     git fetch origin && git reset --hard "origin/$branch"
 }
