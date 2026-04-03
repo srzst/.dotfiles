@@ -47,14 +47,22 @@ function nrc { Set-Location "$env:LOCALAPPDATA\nvim"; nvim . }
 function vrc { nvim $PROFILE }
 function src { . $PROFILE }
 function srcrc { . $PROFILE }
+# ============================================================
+# [파일 및 디렉토리 관리] eza 기반 최적화 (Windows)
+# ============================================================
+# 기본 리스트 (아이콘 제외, 폴더 우선 정렬)
+function l { eza -alF --group-directories-first $args }
+function ll { eza -alF --group-directories-first --git $args }
+function la { eza -aF --group-directories-first $args }
+function lt { eza -alF --sort=modified $args }
 
-# ============================================================
-# 파일 및 디렉토리 관리
-# ============================================================
-function l { Get-ChildItem -Force }
-function ll { Get-ChildItem -Force }
-function la { Get-ChildItem -Force }
-function lt { Get-ChildItem | Sort-Object LastWriteTime -Descending }
+# 트리 구조 (아이콘 제외, 숨김 파일 포함, .git 및 ignore 반영)
+function et { eza --tree -a -I ".git" --git-ignore $args }
+function et1 { eza --tree --level=1 -a -I ".git" --git-ignore $args }
+function et2 { eza --tree --level=2 -a -I ".git" --git-ignore $args }
+function et3 { eza --tree --level=3 -a -I ".git" --git-ignore $args }
+
+# 시스템 유틸리티
 function c { Clear-Host }
 function cc { Clear-Host }
 function e { Exit }
@@ -64,15 +72,51 @@ function ... { Set-Location ../.. }
 function h { Set-Location ~ }
 
 # 디렉토리 생성 후 이동
-function mc { New-Item -ItemType Directory -Path $args[0] -Force; Set-Location $args[0] }
+function mc ($path) { 
+    New-Item -ItemType Directory -Path $path -Force | Out-Null
+    Set-Location $path 
+}
 
-# 안전한 파일 조작 및 별칭 충돌 해결
+# 안전한 파일 조작 (rm 별칭 재정의)
 if (Test-Path "Alias:rm") { Remove-Item "Alias:rm" -Force }
-function Remove-Force { Remove-Item -Path $args -Force -Recurse -Verbose }
-Set-Alias -Name rm -Value Remove-Force -Option AllScope -Force
-# qq, ww 설정
-function qq { Set-Location ~/.dotfiles; ls }
-function ww { Set-Location ~/.dotfolders; ls }
+function rm { Remove-Item -Path $args -Force -Recurse -Verbose }
+
+# 사용자 지정 경로 이동 (이동 후 eza 자동 실행)
+function qq { Set-Location ~/.dotfiles; eza -F --group-directories-first }
+function ww { Set-Location ~/.dotfolders; eza -F --group-directories-first }
+
+# [추가 기능] cd 실행 후 자동 eza
+function cd {
+    param([string]$path)
+    if ($path) { Set-Location $path } else { Set-Location ~ }
+    eza -F --group-directories-first
+}
+# ============================================================
+# # ============================================================
+# # 파일 및 디렉토리 관리
+# # ============================================================
+# function l { Get-ChildItem -Force }
+# function ll { Get-ChildItem -Force }
+# function la { Get-ChildItem -Force }
+# function lt { Get-ChildItem | Sort-Object LastWriteTime -Descending }
+# function c { Clear-Host }
+# function cc { Clear-Host }
+# function e { Exit }
+# function ee { Exit }
+# function .. { Set-Location .. }
+# function ... { Set-Location ../.. }
+# function h { Set-Location ~ }
+
+# # 디렉토리 생성 후 이동
+# function mc { New-Item -ItemType Directory -Path $args[0] -Force; Set-Location $args[0] }
+
+# # 안전한 파일 조작 및 별칭 충돌 해결
+# if (Test-Path "Alias:rm") { Remove-Item "Alias:rm" -Force }
+# function Remove-Force { Remove-Item -Path $args -Force -Recurse -Verbose }
+# Set-Alias -Name rm -Value Remove-Force -Option AllScope -Force
+# # qq, ww 설정
+# function qq { Set-Location ~/.dotfiles; ls }
+# function ww { Set-Location ~/.dotfolders; ls }
 # ============================================================
 # 패키지 관리자 별칭 및 함수
 # ============================================================
@@ -187,6 +231,22 @@ function gfo {
     git fetch origin
     git reset --hard "origin/$branch"
 }
+
+# ============================================================
+# eza 트리 구조 별칭 (Windows PowerShell용)
+# ============================================================
+# 전체 깊이 트리
+function et { eza --tree -a -I ".git" --git-ignore $args }
+
+# 1단계 트리
+function et1 { eza --tree --level=1 -a -I ".git" --git-ignore $args }
+
+# 2단계 트리
+function et2 { eza --tree --level=2 -a -I ".git" --git-ignore $args }
+
+# 3단계 트리
+function et3 { eza --tree --level=3 -a -I ".git" --git-ignore $args }
+# ============================================================
 
 # ============================================================
 # 시스템 유틸리티

@@ -47,14 +47,22 @@ alias src='source ~/.zshrc'
 alias srcrc='source ~/.zshrc'
 alias e='exit'
 alias ee='exit'
+# ============================================================
+# 파일 및 디렉토리 관리 (eza 기반 최적화)
+# ============================================================
+# 기본 리스트 (아이콘 제외, 폴더 우선 정렬)
+alias l='eza -alF --group-directories-first'
+alias ll='eza -alF --group-directories-first --git'
+alias la='eza -aF --group-directories-first'
+alias lt='eza -alF --sort=modified' # 수정 시간순 정렬
 
-# ============================================================
-# 파일 및 디렉토리 관리
-# ============================================================
-alias l='ls -lah'
-alias ll='ls -lah'
-alias la='ls -lAh'
-alias lt='ls -laht'
+# 트리 구조 (아이콘 제외, 숨김 파일 포함, .git 및 ignore 반영)
+alias et='eza --tree -a -I ".git" --git-ignore'
+alias et1='eza --tree --level=1 -a -I ".git" --git-ignore'
+alias et2='eza --tree --level=2 -a -I ".git" --git-ignore'
+alias et3='eza --tree --level=3 -a -I ".git" --git-ignore'
+
+# 시스템 유틸리티
 alias c='clear'
 alias cc='clear'
 alias ..='cd ..'
@@ -64,17 +72,46 @@ alias h='cd ~'
 # 디렉토리 생성 후 이동
 mc() { mkdir -p "$1" && cd "$1"; }
 
-# cd 실행 후 자동 ls
+# cd 실행 후 자동 eza (한 줄로 간결하게 표시)
 cd() {
     if [ -n "$*" ]; then
-        builtin cd "$*" && ls -F
+        builtin cd "$*" && eza -F --group-directories-first
     else
-        builtin cd ~ && ls -F
+        builtin cd ~ && eza -F --group-directories-first
     fi
 }
+
 # 사용자 지정 경로 이동
 alias qq='cd ~/.dotfiles'
 alias ww='cd ~/.dotfolders'
+# ============================================================
+# # ============================================================
+# # 파일 및 디렉토리 관리
+# # ============================================================
+# alias l='ls -lah'
+# alias ll='ls -lah'
+# alias la='ls -lAh'
+# alias lt='ls -laht'
+# alias c='clear'
+# alias cc='clear'
+# alias ..='cd ..'
+# alias ...='cd ../..'
+# alias h='cd ~'
+
+# # 디렉토리 생성 후 이동
+# mc() { mkdir -p "$1" && cd "$1"; }
+
+# # cd 실행 후 자동 ls
+# cd() {
+#     if [ -n "$*" ]; then
+#         builtin cd "$*" && ls -F
+#     else
+#         builtin cd ~ && ls -F
+#     fi
+# }
+# # 사용자 지정 경로 이동
+# alias qq='cd ~/.dotfiles'
+# alias ww='cd ~/.dotfolders'
 # ============================================================
 # 패키지 관리
 # ============================================================
@@ -192,7 +229,22 @@ alias dlog='docker logs -f'
 # FIX: alias → 함수로 변경 (alias는 정의 시점에 즉시 평가되어 빈 값 고정)
 dstop() { docker stop $(docker ps -q); }
 alias dprune='docker system prune -af'
+# ============================================================
+# eza 트리 구조 별칭 (아이콘 제외, .git 및 git-ignore 반영)
+# ============================================================
+# 전체 깊이 트리 (주의: 매우 큰 폴더에서는 지양)
+alias et='eza --tree -a -I ".git" --git-ignore'
 
+# 1단계 트리
+alias et1='eza --tree --level=1 -a -I ".git" --git-ignore'
+
+# 2단계 트리
+alias et2='eza --tree --level=2 -a -I ".git" --git-ignore'
+
+# 3단계 트리
+alias et3='eza --tree --level=3 -a -I ".git" --git-ignore'
+# ============================================================
+# ============================================================
 # ============================================================
 # 시스템 / 네트워크
 # ============================================================

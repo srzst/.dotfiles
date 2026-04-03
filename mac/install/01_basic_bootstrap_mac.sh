@@ -335,6 +335,11 @@ if [ "$TARGET" -le 2 ]; then
   rm -f ~/.wezterm.lua
   ln -sf "$FOLDERS/common/wezterm/wezterm.lua" ~/.wezterm.lua
   echo "OK WezTerm 연결 완료"
+  # Ghostty 설정 연결 (macOS 전용 경로)
+  mkdir -p "$HOME/Library/Application Support/com.mitchellh.ghostty"
+  rm -f "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
+  ln -sf "$REPO/common/ghostty/config.ghostty" "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
+  echo "OK Ghostty 설정 연결 완료"
 fi
 
 # ============================================================
