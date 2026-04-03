@@ -1,0 +1,18 @@
+[
+  {
+    "context": "Editor && VimControl && !VimWaiting && !menu",
+    "bindings": {
+      "g d": ["workspace::SendKeystrokes", "gg\"_dG"],
+      "g y": ["workspace::SendKeystrokes", "gg\"+yG"],
+      "d": ["workspace::SendKeystrokes", "\"_d"],
+      "x": ["workspace::SendKeystrokes", "\"_x"],
+    },
+  },
+  {
+    "context": "Editor && vim_mode == visual && !menu",
+    "bindings": {
+      "d": ["workspace::SendKeystrokes", "\"_d"],
+      "x": ["workspace::SendKeystrokes", "\"_x"],
+    },
+  },
+]

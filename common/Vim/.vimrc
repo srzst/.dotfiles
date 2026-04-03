@@ -40,3 +40,30 @@ set t_vb=
 set clipboard=unnamedplus  " 시스템 클립보드와 동기화
 set mouse=a                " 마우스 사용 가능 설정
 
+" === 기존 설정 유지 ===
+set clipboard=unnamedplus
+set mouse=a
+
+" === 클립보드 & 고속 작업 매핑 수정 ===
+
+" 1. 기본 삭제(d, x) 시 시스템 클립보드 보호 (블랙홀 레지스터)
+" 이렇게 하면 d로 지워도 이전에 복사한 게 안 날아갑니다.
+nnoremap d "_d
+vnoremap d "_d
+nnoremap x "_x
+vnoremap x "_x
+
+" 2. gd: 문서 전체 삭제 (블랙홀 레지스터 사용으로 클립보드 보호)
+" 사용자님 요청: gg "_ d G
+nnoremap gd gg"_dG
+
+" 3. gy: 문서 전체 복사 (시스템 클립보드 '+' 레지스터로 강제 전송)
+" 사용자님 요청: gg y G (시스템 클립보드 연동 추가)
+nnoremap gy gg"+yG
+
+" 4. 선택 영역 복사(y) 시 시스템 클립보드로 명시적 전송
+vnoremap y "+y
+
+" 5. 붙여넣기(p)는 시스템 클립보드에서 가져오기
+nnoremap p "+p
+vnoremap p "+p
