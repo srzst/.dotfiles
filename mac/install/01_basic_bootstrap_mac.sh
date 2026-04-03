@@ -363,7 +363,7 @@ echo ""
 echo "Homebrew 앱 설치 중..."
 if [ "$TARGET" -eq 1 ]; then
   brew install git python python-tk node ffmpeg yt-dlp pngpaste wget terminal-notifier pipx rclone
-  brew install neovim lazygit
+  brew install neovim lazygit eza font-d2coding-nerd-font font-d2coding 
   brew install yazi sevenzip jq poppler fd ripgrep fzf zoxide imagemagick
   brew install --cask \
     google-chrome brave-browser microsoft-edge \
