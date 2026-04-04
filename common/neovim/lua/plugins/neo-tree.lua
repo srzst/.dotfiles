@@ -3,7 +3,6 @@
 -- vim.g.loaded_netrwPlugin = 1
 
 
-return{}
 -- return {
 --   "nvim-neo-tree/neo-tree.nvim",
 --   opts = {
@@ -24,3 +23,28 @@ return{}
 --     },
 --   },
 -- }
+
+return {
+  "nvim-neo-tree/neo-tree.nvim",
+  opts = {
+    filesystem = {
+      filtered_items = {
+        visible = true,
+        hide_dotfiles = false,
+        hide_gitignored = false,
+      },
+    },
+  },
+  init = function()
+    if vim.g.neovide then
+      vim.api.nvim_create_autocmd("VimEnter", {
+        once = true,
+        callback = function()
+          vim.defer_fn(function()
+            require("neo-tree.command").execute({ action = "show" })
+          end, 100)
+        end,
+      })
+    end
+  end,
+}

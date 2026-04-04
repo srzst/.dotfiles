@@ -26,13 +26,13 @@ vim.keymap.set('v', 'x', '"+d', { noremap = true, desc = 'Cut selection to syste
 -- 시스템 클립보드 내용을 기본으로 붙여넣습니다.
 vim.keymap.set({'n', 'v'}, 'p', '"+p', { noremap = true, desc = 'Paste from system clipboard' })
 
-
--- === 5. LSP 매핑 강제 덮어쓰기 (중요) ===
--- LazyVim은 LSP가 붙을 때 gd를 다시 매핑하므로, 이를 방지하기 위한 콜백입니다.
+-- === 5. LSP 매핑 강제 덮어쓰기 (수정본) ===
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local opts = { buffer = args.buf, noremap = true, silent = true }
-    -- LSP의 정의 이동(gd)을 죽이고 사용자님의 전체 삭제를 다시 할당
+    -- LazyVim/Snacks의 기본 LSP 매핑을 무효화하고 사용자 정의 매핑 강제 적용
     vim.keymap.set('n', 'gd', 'gg"_dG', opts)
+    vim.keymap.set('n', 'gy', 'gg"+yG', opts)
+    vim.keymap.set('n', 'gx', 'gg"+dG', opts)
   end,
 })
