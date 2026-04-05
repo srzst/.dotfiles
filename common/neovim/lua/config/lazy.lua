@@ -15,10 +15,36 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+  -- spec = {
+  --   -- add LazyVim and import its plugins
+  --   { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+  --   -- import/override with your plugins
+  --   { import = "plugins" },
+  -- },
   spec = {
-    -- add LazyVim and import its plugins
+    -- 1. 기본 LazyVim 로드
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
-    -- import/override with your plugins
+
+    -- 2. LazyGit 직접 추가 (이걸 넣으면 무조건 작동합니다)
+    {
+      "kdheepak/lazygit.nvim",
+      cmd = {
+        "LazyGit",
+        "LazyGitConfig",
+        "LazyGitCurrentFile",
+        "LazyGitFilter",
+        "LazyGitFilterCurrentFile",
+      },
+      keys = {
+        { "<leader>gg", "<cmd>LazyGit<cr>", desc = "LazyGit" },
+      },
+      -- optional for floating window border decoration
+      dependencies = {
+        "nvim-lua/plenary.nvim",
+      },
+    },
+
+    -- 3. 사용자 개별 플러그인 로드
     { import = "plugins" },
   },
   defaults = {
