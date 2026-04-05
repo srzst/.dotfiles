@@ -62,7 +62,13 @@ function et1 { eza --tree --level=1 -a -I ".git" --git-ignore $args }
 function et2 { eza --tree --level=2 -a -I ".git" --git-ignore $args }
 function et3 { eza --tree --level=3 -a -I ".git" --git-ignore $args }
 
-# 시스템 유틸리티
+# fzf
+function ff { fzf }
+function vf { nvim $(fzf) }
+function cf { cd $(fd --type d | fzf) }
+
+
+# 시스템 유틸리티/ff
 function c { Clear-Host }
 function cc { Clear-Host }
 function e { Exit }
@@ -232,21 +238,7 @@ function gfo {
     git reset --hard "origin/$branch"
 }
 
-# ============================================================
-# eza 트리 구조 별칭 (Windows PowerShell용)
-# ============================================================
-# 전체 깊이 트리
-function et { eza --tree -a -I ".git" --git-ignore $args }
 
-# 1단계 트리
-function et1 { eza --tree --level=1 -a -I ".git" --git-ignore $args }
-
-# 2단계 트리
-function et2 { eza --tree --level=2 -a -I ".git" --git-ignore $args }
-
-# 3단계 트리
-function et3 { eza --tree --level=3 -a -I ".git" --git-ignore $args }
-# ============================================================
 
 # ============================================================
 # 시스템 유틸리티
@@ -257,7 +249,7 @@ function port { param($p) if ($p) { netstat -ano | findstr ":$p" } else { netsta
 function myip { Invoke-RestMethod -Uri "https://ifconfig.me" }
 # FIX: ff 로 통일 (fzf f 단축키 충돌 방지 - GitBash와 일관성)
 # function ff   { param($name) Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue }
-function ff {
+function fn {
     param($name)
     if (!$name) { Write-Host "how to use: ff <search term>" -ForegroundColor Yellow; return }
     Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue |

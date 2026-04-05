@@ -39,12 +39,13 @@ vim.api.nvim_create_autocmd("VimEnter", {
   callback = setup_clipboard,
 })
 
-
 vim.opt.wrap = true
 vim.opt.linebreak = true
 
 -- 자동 저장
 vim.api.nvim_create_autocmd("FocusLost", {
-    pattern = "*",
-    command = "silent! wa",
+  pattern = "*",
+  command = "silent! wa",
 })
+
+vim.opt.termguicolors = true

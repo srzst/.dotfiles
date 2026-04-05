@@ -549,6 +549,7 @@ $wingetApps = @(
     "appmakes.Typora",
     "Iterate.MountainDuck",
     "Figma.Figma",
+    "Anthropic.ClaudeCode",
     "LocalSend.LocalSend"
 )
 foreach ($app in $wingetApps) {

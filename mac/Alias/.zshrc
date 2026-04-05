@@ -69,6 +69,11 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias h='cd ~'
 
+# fzf 
+alias ff='fzf'
+alias vf='nvim $(fzf)'
+alias cf='cd $(fd --type d | fzf)'
+
 # 디렉토리 생성 후 이동
 mc() { mkdir -p "$1" && cd "$1"; }
 
@@ -258,7 +263,7 @@ alias cleanup='find . -type f -name ".DS_Store" -delete && echo ".DS_Store 정�
 # 유틸리티 함수
 # ============================================================
 # FIX: f() → ff() (fzf f 단축키 충돌 방지, 전 플랫폼 통일)
-ff() { find . -iname "*$1*" 2>/dev/null; }
+fn() { find . -iname "*$1*" 2>/dev/null; }
 ds() { du -sh "${1:-.}" 2>/dev/null | sort -h; }
 pk() { ps aux | grep -i "$1" | grep -v grep | awk '{print $2}' | xargs kill -9; }
 

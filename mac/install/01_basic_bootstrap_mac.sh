@@ -367,7 +367,7 @@ if [ "$TARGET" -eq 1 ]; then
   brew install yazi sevenzip jq poppler fd ripgrep fzf zoxide imagemagick
   brew install --cask \
     google-chrome brave-browser microsoft-edge \
-    visual-studio-code cursor zed \
+    visual-studio-code cursor zed claude-code\
     github hammerspoon karabiner-elements \
     obsidian tabby shottr mountain-duck wezterm\
     popclip keka dockdoor raycast hiddenbar alt-tab \
