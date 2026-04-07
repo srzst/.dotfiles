@@ -281,23 +281,62 @@ if [ "$TARGET" -eq 1 ]; then
     fi
   done
 fi
-
 # ============================================================
-# 심볼릭 링크 설정 (생략된 경로 등 유지)
+# 심볼릭 링크 설정 (Ghostty 및 설정 폴더 통합)
 # ============================================================
 echo ""
 echo "심볼릭 링크 설정 중..."
+
+# 1. 기본 설정 파일
 ln -sf "$REPO/mac/Alias/.zshrc" ~/.zshrc
 ln -sf "$REPO/Common/Vim/.vimrc" ~/.vimrc
-mkdir -p ~/.config
+
+# 2. .config 하위 디렉토리 생성
+mkdir -p ~/.config/nvim ~/.config/yazi ~/.config/zed ~/.config/ghostty
+
+# 3. .dotfiles 기반 설정 연결
 ln -sf "$REPO/Common/neovim" ~/.config/nvim
 ln -sf "$REPO/Common/yazi" ~/.config/yazi
-mkdir -p ~/.config/zed
 ln -sf "$REPO/Common/zed/settings.json" ~/.config/zed/settings.json
+
+# 4. .dotfolders 기반 Ghostty 설정 연결 (파일명 변경 주의)
+if [ -f "$FOLDERS/common/ghostty/config.ghosty" ]; then
+    ln -sf "$FOLDERS/common/ghostty/config.ghosty" ~/.config/ghostty/config
+    echo "OK Ghostty 설정 연결 완료"
+else
+    echo "WARN Ghostty 설정 파일을 찾을 수 없습니다: $FOLDERS/common/ghostty/config.ghosty"
+fi
+
 echo "OK 주요 설정 파일 연결 완료"
 
 # ============================================================
-# Homebrew 패키지 설치
+# LaunchAgents 등록 (사용자 커스텀 스크립트 자동 실행)
+# ============================================================
+echo -e "\nLaunchAgents 설정 및 로드 중..."
+
+# 1. 시스템 LaunchAgents 디렉토리 생성
+mkdir -p ~/Library/LaunchAgents
+
+# 2. .dotfiles 내의 plist 파일들을 시스템 경로로 심볼릭 링크 연결
+# (사용자님의 폴더 구조에 맞춰 경로 수정: $REPO/mac/LaunchAgents 로 가정)
+AGENT_SRC="$REPO/mac/LaunchAgents"
+
+if [ -d "$AGENT_SRC" ]; then
+    for plist in "$AGENT_SRC"/*.plist; do
+        filename=$(basename "$plist")
+        ln -sf "$plist" ~/Library/LaunchAgents/"$filename"
+        
+        # 3. 에이전트 로드 (이미 로드된 경우 unload 후 다시 load)
+        launchctl unload ~/Library/LaunchAgents/"$filename" 2>/dev/null
+        launchctl load ~/Library/LaunchAgents/"$filename"
+        echo "OK 에이전트 로드 완료: $filename"
+    done
+else
+    echo "WARN LaunchAgents 소스 폴더를 찾을 수 없습니다: $AGENT_SRC"
+fi
+
+# ============================================================
+# Homebrew 패키지 설치 (Raycast 및 Zsh 플러그인 추가)
 # ============================================================
 echo ""
 echo "Homebrew 앱 설치 중 (TARGET=$TARGET)..."
@@ -305,11 +344,13 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 
 typeset -a apps casks
 if [ "$TARGET" -eq 1 ]; then
-    apps=(git python python-tk node ffmpeg yt-dlp pngpaste wget terminal-notifier pipx rclone neovim lazygit eza font-d2coding-nerd-font font-d2coding yazi sevenzip jq poppler fd ripgrep fzf zoxide imagemagick)
-    casks=(google-chrome hammerspoon karabiner-elements shottr popclip font-hack-nerd-font font-symbols-only-nerd-font)
+    # zsh-syntax-highlighting, zsh-autosuggestions 누락 수정 완료
+    apps=(git python python-tk node ffmpeg yt-dlp pngpaste wget terminal-notifier pipx rclone neovim lazygit eza font-d2coding-nerd-font font-d2coding yazi sevenzip jq poppler fd ripgrep fzf zoxide imagemagick zsh-syntax-highlighting zsh-autosuggestions)
+    # casks 리스트에 raycast 추가
+    casks=(google-chrome raycast hammerspoon karabiner-elements shottr popclip font-hack-nerd-font font-symbols-only-nerd-font)
 elif [ "$TARGET" -eq 2 ]; then
-    apps=(git python node wget pipx neovim lazygit zsh-syntax-highlighting yazi fd ripgrep fzf zoxide)
-    casks=(font-hack-nerd-font font-symbols-only-nerd-font)
+    apps=(git python node wget pipx neovim lazygit zsh-syntax-highlighting zsh-autosuggestions yazi fd ripgrep fzf zoxide)
+    casks=(font-hack-nerd-font font-symbols-only-nerd-font raycast)
 else
     apps=(git python wget neovim)
 fi
@@ -321,6 +362,26 @@ for cask in "${casks[@]}"; do
     brew list --cask "$cask" &>/dev/null || brew install --cask "$cask"
 done
 echo "OK Homebrew 앱 설치 완료"
+
+# ============================================================
+# 시작 프로그램(Login Items) 및 Raycast 등록
+# ============================================================
+echo -e "\n시작 프로그램 등록 중..."
+
+typeset -a login_apps
+login_apps=(
+    "Raycast"
+    "Hammerspoon"
+    "Karabiner-Elements"
+    "Shottr"
+)
+
+for app in "${login_apps[@]}"; do
+    if [ -d "/Applications/${app}.app" ]; then
+        osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"/Applications/${app}.app\", hidden:false}" 2>/dev/null
+        echo "OK 시작 프로그램 등록: $app"
+    fi
+done
 
 # ============================================================
 # GitHub Desktop 호환 - remote HTTPS 변경
