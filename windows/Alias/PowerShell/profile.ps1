@@ -77,6 +77,9 @@ function .. { Set-Location .. }
 function ... { Set-Location ../.. }
 function h { Set-Location ~ }
 
+
+function ~ { Set-Location ~ }
+
 # 디렉토리 생성 후 이동
 function mc ($path) { 
     New-Item -ItemType Directory -Path $path -Force | Out-Null
