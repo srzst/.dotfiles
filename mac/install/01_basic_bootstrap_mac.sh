@@ -93,20 +93,32 @@ fi
 export INFISICAL_TOKEN
 
 # ============================================================
-# fetch_secret 함수 (tr 의존성 제거)
+# fetch_secret 함수 (멀티라인 정규화 및 에러 핸들링 강화)
 # ============================================================
 fetch_secret() {
-  local key="$1"
-  local path="${2:-/}"
-  local raw_val
-  raw_val=$(INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get "$key" \
-    --projectId="$INFISICAL_PROJECT_ID" \
-    --env="$INFISICAL_ENV" \
-    --path="$path" \
-    --plain --silent 2>/dev/null)
-  echo -n "${raw_val//[$'\t\r\n']/}"
-}
+    local key="$1"
+    local secret_path="${2:-/}"
+    local raw_val
 
+    # 1. 시크릿 로드 (INFISICAL_TOKEN은 이미 export된 상태 가정)
+    raw_val=$(infisical secrets get "$key" \
+        --projectId="$INFISICAL_PROJECT_ID" \
+        --env="$INFISICAL_ENV" \
+        --path="$secret_path" \
+        --plain --silent 2>/dev/null)
+
+    if [ -z "$raw_val" ]; then
+        return 1
+    fi
+
+    # 2. 정규화 (사용자님 정리 규칙 반영: \r\n 제거 및 이스케이프된 \n 처리)
+    # Zsh에서 이스케이프된 \\n을 실제 줄바꿈으로 복원
+    raw_val="${raw_val//\\n/$'\n'}"
+    # \r 제거 (Windows 스타일 줄바꿈 대응)
+    raw_val="${raw_val//$'\r'/}"
+    
+    echo -n "$raw_val"
+}
 # ============================================================
 # Git 설정
 # ============================================================
