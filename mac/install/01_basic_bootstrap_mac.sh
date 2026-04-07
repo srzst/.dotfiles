@@ -115,7 +115,7 @@ git config --global user.name "x"
 echo "OK Git 설정 완료"
 
 # ============================================================
-# 파일 시크릿 복원 (typeset -A 및 키 순회 수정)
+# 파일 시크릿 복원 (Zsh path 변수 충돌 해결)
 # ============================================================
 if [ "$TARGET" -ne 3 ]; then
     echo ""
@@ -133,12 +133,12 @@ if [ "$TARGET" -ne 3 ]; then
     )
 
     for key in "${(k)file_secrets[@]}"; do
-        local val_info="${file_secrets[$key]}"
-        # Zsh 안전 분리
-        IFS=':' read -r path dest perm <<EOF
+        val_info="${file_secrets[$key]}"
+        # path 대신 secret_path를 사용하여 $PATH 오염 방지
+        IFS=':' read -r secret_path dest perm <<EOF
 $val_info
 EOF
-        val=$(fetch_secret "$key" "$path")
+        val=$(fetch_secret "$key" "$secret_path")
         if [ -n "$val" ]; then
             mkdir -p "$(dirname "$dest")"
             echo "$val" > "$dest"
@@ -152,7 +152,7 @@ EOF
 fi
 
 # ============================================================
-# Keychain 시크릿 주입
+# Keychain 시크릿 주입 (변수명 수정)
 # ============================================================
 if [ "$TARGET" -ne 3 ]; then
   echo ""
@@ -165,8 +165,8 @@ if [ "$TARGET" -ne 3 ]; then
     "token_gist_srzst" "/github"
   )
   for key in "${(k)keychain_secrets[@]}"; do
-    path="${keychain_secrets[$key]}"
-    val=$(fetch_secret "$key" "$path")
+    secret_path="${keychain_secrets[$key]}"
+    val=$(fetch_secret "$key" "$secret_path")
     if [ -n "$val" ]; then
       security add-generic-password -a "$USER" -s "$key" -w "$val" -U 2>/dev/null
       echo "OK Keychain 저장: $key"
@@ -175,13 +175,6 @@ if [ "$TARGET" -ne 3 ]; then
     fi
   done
   echo "OK Keychain 주입 완료"
-fi
-
-# TARGET=0: 복구 후 종료
-if [ "$TARGET" -eq 0 ]; then
-  echo ""
-  echo "OK 복구 완료 (TARGET=0)"
-  exit 0
 fi
 
 # ============================================================
