@@ -420,35 +420,29 @@ if (-Not (Test-Path $REPO)) {
     Write-LogOK ".dotfiles 이미 존재 (스킵)"
     git -C $REPO pull 2>$null
 }
+
 # ============================================================
 # .dotfolders clone
 # ============================================================
 if (-Not (Test-Path $FOLDERS)) {
     try {
-        # 비공개 저장소이므로 SSH 주소 사용 (이미 PART 1에서 SSH 키 복구됨)
-        git clone "git@github.com:srzst/.dotfolders.git" $FOLDERS 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
-        Write-LogOK ".dotfolders clone 완료"
+        Write-Log ".dotfolders 클론 시도 중..."
+        # 2>&1를 제거하거나, Git 출력의 성격을 고려하여 처리
+        git clone "git@github.com:srzst/.dotfolders.git" $FOLDERS --quiet
+        
+        if (Test-Path $FOLDERS) {
+            Write-LogOK ".dotfolders clone 완료"
+        } else {
+            throw "폴더가 생성되지 않았습니다."
+        }
     } catch {
         Write-LogErr ".dotfolders clone 실패: $_"
     }
 } else {
     Write-LogOK ".dotfolders 이미 존재 (스킵)"
-    git -C $FOLDERS pull 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+    git -C $FOLDERS pull --quiet
 }
-# # ============================================================
-# # .dotfolders clone
-# # ============================================================
-# if (-Not (Test-Path $FOLDERS)) {
-#     try {
-#         git clone "https://github.com/srzst/.dotfolders.git" $FOLDERS 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
-#         Write-LogOK ".dotfolders clone 완료"
-#     } catch {
-#         Write-LogErr ".dotfolders clone 실패: $_"
-#     }
-# } else {
-#     Write-LogOK ".dotfolders 이미 존재 (스킵)"
-#     git -C $FOLDERS pull 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
-# }
+
 # ============================================================
 # 심볼릭 링크
 # ============================================================
@@ -500,7 +494,7 @@ try {
     scoop bucket add nerd-fonts
     scoop bucket add versions
     scoop update
-    scoop install Hack-NF Hack-NF-Mono
+    scoop install Hack-NF Hack-NF-Mono JetBrainsMono-NF
     scoop install autohotkey1.1
     $ahkExe = "$HOME\scoop\apps\autohotkey1.1\current\AutoHotkeyU64.exe"
     cmd /c "assoc .ahk=AutoHotkeyScript" 2>&1 | Out-Null
