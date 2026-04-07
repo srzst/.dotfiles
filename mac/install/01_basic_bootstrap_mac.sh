@@ -164,9 +164,8 @@ EOF
     done
     echo "OK 파일 시크릿 복원 완료"
 fi
-
 # ============================================================
-# Keychain 시크릿 주입 (변수명 수정)
+# Keychain 시크릿 주입 (Windows 변수명과 매칭)
 # ============================================================
 if [ "$TARGET" -ne 3 ]; then
   echo ""
@@ -175,17 +174,17 @@ if [ "$TARGET" -ne 3 ]; then
   keychain_secrets=(
     "tailscale_authkey" "/"
     "gistup_md_manual_srzst" "/github"
-    "token_gist_sndzin" "/github"
-    "token_gist_srzst" "/github"
+    "personal_access_tokens_classic_sndzin" "/github"
+    "personal_access_tokens_classic_srzst" "/github"
   )
   for key in "${(k)keychain_secrets[@]}"; do
     secret_path="${keychain_secrets[$key]}"
     val=$(fetch_secret "$key" "$secret_path")
-    if [ -n "$val" ]; then
+    if [[ -n "$val" ]]; then
       security add-generic-password -a "$USER" -s "$key" -w "$val" -U 2>/dev/null
       echo "OK Keychain 저장: $key"
     else
-      echo "WARN Keychain 저장 실패 (값 없음): $key"
+      echo "WARN Keychain 저장 실패 (값 없음): $key (경로: $secret_path)"
     fi
   done
   echo "OK Keychain 주입 완료"
