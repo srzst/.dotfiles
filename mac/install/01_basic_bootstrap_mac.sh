@@ -15,24 +15,21 @@ FOLDERS="$HOME/.dotfolders"
 MACHINE_TYPE="main"
 # ============================================================
 # ============================================================
-# Homebrew 및 시스템 PATH 설정
+# Homebrew 및 시스템 PATH 설정 (강제 복구)
 # ============================================================
 setup_brew_env() {
-    # 1. 시스템 기본 경로를 명시적으로 최우선 확보
+    # 시스템 기본 경로를 명시적으로 추가하여 명령어 유실 방지
     export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
-    # 2. Apple Silicon Mac인 경우 Homebrew 환경 로드
     if [[ $(uname -m) == 'arm64' ]]; then
         if [[ -x /opt/homebrew/bin/brew ]]; then
-            # PATH가 덮어씌워지지 않도록 shellenv 실행
             eval "$(/opt/homebrew/bin/brew shellenv)"
         fi
     fi
 }
 
-# 함수 실행 (명령어들을 찾기 위해 최상단에서 호출)
+# 함수 즉시 실행하여 PATH 확보
 setup_brew_env
-
 if ! command -v brew &>/dev/null; then
     echo "Homebrew 설치 중..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
