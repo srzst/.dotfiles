@@ -580,6 +580,7 @@ if ([System.Environment]::GetEnvironmentVariable("PYTHONUTF8", "User") -ne "1") 
 } else {
     Write-LogOK "PYTHONUTF8 이미 설정됨 (스킵)"
 }
+
 # ============================================================
 # Winget 패키지 설치
 # ============================================================
@@ -623,27 +624,25 @@ foreach ($app in $wingetApps) {
         $result = winget install --id $app --exact `
             --accept-package-agreements --accept-source-agreements --scope user 2>&1
         Add-Content -Path $LOG_FILE -Value ($result | Out-String)
-        if ($LASTEXITCODE -eq 0)               { Write-LogOK "winget 설치 완료: $app" }
-        elseif ($LASTEXITCODE -eq -1978335189) { Write-LogOK "winget 이미 설치됨 (스킵): $app" }
-        else                                   { Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app" }
+        if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq -1978335189) { Write-LogOK "winget 설치 완료/이미 설치됨: $app" }
+        else { Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app" }
     } catch {
         Write-LogErr "winget 예외 발생: $app : $_"
     }
 }
 $wingetAppsNoScope = @(
     # "ZedIndustries.Zed",
-    "Bandisoft.Bandizip"
-    # "Kakao.KakaoTalk"
-    # "Google.Chrome"
+    "Bandisoft.Bandizip",
+    # "Kakao.KakaoTalk",
+    "Google.Chrome"
 )
 foreach ($app in $wingetAppsNoScope) {
     try {
         $result = winget install -e --id $app `
             --accept-package-agreements --accept-source-agreements --ignore-security-hash 2>&1
         Add-Content -Path $LOG_FILE -Value ($result | Out-String)
-        if ($LASTEXITCODE -eq 0)               { Write-LogOK "winget 설치 완료: $app" }
-        elseif ($LASTEXITCODE -eq -1978335189) { Write-LogOK "winget 이미 설치됨 (스킵): $app" }
-        else                                   { Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app" }
+        if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq -1978335189) { Write-LogOK "winget 설치 완료/이미 설치됨: $app" }
+        else { Write-LogWarn "winget 설치 실패 (exit $LASTEXITCODE): $app" }
     } catch {
         Write-LogErr "winget 예외 발생: $app : $_"
     }
@@ -651,7 +650,8 @@ foreach ($app in $wingetAppsNoScope) {
 
 # Raycast
 $raycastExe = "$FOLDERS\windows\Raycast\Raycast Installer.exe"
-if (Get-AppxPackage -Name "*Raycast*" -ErrorAction SilentlyContinue) {
+$raycastInstalledPath = "$env:LOCALAPPDATA\Programs\Raycast\Raycast.exe"
+if ((Get-AppxPackage -Name "*Raycast*" -ErrorAction SilentlyContinue) -or (Test-Path $raycastInstalledPath)) {
     Write-LogOK "Raycast 이미 설치됨 (스킵)"
 } elseif (Test-Path $raycastExe) {
     Start-Process $raycastExe -Wait
@@ -659,6 +659,7 @@ if (Get-AppxPackage -Name "*Raycast*" -ErrorAction SilentlyContinue) {
 } else {
     Write-LogWarn "Raycast 설치 파일 없음 → $raycastExe 확인 또는 https://raycast.com/windows 수동 설치"
 }
+
 
 # ============================================================
 # pip / npm 패키지
