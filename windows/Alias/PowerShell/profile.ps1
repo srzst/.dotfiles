@@ -204,7 +204,7 @@ function gstl  { git stash list }
 function gr    { param([string]$ref) git reset --hard $ref }
 function grs   { git reset --soft HEAD~1 }
 function gclean { git clean -fd }
-
+function gg { lazygit $args }
 # FIX: gc 재정의 (제거 후 누락됐던 함수)
 function gc  { git commit -m "$args" }
 function gca { git commit -m "auto commit" }

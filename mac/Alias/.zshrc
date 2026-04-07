@@ -182,7 +182,7 @@ alias gco='git checkout'
 alias gcb='git checkout -b'
 alias gbd='git branch -d'
 alias gm='git merge'
-
+alias gg='lazygit'
 # 상태 보존 및 초기화
 alias gst='git stash'
 alias gstp='git stash pop'
