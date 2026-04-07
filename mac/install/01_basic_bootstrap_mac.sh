@@ -176,31 +176,58 @@ fi
 #   sed -i '' '/Host github.com/,/^$/s|IdentityFile.*|IdentityFile ~/.ssh/id_ed25519|' ~/.ssh/config
 #   echo "OK SSH config 업데이트 완료"
 # fi
+# # ============================================================
+# # SSH config 설정
+# # ============================================================
+# mkdir -p ~/.ssh
+# if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
+#   cat >> ~/.ssh/config << 'EOF'
+# Host github.com
+#   IdentityFile ~/.ssh/id_ed25519
+#   User git
+# EOF
+#   chmod 600 ~/.ssh/config
+#   echo "OK SSH config 설정 완료"
+# else
+#   sed -i '' '/Host github.com/,/^$/s|IdentityFile.*|IdentityFile ~/.ssh/id_ed25519|' ~/.ssh/config
+#   echo "OK SSH config 업데이트 완료"
+# fi
+# if ! grep -q "main_ssh_key" ~/.ssh/config 2>/dev/null; then
+#   cat >> ~/.ssh/config << 'EOF'
+
+# Host *
+#   IdentityFile ~/.ssh/main_ssh_key
+#   StrictHostKeyChecking no
+# EOF
+#   echo "OK SSH main_ssh_key config 추가 완료"
+# fi
+
 # ============================================================
 # SSH config 설정
 # ============================================================
 mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+
+# GitHub 설정
 if ! grep -q "Host github.com" ~/.ssh/config 2>/dev/null; then
   cat >> ~/.ssh/config << 'EOF'
 Host github.com
   IdentityFile ~/.ssh/id_ed25519
   User git
 EOF
-  chmod 600 ~/.ssh/config
-  echo "OK SSH config 설정 완료"
+  echo "OK SSH config GitHub 설정 완료"
 else
-  sed -i '' '/Host github.com/,/^$/s|IdentityFile.*|IdentityFile ~/.ssh/id_ed25519|' ~/.ssh/config
-  echo "OK SSH config 업데이트 완료"
+  # macOS sed 호환성 유지
+  sed -i '' '/Host github.com/,/IdentityFile/s|IdentityFile.*|IdentityFile ~/.ssh/id_ed25519|' ~/.ssh/config
+  echo "OK SSH config GitHub 업데이트 완료"
 fi
-if ! grep -q "main_ssh_key" ~/.ssh/config 2>/dev/null; then
-  cat >> ~/.ssh/config << 'EOF'
 
-Host *
-  IdentityFile ~/.ssh/main_ssh_key
-  StrictHostKeyChecking no
-EOF
+# 전역(Main) 키 설정
+if ! grep -q "main_ssh_key" ~/.ssh/config 2>/dev/null; then
+  echo -e "\nHost *\n  IdentityFile ~/.ssh/main_ssh_key\n  StrictHostKeyChecking no" >> ~/.ssh/config
   echo "OK SSH main_ssh_key config 추가 완료"
 fi
+chmod 600 ~/.ssh/config
 # ============================================================
 # GitHub SSH 연결 테스트
 # ============================================================
@@ -356,35 +383,85 @@ if [[ $(uname -m) == 'arm64' ]]; then
   fi
 fi
 
+# # ============================================================
+# # Homebrew 패키지 설치
+# # ============================================================
+# echo ""
+# echo "Homebrew 앱 설치 중..."
+# if [ "$TARGET" -eq 1 ]; then
+#   brew install git python python-tk node ffmpeg yt-dlp pngpaste wget terminal-notifier pipx rclone
+#   brew install neovim lazygit eza font-d2coding-nerd-font font-d2coding 
+#   brew install yazi sevenzip jq poppler fd ripgrep fzf zoxide imagemagick
+#   brew install --cask \
+#     google-chrome brave-browser microsoft-edge \
+#     visual-studio-code cursor zed claude-code\
+#     github hammerspoon karabiner-elements \
+#     obsidian tabby shottr mountain-duck wezterm\
+#     popclip keka dockdoor raycast hiddenbar alt-tab \
+#     font-hack-nerd-font font-symbols-only-nerd-font
+# elif [ "$TARGET" -eq 2 ]; then
+#   brew install git python node wget pipx
+#   brew install neovim lazygit zsh-syntax-highlighting
+#   brew install yazi fd ripgrep fzf zoxide
+#   brew install --cask \
+#     visual-studio-code zed \
+#     font-hack-nerd-font font-symbols-only-nerd-font
+# elif [ "$TARGET" -eq 3 ]; then
+#   brew install git python wget
+#   brew install neovim
+# fi
+# echo "OK Homebrew 앱 설치 완료"
 # ============================================================
 # Homebrew 패키지 설치
 # ============================================================
 echo ""
-echo "Homebrew 앱 설치 중..."
-if [ "$TARGET" -eq 1 ]; then
-  brew install git python python-tk node ffmpeg yt-dlp pngpaste wget terminal-notifier pipx rclone
-  brew install neovim lazygit eza font-d2coding-nerd-font font-d2coding 
-  brew install yazi sevenzip jq poppler fd ripgrep fzf zoxide imagemagick
-  brew install --cask \
-    google-chrome brave-browser microsoft-edge \
-    visual-studio-code cursor zed claude-code\
-    github hammerspoon karabiner-elements \
-    obsidian tabby shottr mountain-duck wezterm\
-    popclip keka dockdoor raycast hiddenbar alt-tab \
-    font-hack-nerd-font font-symbols-only-nerd-font
-elif [ "$TARGET" -eq 2 ]; then
-  brew install git python node wget pipx
-  brew install neovim lazygit zsh-syntax-highlighting
-  brew install yazi fd ripgrep fzf zoxide
-  brew install --cask \
-    visual-studio-code zed \
-    font-hack-nerd-font font-symbols-only-nerd-font
-elif [ "$TARGET" -eq 3 ]; then
-  brew install git python wget
-  brew install neovim
-fi
-echo "OK Homebrew 앱 설치 완료"
+echo "Homebrew 앱 설치 중 (TARGET=$TARGET)..."
+export HOMEBREW_NO_AUTO_UPDATE=1
 
+if [ "$TARGET" -eq 1 ]; then
+    # Formulae 리스트
+    apps=(
+        git python python-tk node ffmpeg yt-dlp pngpaste wget 
+        terminal-notifier pipx rclone neovim lazygit eza 
+        font-d2coding-nerd-font font-d2coding yazi sevenzip 
+        jq poppler fd ripgrep fzf zoxide imagemagick
+    )
+    # Casks 리스트
+    casks=(
+        google-chrome brave-browser microsoft-edge 
+        visual-studio-code cursor zed claude-code
+        github hammerspoon karabiner-elements 
+        obsidian tabby shottr mountain-duck wezterm
+        popclip keka dockdoor raycast hiddenbar alt-tab 
+        font-hack-nerd-font font-symbols-only-nerd-font
+    )
+elif [ "$TARGET" -eq 2 ]; then
+    apps=(git python node wget pipx neovim lazygit zsh-syntax-highlighting yazi fd ripgrep fzf zoxide)
+    casks=(visual-studio-code zed font-hack-nerd-font font-symbols-only-nerd-font)
+elif [ "$TARGET" -eq 3 ]; then
+    apps=(git python wget neovim)
+    casks=()
+fi
+
+# Formulae 설치 루프
+for app in "${apps[@]}"; do
+    if brew list --formula "$app" &>/dev/null; then
+        echo "OK $app 이미 설치됨 (스킵)"
+    else
+        brew install "$app" || echo "WARN $app 설치 실패"
+    fi
+done
+
+# Casks 설치 루프
+for cask in "${casks[@]}"; do
+    if brew list --cask "$cask" &>/dev/null; then
+        echo "OK $cask 이미 설치됨 (스킵)"
+    else
+        brew install --cask "$cask" || echo "WARN $cask 설치 실패"
+    fi
+done
+
+echo "OK Homebrew 앱 설치 완료"
 # ============================================================
 # pipx / gita 설치 (기본/경량)
 # ============================================================
