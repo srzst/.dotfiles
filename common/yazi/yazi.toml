@@ -1,12 +1,42 @@
+# ============================================================
+# [opener] 각 도구별 실행 정의
+# ============================================================
 [opener]
+# 터미널 내에서 수정 (Neovim)
 edit = [
-	{ run = 'nvim "$@"', block = true, desc = "Edit with Neovim" },
+    { run = 'nvim "$@"', block = true, desc = "Edit with Neovim" },
+]
+# GUI 에디터로 열기 (VS Code) - orphan: 터미널이 닫혀도 유지
+code = [
+    { run = 'code "$@"', orphan = true, desc = "Edit with VS Code" },
+]
+# Windows 시스템 기본 연결 프로그램
+default = [
+    { run = 'start "" "$@"', orphan = true, desc = "Open with System" },
 ]
 
+# ============================================================
+# [open] 확장자별 매칭 규칙
+# ============================================================
 [open]
 rules = [
-	{ name = "*.txt", use = "edit" },
-	{ name = "*.md",  use = "edit" },
-	{ name = "*.lua", use = "edit" },
-    { mime = "text/*", use = "edit" },
+    # 1. 스크립트 및 프로그래밍 언어 (nvim 우선, code 보조)
+    { name = "*.{py,ahk,lua,go,ps1,sh,js,ts,php}", use = ["edit", "code"] },
+
+    # 2. 설정 및 데이터 파일 (Json, Yaml, Toml, Md)
+    { name = "*.{json,yaml,yml,toml,md,txt,conf,ini}", use = ["edit", "code"] },
+
+    # 3. 웹 관련
+    { name = "*.{html,css,scss}", use = ["code", "default"] },
+
+    # 4. 이미지 및 미디어 (시스템 기본 뷰어)
+    { mime = "image/*", use = "default" },
+    { mime = "video/*", use = "default" },
+    { mime = "application/pdf", use = "default" },
+
+    # 5. 폴더 열기 (yazi 내부 이동이 기본이지만, 엔터 시 시스템 탐색기로 열기)
+    { mime = "inode/directory", use = "default" },
+
+    # 6. 기타 모든 파일 (안전 장치: 시스템 기본값으로 열기)
+    { name = "*", use = "default" },
 ]
