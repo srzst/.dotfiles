@@ -91,33 +91,33 @@ else
   echo "OK Infisical 토큰 로드 완료"
 fi
 export INFISICAL_TOKEN
+# ============================================================
+# fetch_secret: 멀티라인(SSH 키 등) 보존형 함수
+# ============================================================
 
-# ============================================================
-# fetch_secret 함수 (멀티라인 정규화 및 에러 핸들링 강화)
-# ============================================================
 fetch_secret() {
     local key="$1"
     local secret_path="${2:-/}"
-    local raw_val
+    local val
 
-    # 1. 시크릿 로드 (INFISICAL_TOKEN은 이미 export된 상태 가정)
-    raw_val=$(infisical secrets get "$key" \
+    # 1. Infisical에서 값 가져오기 (따옴표로 감싸서 공백/줄바꿈 보존)
+    val=$(infisical secrets get "$key" \
         --projectId="$INFISICAL_PROJECT_ID" \
         --env="$INFISICAL_ENV" \
         --path="$secret_path" \
         --plain --silent 2>/dev/null)
 
-    if [ -z "$raw_val" ]; then
+    if [[ -z "$val" ]]; then
         return 1
     fi
 
-    # 2. 정규화 (사용자님 정리 규칙 반영: \r\n 제거 및 이스케이프된 \n 처리)
-    # Zsh에서 이스케이프된 \\n을 실제 줄바꿈으로 복원
-    raw_val="${raw_val//\\n/$'\n'}"
-    # \r 제거 (Windows 스타일 줄바꿈 대응)
-    raw_val="${raw_val//$'\r'/}"
-    
-    echo -n "$raw_val"
+    # 2. 정규화: 이스케이프된 \n 문자를 실제 줄바꿈으로 복원 (컨텍스트 규칙 반영)
+    val="${val//\\n/$'\n'}"
+    # Windows 스타일 \r 제거
+    val="${val//$'\r'/}"
+
+    # 3. 값 반환 (함수 결과값 출력 시 줄바꿈 유지를 위해 echo 대신 printf 활용 권장)
+    printf "%s" "$val"
 }
 # ============================================================
 # Git 설정
@@ -125,9 +125,8 @@ fetch_secret() {
 git config --global user.email "x@srzst.com"
 git config --global user.name "x"
 echo "OK Git 설정 완료"
-
 # ============================================================
-# 파일 시크릿 복원 (Zsh path 변수 충돌 해결)
+# 파일 시크릿 복원 루프
 # ============================================================
 if [ "$TARGET" -ne 3 ]; then
     echo ""
@@ -146,18 +145,21 @@ if [ "$TARGET" -ne 3 ]; then
 
     for key in "${(k)file_secrets[@]}"; do
         val_info="${file_secrets[$key]}"
-        # path 대신 secret_path를 사용하여 $PATH 오염 방지
+        # path 대신 secret_path 사용 (Zsh $PATH 충돌 방지)
         IFS=':' read -r secret_path dest perm <<EOF
 $val_info
 EOF
+        # 값을 가져올 때 줄바꿈이 깨지지 않도록 변수에 담음
         val=$(fetch_secret "$key" "$secret_path")
-        if [ -n "$val" ]; then
+
+        if [[ -n "$val" ]]; then
             mkdir -p "$(dirname "$dest")"
+            # 파일 저장 시 반드시 "$val" (따옴표) 사용해야 멀티라인 유지됨
             echo "$val" > "$dest"
             chmod "$perm" "$dest"
-            echo "OK 파일 저장: $dest"
+            echo "OK 파일 저장 성공: $dest"
         else
-            echo "WARN 파일 저장 실패 (값 없음): $key"
+            echo "WARN 파일 저장 실패 (값 없음): $key (경로: $secret_path)"
         fi
     done
     echo "OK 파일 시크릿 복원 완료"
