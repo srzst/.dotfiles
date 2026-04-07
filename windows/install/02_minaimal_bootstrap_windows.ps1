@@ -231,6 +231,26 @@ if (-Not (Get-Command openssl -ErrorAction SilentlyContinue)) {
 } else {
     Write-LogOK "openssl 이미 설치됨 (스킵)"
 }
+# # ============================================================
+# # Infisical CLI 설치
+# # ============================================================
+# if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
+#     Write-Log "Infisical CLI 설치 중..."
+#     try {
+#         scoop bucket add infisical https://github.com/infisical/scoop-infisical
+#         scoop install infisical
+#         $env:PATH = "$HOME\scoop\shims;" + [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+#         if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
+#             throw "infisical 설치 후에도 명령어 없음"
+#         }
+#         Write-LogOK "Infisical CLI 설치 완료"
+#     } catch {
+#         Write-LogErr "Infisical CLI 설치 실패: $_"
+#         exit 1
+#     }
+# } else {
+#     Write-LogOK "Infisical CLI 이미 설치됨 (스킵)"
+# }
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
@@ -239,11 +259,15 @@ if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
     try {
         scoop bucket add infisical https://github.com/infisical/scoop-infisical
         scoop install infisical
-        $env:PATH = "$HOME\scoop\shims;" + [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+        
+        # [중요] 설치 직후 현재 세션의 PATH에 scoop shims 경로를 강제로 추가
+        $env:PATH = "$HOME\scoop\shims;" + $env:PATH
+        
+        # 경로 업데이트 후 다시 확인
         if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
-            throw "infisical 설치 후에도 명령어 없음"
+            throw "infisical 설치 후에도 PATH 인식 실패"
         }
-        Write-LogOK "Infisical CLI 설치 완료"
+        Write-LogOK "Infisical CLI 설치 및 PATH 반영 완료"
     } catch {
         Write-LogErr "Infisical CLI 설치 실패: $_"
         exit 1
@@ -251,7 +275,6 @@ if (-Not (Get-Command infisical -ErrorAction SilentlyContinue)) {
 } else {
     Write-LogOK "Infisical CLI 이미 설치됨 (스킵)"
 }
-
 # ============================================================
 # Secrets 복원 - 환경변수
 # ============================================================
