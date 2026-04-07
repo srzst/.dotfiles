@@ -485,11 +485,16 @@ New-Symlink "$HOME\.gitattributes_global" "$REPO\.gitattributes"
 git config --global core.attributesFile "$HOME\.gitattributes_global"
 Write-LogOK "Git 글로벌 attributes 연결 완료"
 
+
 # ============================================================
 # Scoop 패키지 설치
 # ============================================================
 try {
-    scoop install gsudo vim curl rclone copyq googlechrome honeyview
+    scoop install gsudo vim curl rclone copyq googlechrome honeyview eza
+    
+    # 설치 직후 현재 세션의 PATH에 scoop shims 경로를 강제로 추가
+    $env:PATH = "$HOME\scoop\shims;" + $env:PATH
+    
     scoop bucket add extras
     scoop bucket add nerd-fonts
     scoop bucket add versions
@@ -781,12 +786,28 @@ if (Test-Path $startupScript) {
 } else {
     Write-LogWarn "startup_register.ps1 없음 (스킵): $startupScript"
 }
-
 # ============================================================
-# 레지스트리 설정
+# 레지스트리 및 시스템 시각 효과 설정
 # ============================================================
+# Microsoft IME 이전 버전 호환 모드 설정
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\InputMethod\Settings\KOR" -Name "EnableCompatibilityMode" -Value 1 -Type DWord
 Write-LogOK "Microsoft IME 이전 버전 호환 모드 설정 완료"
+
+# 창 그림자 제거 (Windows API 직접 호출 방식)
+if (-not ([System.Management.Automation.PSTypeName]"WinAPI2").Type) {
+    Add-Type -TypeDefinition @"
+    using System;
+    using System.Runtime.InteropServices;
+    public class WinAPI2 {
+        [DllImport("user32.dll")]
+        public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, uint fWinIni);
+    }
+"@
+}
+
+# 0x1025: SPI_SETDROPSHADOW, 0: 비활성화, 3: SPIF_UPDATEINIFILE | SPIF_SENDCHANGE
+[WinAPI2]::SystemParametersInfo(0x1025, 0, [IntPtr]0, 3)
+Write-LogOK "창 그림자 제거 및 시스템 반영 완료"
 
 # ============================================================
 # 마우스 커서 설치
