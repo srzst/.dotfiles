@@ -16,16 +16,19 @@ MACHINE_TYPE="main"
 # ============================================================
 
 # ============================================================
-# Homebrew 선행 설치 (bootstrap 시 필수)
+# Homebrew 선행 설치 (PATH 보존형)
 # ============================================================
 setup_brew_env() {
+    # 기본 시스템 경로를 명시적으로 추가하여 명령어 유실 방지
+    export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
     if [[ $(uname -m) == 'arm64' ]]; then
-        if [[ -f /opt/homebrew/bin/brew ]]; then
+        if [[ -x /opt/homebrew/bin/brew ]]; then
+            # eval 시 기존 PATH가 유지되도록 처리
             eval "$(/opt/homebrew/bin/brew shellenv)"
         fi
     fi
 }
-
 if ! command -v brew &>/dev/null; then
     echo "Homebrew 설치 중..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
