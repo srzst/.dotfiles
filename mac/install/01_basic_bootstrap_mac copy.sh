@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 exec < /dev/tty
 
 # ============================================================
@@ -15,50 +15,23 @@ FOLDERS="$HOME/.dotfolders"
 MACHINE_TYPE="main"
 # ============================================================
 
-# # ============================================================
-# # Homebrew 선행 설치 (bootstrap 시 필수)
-# # ============================================================
-# if ! command -v brew &>/dev/null; then
-#   echo "Homebrew 설치 중..."
-#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-#   if [[ $(uname -m) == 'arm64' ]]; then
-#     eval "$(/opt/homebrew/bin/brew shellenv)"
-#   fi
-#   echo "OK Homebrew 설치 완료"
-# else
-#   echo "OK Homebrew 이미 설치됨 (스킵)"
-#   if [[ $(uname -m) == 'arm64' ]]; then
-#     eval "$(/opt/homebrew/bin/brew shellenv)"
-#   fi
-# fi
 # ============================================================
 # Homebrew 선행 설치 (bootstrap 시 필수)
 # ============================================================
-setup_brew_env() {
-    if [[ $(uname -m) == 'arm64' ]]; then
-        # Apple Silicon 경로 확인 및 적용
-        if [[ -f /opt/homebrew/bin/brew ]]; then
-            eval "$(/opt/homebrew/bin/brew shellenv)"
-        fi
-    fi
-}
-
 if ! command -v brew &>/dev/null; then
-    echo "Homebrew 설치 중..."
-    # Homebrew 설치 스크립트 실행
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    
-    setup_brew_env
-    echo "OK Homebrew 설치 완료"
+  echo "Homebrew 설치 중..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [[ $(uname -m) == 'arm64' ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  fi
+  echo "OK Homebrew 설치 완료"
 else
-    echo "OK Homebrew 이미 설치됨 (스킵)"
-    setup_brew_env
+  echo "OK Homebrew 이미 설치됨 (스킵)"
+  if [[ $(uname -m) == 'arm64' ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  fi
 fi
 
-# brew가 설치되었음에도 command로 인식 안 될 경우를 대비한 최종 확인
-if ! command -v brew &>/dev/null && [[ -f /opt/homebrew/bin/brew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
@@ -495,15 +468,16 @@ if [ "$TARGET" -eq 1 ]; then
     )
     # Casks 리스트
     casks=(
-        google-chrome 
-        hammerspoon karabiner-elements 
-        shottr 
-        popclip 
+        google-chrome brave-browser microsoft-edge 
+        visual-studio-code cursor zed claude-code
+        github hammerspoon karabiner-elements 
+        obsidian tabby shottr mountain-duck wezterm
+        popclip keka dockdoor raycast hiddenbar alt-tab 
         font-hack-nerd-font font-symbols-only-nerd-font
     )
 elif [ "$TARGET" -eq 2 ]; then
     apps=(git python node wget pipx neovim lazygit zsh-syntax-highlighting yazi fd ripgrep fzf zoxide)
-    casks=(font-hack-nerd-font font-symbols-only-nerd-font)
+    casks=(visual-studio-code zed font-hack-nerd-font font-symbols-only-nerd-font)
 elif [ "$TARGET" -eq 3 ]; then
     apps=(git python wget neovim)
     casks=()
