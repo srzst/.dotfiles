@@ -281,8 +281,9 @@ if [ "$TARGET" -eq 1 ]; then
     fi
   done
 fi
+
 # ============================================================
-# 심볼릭 링크 설정 (Ghostty 및 설정 폴더 통합)
+# 심볼릭 링크 설정 (앱 및 설정 폴더 통합)
 # ============================================================
 echo ""
 echo "심볼릭 링크 설정 중..."
@@ -293,21 +294,39 @@ ln -sf "$REPO/Common/Vim/.vimrc" ~/.vimrc
 
 # 2. .config 하위 디렉토리 생성
 mkdir -p ~/.config/nvim ~/.config/yazi ~/.config/zed ~/.config/ghostty
+mkdir -p "$HOME/Library/Application Support"
 
-# 3. .dotfiles 기반 설정 연결
+# 3. .dotfiles(REPO) 기반 설정 연결
 ln -sf "$REPO/Common/neovim" ~/.config/nvim
 ln -sf "$REPO/Common/yazi" ~/.config/yazi
 ln -sf "$REPO/Common/zed/settings.json" ~/.config/zed/settings.json
 
-# 4. .dotfolders 기반 Ghostty 설정 연결 (파일명 변경 주의)
+# 4. .dotfolders(FOLDERS) 기반 설정 연결
+
+# Ghostty
 if [ -f "$FOLDERS/common/ghostty/config.ghosty" ]; then
     ln -sf "$FOLDERS/common/ghostty/config.ghosty" ~/.config/ghostty/config
-    echo "OK Ghostty 설정 연결 완료"
+    echo "OK Ghostty 연결 완료"
 else
-    echo "WARN Ghostty 설정 파일을 찾을 수 없습니다: $FOLDERS/common/ghostty/config.ghosty"
+    echo "WARN Ghostty 파일을 찾을 수 없습니다: $FOLDERS/common/ghostty/config.ghosty"
 fi
 
-echo "OK 주요 설정 파일 연결 완료"
+# BetterTouchTool
+if [ -d "$FOLDERS/mac/btt" ]; then
+    rm -rf "$HOME/Library/Application Support/BetterTouchTool"
+    ln -s "$FOLDERS/mac/btt" "$HOME/Library/Application Support/BetterTouchTool"
+    echo "OK BetterTouchTool 연결 완료"
+fi
+
+# Keyboard Maestro
+if [ -d "$FOLDERS/mac/keyboard_maestro" ]; then
+    rm -rf "$HOME/Library/Application Support/Keyboard Maestro"
+    ln -s "$FOLDERS/mac/keyboard_maestro" "$HOME/Library/Application Support/Keyboard Maestro"
+    echo "OK Keyboard Maestro 연결 완료"
+fi
+
+echo "OK 모든 심볼릭 링크 설정 완료"
+
 
 # ============================================================
 # LaunchAgents 등록 (사용자 커스텀 스크립트 자동 실행)
@@ -334,9 +353,8 @@ if [ -d "$AGENT_SRC" ]; then
 else
     echo "WARN LaunchAgents 소스 폴더를 찾을 수 없습니다: $AGENT_SRC"
 fi
-
 # ============================================================
-# Homebrew 패키지 설치 (Raycast 및 Zsh 플러그인 추가)
+# Homebrew 패키지 설치 (Raycast, BTT, KM 및 Zsh 플러그인 추가)
 # ============================================================
 echo ""
 echo "Homebrew 앱 설치 중 (TARGET=$TARGET)..."
@@ -344,13 +362,39 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 
 typeset -a apps casks
 if [ "$TARGET" -eq 1 ]; then
-    # zsh-syntax-highlighting, zsh-autosuggestions 누락 수정 완료
-    apps=(git python python-tk node ffmpeg yt-dlp pngpaste wget terminal-notifier pipx rclone neovim lazygit eza font-d2coding-nerd-font font-d2coding yazi sevenzip jq poppler fd ripgrep fzf zoxide imagemagick zsh-syntax-highlighting zsh-autosuggestions)
-    # casks 리스트에 raycast 추가
-    casks=(google-chrome raycast hammerspoon karabiner-elements shottr popclip font-hack-nerd-font font-symbols-only-nerd-font)
+    # --- CLI Tools & Plugins ---
+    apps=(
+        git python python-tk node ffmpeg yt-dlp 
+        pngpaste wget terminal-notifier pipx rclone 
+        neovim lazygit eza yazi sevenzip jq poppler 
+        fd ripgrep fzf zoxide imagemagick 
+        zsh-syntax-highlighting zsh-autosuggestions
+        font-d2coding-nerd-font font-d2coding
+    )
+    # --- GUI Applications (Casks) ---
+    casks=(
+        google-chrome 
+        raycast               # 런처
+        hammerspoon           # 자동화
+        karabiner-elements    # 키 매핑
+        bettertouchtool       # 입력 장치 확장
+        keyboard-maestro      # 매크로 자동화
+        shottr                # 스크린샷
+        popclip               # 텍스트 팝업 메뉴
+        font-hack-nerd-font 
+        font-symbols-only-nerd-font
+    )
 elif [ "$TARGET" -eq 2 ]; then
-    apps=(git python node wget pipx neovim lazygit zsh-syntax-highlighting zsh-autosuggestions yazi fd ripgrep fzf zoxide)
-    casks=(font-hack-nerd-font font-symbols-only-nerd-font raycast)
+    apps=(
+        git python node wget pipx neovim 
+        lazygit yazi fd ripgrep fzf zoxide 
+        zsh-syntax-highlighting zsh-autosuggestions
+    )
+    casks=(
+        raycast
+        font-hack-nerd-font 
+        font-symbols-only-nerd-font
+    )
 else
     apps=(git python wget neovim)
 fi
