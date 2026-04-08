@@ -408,7 +408,7 @@ done
 echo "OK Homebrew 앱 설치 완료"
 
 # ============================================================
-# 시작 프로그램(Login Items) 및 Raycast 등록
+# 시작 프로그램(Login Items) 및 주요 앱 등록
 # ============================================================
 echo -e "\n시작 프로그램 등록 중..."
 
@@ -418,15 +418,26 @@ login_apps=(
     "Hammerspoon"
     "Karabiner-Elements"
     "Shottr"
+    "BetterTouchTool"
+    "Keyboard Maestro"
+    "Bitwarden"
+    "PopClip"
+    "CleanShot X"
 )
 
 for app in "${login_apps[@]}"; do
-    if [ -d "/Applications/${app}.app" ]; then
-        osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"/Applications/${app}.app\", hidden:false}" 2>/dev/null
-        echo "OK 시작 프로그램 등록: $app"
+    APP_PATH="/Applications/${app}.app"
+    if [ -d "$APP_PATH" ]; then
+        # 이미 등록되어 있는지 확인 후, 없을 때만 추가 (오류 방지)
+        check_item=$(osascript -e "tell application \"System Events\" to get name of every login item" | grep -w "$app")
+        if [ -z "$check_item" ]; then
+            osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"$APP_PATH\", hidden:false}" 2>/dev/null
+            echo "OK 시작 프로그램 등록 완료: $app"
+        else
+            echo "SKIP 이미 등록됨: $app"
+        fi
     fi
 done
-
 # ============================================================
 # GitHub Desktop 호환 - remote HTTPS 변경
 # ============================================================
