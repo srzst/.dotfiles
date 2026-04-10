@@ -292,6 +292,7 @@ function w3  { _ssh_connect "x" "w3" }
 function w5  { _ssh_connect "x" "w5" }
 function shorten { _ssh_connect "x" "shorten" }
 function stn { _ssh_connect "x" "shorten" }
+function wtt  { _ssh_connect "x" "100.107.192.115" }
 # ============================================================
 # 외부 도구 초기화 (Yazi, zoxide)
 # ============================================================
