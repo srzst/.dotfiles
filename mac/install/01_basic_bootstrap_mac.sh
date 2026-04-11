@@ -460,3 +460,6 @@ fi
 
 echo ""
 echo "OK Mac 설치 완료 (TARGET=$TARGET, MODE=$MODE)"
+
+
+# 데이지  디스크 설치  
