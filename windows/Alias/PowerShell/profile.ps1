@@ -181,31 +181,162 @@ function gbD   { param([string]$b) git branch -D $b }      # 브랜치 강제 �
 function gm    { param([string]$b) git merge $b }          # 브랜치 병합
 function gg    { lazygit $args }                           # lazygit 실행
 
+# ============================================================
 # 태그 관리
-function gt    { git tag }                                 # 태그 목록 확인
-function gtd   { param([string]$t) git tag -d $t }         # 태그 삭제
-# gta: 메시지만 입력하면 날짜 기반 태그 자동 생성
-# gta: 날짜_시간(메시지) 형식으로 태그명 자동 생성
-function gta {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$m
-    )
+# ============================================================
 
-    # 메시지 내 공백을 언더바로 치환
+# gt: 태그 목록 확인
+function gt { git tag }
+
+# gtd: 특정 태그 삭제
+function gtd { param([string]$t) git tag -d $t }
+
+# gta: 현재 커밋에 태그만 붙이기 (날짜_시간(메시지) 형식)
+function gta {
+    param([Parameter(Mandatory=$true)][string]$m)
     $msg_clean = $m -replace ' ', '_'
-    
-    # 태그명 형식: 260412_1045(메시지)
     $timestamp = Get-Date -Format "yyMMdd_HHmm"
     $tag_name = "${timestamp}($msg_clean)"
-    
-    # 태그 생성
     git tag -a $tag_name -m $m
-    
     Write-Host "✅ 태그 생성 완료: $tag_name" -ForegroundColor Green
 }
 
+# gt1: 빈 커밋 생성 후 태그 백업 (변경사항 없어도 스냅샷 가능)
+function gt1 {
+    param([Parameter(Mandatory=$true)][string]$m)
+    $msg_clean = $m -replace ' ', '_'
+    $timestamp = Get-Date -Format "yyMMdd_HHmm"
+    $tag_name = "${timestamp}($msg_clean)"
+    git commit --allow-empty -m "checkpoint: $m"
+    git tag -a $tag_name -m $m
+    Write-Host "✅ 태그 백업 완료: $tag_name" -ForegroundColor Green
+}
 
+# gt2: 특정 태그에서 복원
+# 사용: gt2 태그명                                    → 전체 복원
+# 사용: gt2 태그명 파일명                             → 단일 파일 복원
+# 사용: gt2 태그명 파일명1 파일명2 파일명3            → 복수 파일 복원
+function gt2 {
+    param(
+        [Parameter(Mandatory=$true)][string]$tag,
+        [Parameter(ValueFromRemainingArguments=$true)][string[]]$files
+    )
+    $root = git rev-parse --show-toplevel
+    if ($files.Count -gt 0) {
+        foreach ($f in $files) {
+            $rel = [System.IO.Path]::GetRelativePath($root, (Resolve-Path $f))
+            git -C $root restore --source=$tag $rel
+            Write-Host "✅ 복원 완료: $f (from $tag)" -ForegroundColor Green
+        }
+    } else {
+        git -C $root restore --source=$tag .
+        Write-Host "✅ 전체 복원 완료 (from $tag)" -ForegroundColor Green
+    }
+}
+
+# gt3: 특정 태그 삭제
+function gt3 {
+    param([Parameter(Mandatory=$true)][string]$tag)
+    git tag -d $tag
+    Write-Host "✅ 태그 삭제 완료: $tag" -ForegroundColor Green
+}
+
+# gt4: 등록된 태그 모두 삭제
+function gt4 {
+    $confirm = Read-Host "⚠️  모든 태그를 삭제합니다. 계속할까요? (y/N)"
+    if ($confirm -match '^[Yy]$') {
+        git tag | ForEach-Object { git tag -d $_ }
+        Write-Host "✅ 모든 태그 삭제 완료" -ForegroundColor Green
+    } else {
+        Write-Host "취소됨"
+    }
+}
+
+# ============================================================
+# Git 파일 단위 백업/복원 함수 (단일 파일 전용)
+# ============================================================
+
+# g1: 특정 파일 백업 커밋
+# 사용: g1 파일명            → 기본 메시지: 260412_2210 수정전
+# 사용: g1 파일명 "메시지"   → 커스텀 메시지
+function g1 {
+    param(
+        [Parameter(Mandatory=$true)][string]$file,
+        [string]$msg = "$(Get-Date -Format 'yyMMdd_HHmm') 수정전"
+    )
+    if (-not (Test-Path $file)) {
+        Write-Host "❌ 파일을 찾을 수 없습니다: $file" -ForegroundColor Red
+        return
+    }
+    $root = git rev-parse --show-toplevel
+    $rel = [System.IO.Path]::GetRelativePath($root, (Resolve-Path $file))
+    Add-Content $file ""
+    git -C $root add $rel
+    git -C $root commit -m "backup: $rel - $msg"
+    Write-Host "✅ 저장: $rel - $msg" -ForegroundColor Green
+}
+
+# g2: 해시만으로 파일 자동 인식 후 복원
+# 사용: g2 커밋해시
+function g2 {
+    param([Parameter(Mandatory=$true)][string]$hash)
+    $root = git rev-parse --show-toplevel
+    $rel = git -C $root show --name-only --format="" $hash | Select-Object -First 1
+    if (-not $rel) {
+        Write-Host "❌ 해시를 찾을 수 없습니다." -ForegroundColor Red
+        return
+    }
+    git -C $root restore --source=$hash $rel
+    Write-Host "✅ 복원: $rel" -ForegroundColor Green
+}
+
+# ============================================================
+# Git 태그 백업/복원 함수 사용법
+# ============================================================
+#
+# [gt] 태그 목록 확인
+#   gt
+#
+# [gta] 현재 커밋에 태그만 붙이기
+#   gta "메시지"
+#   gta "functions.php 수정 완료"
+#   → 260412_2210(functions.php_수정_완료)
+#
+# [gt1] 빈 커밋 생성 후 태그 백업 (변경사항 없어도 스냅샷 가능)
+#   gt1 "메시지"
+#   gt1 "functions.php 수정 전"
+#   → 260412_2210(functions.php_수정_전)
+#
+# [gt2] 특정 태그에서 복원
+#   gt2 태그명                                      # 전체 복원
+#   gt2 태그명 functions.php                        # 단일 파일 복원
+#   gt2 태그명 functions.php header.php style.css   # 복수 파일 복원
+#
+# [gt3] 특정 태그 삭제
+#   gt3 태그명
+#   gt3 260412_2210(functions.php_수정_전)
+#
+# [gt4] 등록된 태그 모두 삭제
+#   gt4
+#
+# ============================================================
+# Git 파일 단위 백업/복원 함수 사용법 (단일 파일 전용)
+# ============================================================
+#
+# [g1] 특정 파일 백업 커밋
+#   g1 파일명              # 기본 메시지: 260412_2210 수정전
+#   g1 파일명 "메시지"     # 커스텀 메시지
+#   g1 ytb_dl.py
+#   g1 ytb_dl.py "기능1 추가 전"
+#
+# [g2] 해시로 파일 복원 (파일명 자동 인식)
+#   g2 커밋해시
+#   g2 9c24313
+#
+# [gl] 백업 이력 확인
+#   gl
+#   → 9c24313 backup: common/python/util/ytb_dl/ytb_dl.py - 260412_2210 수정전
+# ============================================================
 
 # 상태 보존 및 복구 (최신 restore 반영)
 function gst   { git stash }                               # 작업 임시 저장
@@ -216,6 +347,10 @@ function grs   { git reset --soft HEAD~1 }                 # 최근 커밋 취�
 function gre   { param([string]$f) git restore $f }        # 파일 변경사항 복구 (checkout -- 대체)
 function gres  { param([string]$f) git restore --staged $f } # 스테이징 취소
 function gclean { git clean -fd }                          # 추적되지 않는 파일 삭제
+
+
+
+
 
 # ------------------------------------------------------------
 # Git 자동화 함수 (복사+붙여넣기 본문 지원 및 폴더 생성)

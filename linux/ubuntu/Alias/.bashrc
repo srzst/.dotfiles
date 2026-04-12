@@ -112,36 +112,172 @@ alias gbd='git branch -d'                 # 브랜치 삭제
 alias gm='git merge'                      # 브랜치 병합
 alias gg='lazygit'                        # lazygit
 
+
 # 태그 관리
-alias gt='git tag'                        # 태그 목록
-alias gtd='git tag -d'                    # 태그 삭제
+alias gt='git tag'                        # 태그 목록 확인
+
 # gta: 날짜_시간(메시지) 형식으로 태그명 자동 생성
 gta() {
     if [ -z "$1" ]; then
         echo "❌ 에러: 태그 메시지를 입력해주세요."
         return 1
     fi
-
-    # 태그명: YYMMDD_HHMM(입력메시지)
-    # 메시지 내부의 공백은 보기 좋게 언더바(_)로 치환합니다.
     local msg_clean="${1// /_}"
     local tag_name="$(date +'%y%m%d_%H%M')(${msg_clean})"
-    
     git tag -a "$tag_name" -m "$1"
-    
     echo "✅ 태그 생성 완료: $tag_name"
 }
 
+# gt1: 현재 상태 태그 백업 (빈 커밋 후 태그)
+gt1() {
+    if [ -z "$1" ]; then
+        echo "❌ 에러: 태그 메시지를 입력해주세요."
+        return 1
+    fi
+    local msg_clean="${1// /_}"
+    local tag_name="$(date +'%y%m%d_%H%M')(${msg_clean})"
+    git commit --allow-empty -m "checkpoint: $1"
+    git tag -a "$tag_name" -m "$1"
+    echo "✅ 태그 백업 완료: $tag_name"
+}
 
-# 상태 보존 및 복구 (restore 반영)
+# gt2: 특정 태그에서 파일 복원
+# 사용: gt2 태그명 [파일명 ...] (파일명 생략 시 전체 복원)
+gt2() {
+    if [ -z "$1" ]; then
+        echo "❌ 에러: 태그명을 입력해주세요."
+        return 1
+    fi
+    local tag="$1"
+    shift
+    if [ $# -gt 0 ]; then
+        for f in "$@"; do
+            git restore --source="$tag" "$f"
+            echo "✅ 복원 완료: $f (from $tag)"
+        done
+    else
+        git restore --source="$tag" .
+        echo "✅ 전체 복원 완료 (from $tag)"
+    fi
+}
+# gt3: 특정 태그 삭제
+# 사용: gt3 태그명
+gt3() {
+    if [ -z "$1" ]; then
+        echo "❌ 에러: 태그명을 입력해주세요."
+        return 1
+    fi
+    git tag -d "$1"
+    echo "✅ 태그 삭제 완료: $1"
+}
+
+# gt4: 등록된 태그 모두 삭제
+gt4() {
+    echo "⚠️  모든 태그를 삭제합니다. 계속할까요? (y/N): "
+    read confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        git tag | xargs git tag -d
+        echo "✅ 모든 태그 삭제 완료"
+    else
+        echo "취소됨"
+    fi
+}
+
+# ============================================================
+# Git 태그 백업/복원 함수 사용법
+# ============================================================
+#
+# [gt] 태그 목록 확인
+#   gt
+#
+# [gta] 현재 커밋에 태그만 붙이기
+#   gta "메시지"
+#   gta "functions.php 수정 완료"
+#   → 260412_2210(functions.php_수정_완료)
+#
+# [gt1] 빈 커밋 생성 후 태그 백업 (변경사항 없어도 스냅샷 가능)
+#   gt1 "메시지"
+#   gt1 "functions.php 수정 전"
+#   → 260412_2210(functions.php_수정_전)
+#
+# [gt2] 특정 태그에서 복원
+#   gt2 태그명                                      # 전체 복원
+#   gt2 태그명 functions.php                        # 단일 파일 복원
+#   gt2 태그명 functions.php header.php style.css   # 복수 파일 복원
+#
+# [gt3] 특정 태그 삭제
+#   gt3 태그명
+#   gt3 260412_2210(functions.php_수정_전)
+#
+# [gt4] 등록된 태그 모두 삭제
+#   gt4
+#
+# ============================================================ 
+# 상태 보존 및 복구 (최신 restore 반영)
+# ============================================================
 alias gst='git stash'                     # 작업 임시 저장
-alias gstp='git stash pop'                # 임시 저장 복구
-alias gstl='git stash list'               # 임시 저장 목록
-alias gr='git reset --hard'               # 강제 초기화
-alias grs='git reset --soft HEAD~1'       # 커밋 취소
-alias gre='git restore'                   # 파일 복구
+alias gstp='git stash pop'                # 임시 저장 불러오기 및 삭제
+alias gstl='git stash list'               # 임시 저장 목록 확인
+alias gr='git reset --hard'               # 특정 시점으로 강제 초기화
+alias grs='git reset --soft HEAD~1'       # 최근 커밋 취소 (내용은 유지)
+alias gre='git restore'                   # 파일 변경사항 복구 (checkout -- 대체)
 alias gres='git restore --staged'         # 스테이징 취소
-alias gclean='git clean -fd'              # 미추적 파일 삭제
+alias gclean='git clean -fd'              # 추적되지 않는 파일 강제 삭제
+
+# ------------------------------------------------------------
+# git 파일 단위 백업/복원 함수
+# ------------------------------------------------------------
+# g1: 특정 파일 백업 커밋 (gb 파일명 "메시지")
+
+# g1 ytb_dl.py              # → backup: .../ytb_dl.py - 260412_2145 수정전
+# g1 ytb_dl.py "기능1 전"   # → backup: .../ytb_dl.py - 기능1 전
+g1() {
+    if [ -z "$1" ]; then
+        echo "❌ 사용법: g1 파일명 [메시지]"
+        return 1
+    fi
+    local file="$1"
+    local msg="${2:-$(date +'%y%m%d_%h%m') 수정전}"
+    local root=$(git rev-parse --show-toplevel)
+    local abs=$(builtin cd "$(dirname "$file")" && pwd)/$(basename "$file")
+    local rel="${abs#$root/}"
+    echo "" >> "$abs"
+    git -c "$root" add "$rel"
+    local hash=$(git -c "$root" commit -m "backup: $rel - $msg" | awk '/^\[/{print $2}' | tr -d ']')
+    echo "$hash $rel" >> ~/.git_backups
+    echo "✅ 저장: $rel - $msg ($hash)"
+}
+# g2: 특정 커밋에서 특정 파일 복원 (gr 커밋해시)
+g2() {
+    local hash="$1"
+    local root=$(git rev-parse --show-toplevel)
+    local rel=$(git -c "$root" show --name-only --format="" "$hash" | head -1)
+    git -c "$root" restore --source="$hash" "$rel"
+    echo "✅ 복원: $rel"
+}
+# ============================================================
+# Git 파일 단위 백업/복원 함수 사용법 (단일 파일 전용)
+# ============================================================
+#
+# [g1] 특정 파일 백업 커밋
+#   g1 파일명              # 기본 메시지: 260412_2210 수정전
+#   g1 파일명 "메시지"     # 커스텀 메시지
+#   g1 ytb_dl.py
+#   g1 ytb_dl.py "기능1 추가 전"
+#
+# [g2] 해시로 파일 복원 (파일명 자동 인식)
+#   g2 커밋해시
+#   g2 9c24313
+#
+# [gl] 백업 이력 확인
+#   gl
+#   → 9c24313 backup: common/python/util/ytb_dl/ytb_dl.py - 260412_2210 수정전
+# ============================================================
+
+
+
+
+
 
 # ------------------------------------------------------------
 # Git & 유틸리티 자동화 함수
