@@ -90,9 +90,6 @@ function .. { Set-Location .. }
 function ... { Set-Location ../.. }
 function h { Set-Location ~ }
 
-
-function ~ { Set-Location ~ }
-
 # 디렉토리 생성 후 이동
 function mc ($path) { 
     New-Item -ItemType Directory -Path $path -Force | Out-Null
@@ -114,31 +111,7 @@ function cd {
     eza -F --group-directories-first
 }
 # ============================================================
-# # ============================================================
-# # 파일 및 디렉토리 관리
-# # ============================================================
-# function l { Get-ChildItem -Force }
-# function ll { Get-ChildItem -Force }
-# function la { Get-ChildItem -Force }
-# function lt { Get-ChildItem | Sort-Object LastWriteTime -Descending }
-# function c { Clear-Host }
-# function cc { Clear-Host }
-# function e { Exit }
-# function ee { Exit }
-# function .. { Set-Location .. }
-# function ... { Set-Location ../.. }
-# function h { Set-Location ~ }
 
-# # 디렉토리 생성 후 이동
-# function mc { New-Item -ItemType Directory -Path $args[0] -Force; Set-Location $args[0] }
-
-# # 안전한 파일 조작 및 별칭 충돌 해결
-# if (Test-Path "Alias:rm") { Remove-Item "Alias:rm" -Force }
-# function Remove-Force { Remove-Item -Path $args -Force -Recurse -Verbose }
-# Set-Alias -Name rm -Value Remove-Force -Option AllScope -Force
-# # qq, ww 설정
-# function qq { Set-Location ~/.dotfiles; ls }
-# function ww { Set-Location ~/.dotfolders; ls }
 # ============================================================
 # 패키지 관리자 별칭 및 함수
 # ============================================================
@@ -210,8 +183,29 @@ function gg    { lazygit $args }                           # lazygit 실행
 
 # 태그 관리
 function gt    { git tag }                                 # 태그 목록 확인
-function gta   { param([string]$t, [string]$m) git tag -a $t -m $m } # 주석 태그 생성
 function gtd   { param([string]$t) git tag -d $t }         # 태그 삭제
+# gta: 메시지만 입력하면 날짜 기반 태그 자동 생성
+# gta: 날짜_시간(메시지) 형식으로 태그명 자동 생성
+function gta {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$m
+    )
+
+    # 메시지 내 공백을 언더바로 치환
+    $msg_clean = $m -replace ' ', '_'
+    
+    # 태그명 형식: 260412_1045(메시지)
+    $timestamp = Get-Date -Format "yyMMdd_HHmm"
+    $tag_name = "${timestamp}($msg_clean)"
+    
+    # 태그 생성
+    git tag -a $tag_name -m $m
+    
+    Write-Host "✅ 태그 생성 완료: $tag_name" -ForegroundColor Green
+}
+
+
 
 # 상태 보존 및 복구 (최신 restore 반영)
 function gst   { git stash }                               # 작업 임시 저장

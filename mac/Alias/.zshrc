@@ -68,7 +68,6 @@ alias cc='clear'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias h='cd ~'
-
 # fzf 
 alias ff='fzf'
 alias vf='nvim $(fzf)'
@@ -174,8 +173,25 @@ alias gg='lazygit'                        # lazygit 실행
 
 # 태그 관리
 alias gt='git tag'                        # 태그 목록 확인
-alias gta='git tag -a'                    # 주석 태그 생성 (예: gta v1.0 -m "메시지")
 alias gtd='git tag -d'                    # 태그 삭제
+# gta: 날짜_시간_메시지 형식으로 태그명 자동 생성
+# gta: 날짜_시간(메시지) 형식으로 태그명 자동 생성
+gta() {
+    if [ -z "$1" ]; then
+        echo "❌ 에러: 태그 메시지를 입력해주세요."
+        return 1
+    fi
+
+    # 태그명: YYMMDD_HHMM(입력메시지)
+    # 메시지 내부의 공백은 보기 좋게 언더바(_)로 치환합니다.
+    local msg_clean="${1// /_}"
+    local tag_name="$(date +'%y%m%d_%H%M')(${msg_clean})"
+    
+    git tag -a "$tag_name" -m "$1"
+    
+    echo "✅ 태그 생성 완료: $tag_name"
+}
+
 
 # 상태 보존 및 복구 (최신 restore 반영)
 alias gst='git stash'                     # 작업 임시 저장
