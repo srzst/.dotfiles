@@ -89,34 +89,7 @@ cd() {
 # 사용자 지정 경로 이동
 alias qq='cd ~/.dotfiles'
 alias ww='cd ~/.dotfolders'
-# ============================================================
-# # ============================================================
-# # 파일 및 디렉토리 관리
-# # ============================================================
-# alias l='ls -lah'
-# alias ll='ls -lah'
-# alias la='ls -lAh'
-# alias lt='ls -laht'
-# alias c='clear'
-# alias cc='clear'
-# alias ..='cd ..'
-# alias ...='cd ../..'
-# alias h='cd ~'
 
-# # 디렉토리 생성 후 이동
-# mc() { mkdir -p "$1" && cd "$1"; }
-
-# # cd 실행 후 자동 ls
-# cd() {
-#     if [ -n "$*" ]; then
-#         builtin cd "$*" && ls -F
-#     else
-#         builtin cd ~ && ls -F
-#     fi
-# }
-# # 사용자 지정 경로 이동
-# alias qq='cd ~/.dotfiles'
-# alias ww='cd ~/.dotfolders'
 # ============================================================
 # 패키지 관리
 # ============================================================
@@ -158,38 +131,51 @@ gtacp() {
 }
 
 # ============================================================
-# Git 관련
+# Git 관련 (최신 문법, 태그 관리, 자동화 함수 포함)
 # ============================================================
 
-# 기본 별칭
-alias gi='git init -b main'
-alias gs='git status'
-alias gss='git status -s'
-alias ga='git add .'
-alias gaa='git add --all'
-alias gp='git push'
-alias gpl='git pull'
-alias gpf='git push origin --force-with-lease'
+# 기본 및 상태 확인
+alias gi='git init -b main'               # 메인 브랜치명 지정하여 저장소 초기화
+alias gs='git status'                     # 현재 변경 상태 확인
+alias gss='git status -s'                 # 상태 요약 확인 확인
+alias ga='git add .'                      # 현재 폴더 변경사항 스테이징
+alias gaa='git add --all'                 # 모든 변경사항 스테이징
+alias gp='git push'                       # 원격 저장소에 푸시
+alias gpl='git pull'                      # 원격 저장소에서 풀
+alias gpf='git push origin --force-with-lease' # 안전한 강제 푸시
 
-# 로그 및 브랜치 관리
-alias gl='git log --oneline -n 10'
-alias gll='git log --oneline --graph --all'
-alias gd='git diff'
-alias gdc='git diff --staged'
-alias gb='git branch'
-alias gba='git branch -a'
-alias gco='git checkout'
-alias gcb='git checkout -b'
-alias gbd='git branch -d'
-alias gm='git merge'
-alias gg='lazygit'
-# 상태 보존 및 초기화
-alias gst='git stash'
-alias gstp='git stash pop'
-alias gstl='git stash list'
-alias gr='git reset --hard'
-alias grs='git reset --soft HEAD~1'
-alias gclean='git clean -fd'
+# 로그 및 브랜치 관리 (최신 switch 반영)
+alias gl='git log --oneline -n 10'        # 한 줄 로그 10개 확인
+alias gll='git log --oneline --graph --all' # 전체 브랜치 로그 그래프 확인
+alias gd='git diff'                       # 작업 디렉토리 변경사항 비교
+alias gdc='git diff --staged'             # 스테이징된 변경사항 비교
+alias gb='git branch'                     # 로컬 브랜치 목록 확인
+alias gba='git branch -a'                 # 모든 브랜치(원격 포함) 확인
+alias gsw='git switch'                    # 브랜치 전환 (checkout 대체)
+alias gsc='git switch -c'                 # 새 브랜치 생성 및 전환
+alias gbd='git branch -d'                 # 브랜치 삭제 (병합 완료 시)
+alias gbD='git branch -D'                 # 브랜치 강제 삭제
+alias gm='git merge'                      # 브랜치 병합
+alias gg='lazygit'                        # lazygit 실행
+
+# 태그 관리
+alias gt='git tag'                        # 태그 목록 확인
+alias gta='git tag -a'                    # 주석 태그 생성 (예: gta v1.0 -m "메시지")
+alias gtd='git tag -d'                    # 태그 삭제
+
+# 상태 보존 및 복구 (최신 restore 반영)
+alias gst='git stash'                     # 작업 임시 저장
+alias gstp='git stash pop'                # 임시 저장 불러오기 및 삭제
+alias gstl='git stash list'               # 임시 저장 목록 확인
+alias gr='git reset --hard'               # 특정 시점으로 강제 초기화
+alias grs='git reset --soft HEAD~1'       # 최근 커밋 취소 (내용은 유지)
+alias gre='git restore'                   # 파일 변경사항 복구 (checkout -- 대체)
+alias gres='git restore --staged'         # 스테이징 취소
+alias gclean='git clean -fd'              # 추적되지 않는 파일 강제 삭제
+
+# ------------------------------------------------------------
+# Git 자동화 함수 (커밋 제목/본문 구분 및 폴더 자동 생성)
+# ------------------------------------------------------------
 
 # gc: 커밋 메시지와 함께 커밋
 gc() { git commit -m "$*"; }
@@ -197,16 +183,23 @@ gc() { git commit -m "$*"; }
 # gca: 자동 메시지로 커밋
 alias gca='git commit -m "auto commit"'
 
-# gac: Add all + Commit
+
+# gac: 제목($1)과 본문($2)을 구분하여 커밋 (복사+붙여넣기 최적화)
 gac() {
     git add -A
-    git commit -m "${1:-auto commit}"
+    if [ -n "$2" ]; then
+        # $2에 들어온 줄바꿈이 포함된 텍스트를 그대로 커밋 본문에 반영
+        git commit -m "$1" -m "$2"
+    else
+        git commit -m "${1:-auto commit}"
+    fi
 }
 
-# gacp: Add all + Commit + Push
+# gacp: 제목($1)과 본문($2) 커밋 후 푸시 (gac의 구조를 그대로 계승)
 gacp() {
-    git add -A
-    git commit -m "${1:-auto commit}"
+    # 첫 번째와 두 번째 인자를 gac 함수로 전달
+    gac "$1" "$2"
+    # 현재 브랜치 이름을 확인하여 푸시 (없으면 main)
     local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
     git push origin "$branch"
 }
@@ -221,6 +214,23 @@ gfo() {
     echo -e "\033[0;33mFetching from origin and resetting to $branch...\033[0m"
     git fetch origin && git reset --hard "origin/$branch"
 }
+
+# mrd: 폴더 생성 + README.md 생성
+mrd() {
+    mkdir -p "$1"
+    echo "# ${1##*/}" > "$1/README.md"
+    echo -e "\033[0;32mFolder '$1' created with README.md\033[0m"
+}
+
+# mrdpy: 폴더 생성 + README.md + basic.py 생성
+mrdpy() {
+    mkdir -p "$1"
+    echo "# ${1##*/}" > "$1/README.md"
+    touch "$1/basic.py"
+    echo -e "\033[0;32mFolder '$1' created with README.md and basic.py\033[0m"
+}
+# ============================================================
+
 
 # ============================================================
 # Docker 관련
