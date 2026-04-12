@@ -72,7 +72,21 @@ alias h='cd ~'
 # fzf 
 alias ff='fzf'
 alias vf='nvim $(fzf)'
-alias cf='cd $(fd --type d | fzf)'
+# alias cf='cd $(fd --type d | fzf)'
+
+cf() {
+  local result query dir
+  result=$(fd --type d --hidden --exclude .git . 2>/dev/null | fzf --print-query)
+  query=$(echo "$result" | head -1)
+  dir=$(echo "$result" | sed -n '2p')
+
+  if [[ "$query" == ".." && -z "$dir" ]]; then
+    cd ..
+    cf
+  elif [[ -n "$dir" ]]; then
+    cd "$dir"
+  fi
+}
 
 # 디렉토리 생성 후 이동
 mc() { mkdir -p "$1" && cd "$1"; }
@@ -355,3 +369,8 @@ source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zs
 # LS_COLORS for colorful ls
 export CLICOLOR=1
 export LSCOLORS="ExFxCxDxBxegedabagacad"   # 기본 예쁜 색상 (Catppuccin 느낌에 가까움)
+# ============================================================
+# 프롬프트 설정 (전체 경로 표시)
+# ============================================================
+# %n: 사용자명 / %m: 호스트명 / %~: 전체 경로(홈은 ~) / %#: 권한 표시
+PROMPT='%n@%m %~ %# '

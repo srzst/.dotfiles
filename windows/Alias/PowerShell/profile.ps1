@@ -65,8 +65,21 @@ function et3 { eza --tree --level=3 -a -I ".git" --git-ignore $args }
 # fzf
 function ff { fzf }
 function vf { nvim $(fzf) }
-function cf { cd $(fd --type d | fzf) }
+# function cf { cd $(fd --type d | fzf) }
+# cf: fzf 내에서 Alt+Up으로 상위 폴더 이동 기능 추가 (PowerShell용)
+function cf {
+    $query = fd --type d | fzf --print-query
+    $lines = $query -split "`n"
+    $input = $lines[0].Trim()
+    $dir = if ($lines.Count -gt 1) { $lines[1].Trim() } else { "" }
 
+    if ($input -eq ".." -and $dir -eq "") {
+        Set-Location ..
+        cf
+    } elseif ($dir -ne "") {
+        Set-Location $dir
+    }
+}
 
 # 시스템 유틸리티/ff
 function c { Clear-Host }
