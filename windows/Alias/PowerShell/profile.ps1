@@ -168,79 +168,106 @@ function gtac { $msg = if ($args[0]) { $args[0] } else { "auto commit" }; gita s
 function gtacp { $msg = if ($args[0]) { $args[0] } else { "auto commit" }; gita super add -A; gita super commit -m $msg; gita super push }
 
 # ============================================================
-# Git 함수
+# Git 함수 (최신 문법, 태그 관리, 자동화 함수 포함 - PowerShell용)
 # ============================================================
-# FIX: 충돌 별칭 제거 (gs, gc, gp, gm, gcm, gl 모두)
-@('gs','gc','gp','gm','gcm','gl') | ForEach-Object {
-    if (Test-Path "Alias:$_") { Remove-Item "Alias:$_" -Force }
-}
 
-# 기본 상태 / 초기화
-function gi  { git init -b main }
-# FIX: gs 재정의 (제거 후 누락됐던 함수)
-function gs  { git status }
-function gss { git status -s }
-function ga  { git add . }
-function gaa { git add --all }
-function gp  { git push }
-function gpl { git pull }
-function gpf { git push origin --force-with-lease }
+# 기본 별칭 및 상태 확인
+function gi    { git init -b main }                        # 메인 브랜치명 지정하여 저장소 초기화
+function gs    { git status }                              # 현재 변경 상태 확인
+function gss   { git status -s }                           # 상태 요약 확인
+function ga    { git add . }                               # 현재 폴더 변경사항 스테이징
+function gaa   { git add --all }                           # 모든 변경사항 스테이징
+function gp    { git push }                                # 원격 저장소에 푸시
+function gpl   { git pull }                                # 원격 저장소에서 풀
+function gpf   { git push origin --force-with-lease }      # 안전한 강제 푸시
 
-# 로그 / 브랜치
-function gl   { git log --oneline -n 10 }
-function gll  { git log --oneline --graph --all }
-function gd   { git diff }
-function gdc  { git diff --staged }
-function gb   { git branch }
-function gba  { git branch -a }
+# 로그 및 브랜치 관리 (최신 switch 반영)
+function gl    { git log --oneline -n 10 }                 # 한 줄 로그 10개 확인
+function gll   { git log --oneline --graph --all }         # 전체 브랜치 로그 그래프 확인
+function gd    { git diff }                                # 작업 디렉토리 변경사항 비교
+function gdc   { git diff --staged }                       # 스테이징된 변경사항 비교
+function gb    { git branch }                              # 로컬 브랜치 목록 확인
+function gba   { git branch -a }                           # 모든 브랜치(원격 포함) 확인
+function gsw   { param([string]$b) git switch $b }         # 브랜치 전환 (checkout 대체)
+function gsc   { param([string]$b) git switch -c $b }      # 새 브랜치 생성 및 전환
+function gbd   { param([string]$b) git branch -d $b }      # 브랜치 삭제
+function gbD   { param([string]$b) git branch -D $b }      # 브랜치 강제 삭제
+function gm    { param([string]$b) git merge $b }          # 브랜치 병합
+function gg    { lazygit $args }                           # lazygit 실행
 
-# FIX: $args 미전달 문제 → param() 으로 명시적 수신
-function gco  { param([string]$branch) git checkout $branch }
-function gcb  { param([string]$branch) git checkout -b $branch }
-function gbd  { param([string]$branch) git branch -d $branch }
-function gm   { param([string]$branch) git merge $branch }
+# 태그 관리
+function gt    { git tag }                                 # 태그 목록 확인
+function gta   { param([string]$t, [string]$m) git tag -a $t -m $m } # 주석 태그 생성
+function gtd   { param([string]$t) git tag -d $t }         # 태그 삭제
 
-# 스태시 / 리셋
-function gst   { git stash }
-function gstp  { git stash pop }
-function gstl  { git stash list }
-function gr    { param([string]$ref) git reset --hard $ref }
-function grs   { git reset --soft HEAD~1 }
-function gclean { git clean -fd }
-function gg { lazygit $args }
-# FIX: gc 재정의 (제거 후 누락됐던 함수)
-function gc  { git commit -m "$args" }
-function gca { git commit -m "auto commit" }
+# 상태 보존 및 복구 (최신 restore 반영)
+function gst   { git stash }                               # 작업 임시 저장
+function gstp  { git stash pop }                           # 임시 저장 불러오기 및 삭제
+function gstl  { git stash list }                          # 임시 저장 목록 확인
+function gr    { param([string]$ref) git reset --hard $ref } # 특정 시점으로 강제 초기화
+function grs   { git reset --soft HEAD~1 }                 # 최근 커밋 취소 (내용 유지)
+function gre   { param([string]$f) git restore $f }        # 파일 변경사항 복구 (checkout -- 대체)
+function gres  { param([string]$f) git restore --staged $f } # 스테이징 취소
+function gclean { git clean -fd }                          # 추적되지 않는 파일 삭제
 
-# gac: Add + Commit
+# ------------------------------------------------------------
+# Git 자동화 함수 (복사+붙여넣기 본문 지원 및 폴더 생성)
+# ------------------------------------------------------------
+
+# gc: 커밋 메시지와 함께 커밋
+function gc    { git commit -m "$args" }
+
+# gca: 자동 메시지로 커밋
+function gca   { git commit -m "auto commit" }
+
+# gac: 제목($msg)과 본문($body)을 구분하여 커밋 (복사+붙여넣기 최적화)
 function gac {
-    param([string]$msg = "auto commit")
-    git add .
-    git commit -m $msg
+    param([string]$msg = "auto commit", [string]$body)
+    git add -A
+    if ($body) {
+        git commit -m $msg -m $body
+    } else {
+        git commit -m $msg
+    }
 }
 
-# gacp: Add + Commit + Push
-# FIX: Mandatory=$true → 기본값 "auto commit" 으로 변경
+# gacp: 제목($msg)과 본문($body) 커밋 후 푸시
 function gacp {
-    param([string]$msg = "auto commit")
+    param([string]$msg = "auto commit", [string]$body)
+    gac $msg $body
     $branch = git rev-parse --abbrev-ref HEAD 2>$null
     if (!$branch) { $branch = "main" }
-    git add .
-    git commit -m $msg
     git push origin $branch
 }
 
-# gup: 즉시 푸시
+# gup: 고정 메시지로 즉시 푸시
 function gup { git add .; git commit -m "auto commit"; git push }
 
 # gfo: 원격 기준 강제 초기화
 function gfo {
     $branch = git rev-parse --abbrev-ref HEAD 2>$null
     if (!$branch) { $branch = "main" }
+    Write-Host "Fetching from origin and resetting to $branch..." -ForegroundColor Yellow
     git fetch origin
     git reset --hard "origin/$branch"
 }
 
+# mrd: 폴더 생성 + README.md 생성
+function mrd {
+    param([string]$name)
+    New-Item -ItemType Directory -Path $name -Force | Out-Null
+    New-Item -ItemType File -Path "$name\README.md" -Value "# $name" -Force | Out-Null
+    Write-Host "Folder '$name' created with README.md" -ForegroundColor Green
+}
+
+# mrdpy: 폴더 생성 + README.md + basic.py 생성
+function mrdpy {
+    param([string]$name)
+    mrd $name
+    New-Item -ItemType File -Path "$name\basic.py" -Force | Out-Null
+    Write-Host "Folder '$name' created with README.md and basic.py" -ForegroundColor Green
+}
+# ============================================================
 
 
 # ============================================================
