@@ -22,7 +22,7 @@
   "editor.dropIntoEditor.preferences": [],
   "files.autoSave": "onFocusChange",
   "files.exclude": {
-    "**/.git": false
+    "**/.git": false,
   },
   "explorer.compactFolders": false,
   "explorer.confirmDelete": false,
@@ -41,22 +41,22 @@
   "terminal.integrated.profiles.windows": {
     "PowerShell": {
       "source": "PowerShell",
-      "icon": "terminal-powershell"
+      "icon": "terminal-powershell",
     },
     "Command Prompt": {
       "path": [
         "${env:windir}\\Sysnative\\cmd.exe",
-        "${env:windir}\\System32\\cmd.exe"
+        "${env:windir}\\System32\\cmd.exe",
       ],
       "args": [],
-      "icon": "terminal-cmd"
+      "icon": "terminal-cmd",
     },
     "Git Bash": {
-      "source": "Git Bash"
+      "source": "Git Bash",
     },
     "Windows PowerShell": {
-      "path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-    }
+      "path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    },
   },
 
   // === Vim & Automation Settings ===
@@ -69,49 +69,49 @@
   "vim.handleKeys": {
     "gd": true,
     "gx": true,
-    "<C-d>": true
+    "<C-d>": true,
   },
   "vim.normalModeKeyBindingsNonRecursive": [
     {
       "before": ["g", "g", "d", "G"],
-      "after": ["g", "g", "\"", "_", "d", "G"]
+      "after": ["g", "g", "\"", "_", "d", "G"],
     },
     {
       "before": ["g", "d"],
-      "after": ["g", "g", "\"", "_", "d", "G"]
+      "after": ["g", "g", "\"", "_", "d", "G"],
     },
     {
       "before": ["g", "y"],
-      "after": ["g", "g", "\"", "+", "y", "G"]
+      "after": ["g", "g", "\"", "+", "y", "G"],
     },
     {
       "before": ["g", "x"],
-      "after": ["g", "g", "\"", "+", "d", "G"]
+      "after": ["g", "g", "\"", "+", "d", "G"],
     },
     {
       "before": ["d"],
-      "after": ["\"", "_", "d"]
+      "after": ["\"", "_", "d"],
     },
     {
       "before": ["x"],
-      "after": ["\"", "+", "x"]
-    }
+      "after": ["\"", "+", "x"],
+    },
   ],
   "vim.visualModeKeyBindingsNonRecursive": [
     {
       "before": ["x"],
-      "after": ["\"", "+", "d"]
+      "after": ["\"", "+", "d"],
     },
     {
       "before": ["d"],
-      "after": ["\"", "_", "d"]
-    }
+      "after": ["\"", "_", "d"],
+    },
   ],
   "ahk++.file.executePath": "C:/Program Files/AutoHotkey/AutohotkeyU32.exe",
 
   // === Language Specific Settings ===
   "[python]": {
-    "editor.defaultFormatter": "ms-python.autopep8"
+    "editor.defaultFormatter": "ms-python.autopep8",
   },
   "python.defaultInterpreterPath": "c:\\Python314\\python.exe",
   "python.formatting.provider": "none",
@@ -123,11 +123,11 @@
     "javascript",
     "javascriptreact",
     "typescript",
-    "typescriptreact"
+    "typescriptreact",
   ],
   "files.associations": {
     "*.ahk": "ahk",
-    "*.py": "python"
+    "*.py": "python",
   },
   "[markdown]": {
     "editor.unicodeHighlight.ambiguousCharacters": false,
@@ -137,8 +137,8 @@
     "editor.quickSuggestions": {
       "comments": "off",
       "strings": "off",
-      "other": "off"
-    }
+      "other": "off",
+    },
   },
 
   // === Git & Remote Settings ===
@@ -148,10 +148,11 @@
   "git.openRepositoryInParentFolders": "never",
   "remote.SSH.remotePlatform": {
     "U_W02": "linux",
-    "U_W03": "linux"
+    "U_W03": "linux",
   },
   "security.workspace.trust.untrustedFiles": "open",
   "copyMarkdownAsHtml.linkify": true,
   "http.proxyAuthorization": null,
-  "remote.SSH.defaultForwardedPorts": []
+  "remote.SSH.defaultForwardedPorts": [],
+  "explorer.confirmDragAndDrop": false,
 }
