@@ -73,20 +73,61 @@ alias ff='fzf'
 alias vf='nvim $(fzf)'
 # alias cf='cd $(fd --type d | fzf)'
 
-cf() {
-  local result query dir
-  result=$(fd --type d --hidden --exclude .git . 2>/dev/null | fzf --print-query)
-  query=$(echo "$result" | head -1)
-  dir=$(echo "$result" | sed -n '2p')
+# cf() {
+#   local result query dir
+#   result=$(fd --type d --hidden --exclude .git . 2>/dev/null | fzf --print-query)
+#   query=$(echo "$result" | head -1)
+#   dir=$(echo "$result" | sed -n '2p')
 
-  if [[ "$query" == ".." && -z "$dir" ]]; then
+#   if [[ "$query" == ".." && -z "$dir" ]]; then
+#     cd ..
+#     cf
+#   elif [[ -n "$dir" ]]; then
+#     cd "$dir"
+#   fi
+# }
+cf() {
+  local result query target
+
+  result=$(fd --hidden --exclude .git -t f -t d . 2>/dev/null \
+    | fzf --print-query \
+          --layout=reverse-list \
+          --info=inline \
+          --prompt='> ' \
+          --exact \
+          --bind 'ctrl-k:up,ctrl-j:down')
+
+  if [[ -z "$result" ]]; then
+    return
+  fi
+
+  query=$(echo "$result" | head -1 | xargs)
+  target=$(echo "$result" | sed -n '2p' | xargs)
+
+  # .. 특수 처리
+  if [[ "$query" == ".." && -z "$target" ]]; then
     cd ..
     cf
-  elif [[ -n "$dir" ]]; then
-    cd "$dir"
+    return
   fi
-}
 
+  if [[ -n "$target" ]]; then
+    if [[ -d "$target" ]]; then
+      cd "$target"
+    elif [[ -f "$target" ]]; then
+      cd "$(dirname "$target")"
+    fi
+  elif [[ -n "$query" ]]; then
+    # 직접 입력한 경우
+    if [[ -d "$query" ]]; then
+      cd "$query"
+    elif [[ -f "$query" ]]; then
+      cd "$(dirname "$query")"
+    fi
+  fi
+
+  echo -e "\033[32m→ $PWD\033[0m"
+}
 # 디렉토리 생성 후 이동
 mc() { mkdir -p "$1" && cd "$1"; }
 
