@@ -66,20 +66,103 @@ function et3 { eza --tree --level=3 -a -I ".git" --git-ignore $args }
 function ff { fzf }
 function vf { nvim $(fzf) }
 # function cf { cd $(fd --type d | fzf) }
-# cf: fzf 내에서 Alt+Up으로 상위 폴더 이동 기능 추가 (PowerShell용)
-function cf {
-    $query = fd --type d | fzf --print-query
-    $lines = $query -split "`n"
-    $input = $lines[0].Trim()
-    $dir = if ($lines.Count -gt 1) { $lines[1].Trim() } else { "" }
+# # cf: fzf 내에서 Alt+Up으로 상위 폴더 이동 기능 추가 (PowerShell용)
 
-    if ($input -eq ".." -and $dir -eq "") {
+
+
+# function cf {
+#     $query = fd --type d | fzf --print-query
+#     $lines = $query -split "`n"
+#     $input = $lines[0].Trim()
+#     $dir = if ($lines.Count -gt 1) { $lines[1].Trim() } else { "" }
+
+#     if ($input -eq ".." -and $dir -eq "") {
+#         Set-Location ..
+#         cf
+#     } elseif ($dir -ne "") {
+#         Set-Location $dir
+#     }
+# }
+
+
+# function cf {
+#     $result = fd --hidden --exclude .git -t f -t d . 2>$null `
+#         | fzf --print-query `
+#               --layout=reverse `
+#               --info=inline `
+#               --bind 'ctrl-k:up,ctrl-j:down' `
+#               --prompt='> ' `
+#               --exact   # ← 이 옵션 추가 (정확한 매칭 강화)
+
+#     if (-not $result) { return }
+
+#     $lines = $result -split "`r?`n"
+#     $query = $lines[0].Trim()
+#     $target = if ($lines.Count -gt 1) { $lines[1].Trim() } else { $null }
+
+#     if ($query -eq ".." -and -not $target) {
+#         Set-Location ..
+#         cf
+#         return
+#     }
+
+#     if ($target) {
+#         $target = $target.Trim()
+#         if (Test-Path $target -PathType Container) {
+#             Set-Location $target
+#             Write-Host "→ $PWD" -ForegroundColor Green
+#         }
+#         elseif (Test-Path $target -PathType Leaf) {
+#             $parent = Split-Path $target -Parent
+#             if ($parent) {
+#                 Set-Location $parent
+#                 Write-Host "→ $PWD (파일 선택)" -ForegroundColor Green
+#             }
+#         }
+#     }
+# }
+
+
+function cf {
+    $fzfArgs = @(
+        '--print-query'
+        '--layout=reverse-list'   # ← 검색 입력창을 하단으로 배치
+        '--info=inline'
+        '--bind', 'ctrl-k:up,ctrl-j:down'
+        '--prompt=> '
+        '--exact'
+    )
+
+    $result = fd --hidden --exclude .git -t f -t d . 2>$null | fzf @fzfArgs
+
+    if (-not $result) { return }
+
+    $lines = $result -split "`r?`n"
+    $query = $lines[0].Trim()
+    $target = if ($lines.Count -gt 1) { $lines[1].Trim() } else { $null }
+
+    if ($query -eq ".." -and -not $target) {
         Set-Location ..
         cf
-    } elseif ($dir -ne "") {
-        Set-Location $dir
+        return
+    }
+
+    if ($target) {
+        $target = $target.Trim()
+        if (Test-Path $target -PathType Container) {
+            Set-Location $target
+            Write-Host "→ $PWD" -ForegroundColor Green
+        }
+        elseif (Test-Path $target -PathType Leaf) {
+            $parent = Split-Path $target -Parent
+            if ($parent) {
+                Set-Location $parent
+                Write-Host "→ $PWD (파일 선택)" -ForegroundColor Green
+            }
+        }
     }
 }
+
 
 # 시스템 유틸리티/ff
 function c { Clear-Host }
