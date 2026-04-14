@@ -286,21 +286,25 @@ function gtp   { gita super push }
 # }
 # gta: 특정 저장소 애드 + 커밋 + 푸시 (제목/설명 대응)
 # 사용법: gta .dotfolders "제목" "설명"
+# gta: 특정 저장소 애드 + 커밋 + 푸시 (gita shell 직접 연동)
+# 사용법: gta .dotfolders "제목" "설명"
 function gta {
     param([Parameter(Mandatory=$true)][string]$repo, [string]$title = "auto commit ", [string]$body)
+    
+    Write-Host "→ Processing repository: $repo " -ForegroundColor Cyan
     
     # 1. Add
     gita shell $repo git add -A
     
-    # 2. Commit
+    # 2. Commit (백틱으로 따옴표 감싸기 유지)
     if ($body) {
         gita shell $repo git commit -m "`"$title`"" -m "`"$body`""
     } else {
         gita shell $repo git commit -m "`"$title`""
     }
     
-    # 3. Push (gita shell을 통해 git push 직접 실행)
-    Write-Host "→ Pushing $repo..." -ForegroundColor Cyan
+    # 3. Push (gita shell 내에서 직접 실행)
+    Write-Host "→ Pushing to remote... " -ForegroundColor Green
     gita shell $repo git push
 }
 # ============================================================
