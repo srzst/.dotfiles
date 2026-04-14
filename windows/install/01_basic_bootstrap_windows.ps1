@@ -470,7 +470,7 @@ try {
     cmd /c "ftype AutoHotkeyScript=`"$ahkExe`" `"%1`" %*" 2>&1 | Out-Null
     Write-LogOK ".ahk 파일 연결 등록 완료"
     scoop install python nodejs
-    scoop install neovim neovide lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
+    scoop install neovim neovide gh lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
     winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
     Write-LogOK "Scoop 패키지 설치 완료"
 } catch {

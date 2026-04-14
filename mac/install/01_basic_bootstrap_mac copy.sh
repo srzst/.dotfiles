@@ -464,7 +464,7 @@ if [ "$TARGET" -eq 1 ]; then
         git python python-tk node ffmpeg yt-dlp pngpaste wget 
         terminal-notifier pipx rclone neovim lazygit eza 
         font-d2coding-nerd-font font-d2coding yazi sevenzip 
-        jq poppler fd ripgrep fzf zoxide imagemagick
+        jq poppler fd ripgrep fzf zoxide imagemagick gh
     )
     # Casks 리스트
     casks=(
