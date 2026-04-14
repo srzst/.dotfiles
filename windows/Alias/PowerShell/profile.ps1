@@ -380,7 +380,7 @@ function mrdpy {
 # gga <f1> <f2>    - 다중 파일 업로드
 # ggaa             - 클립보드 업로드
 # ============================================================
-function ggl  { gh gist list --limit 50 }
+function ggl  { gh gist list --limit 20 }
 function ggd  { gh gist delete $args }
 function gga  { gh gist create $args }
 function ggaa { python3 C:\Users\x\.dotfolders\common\python\util\gistup\basic_srzst_gh.py }
