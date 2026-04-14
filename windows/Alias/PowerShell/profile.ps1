@@ -5,6 +5,9 @@
 # Windows PowerShell Profile
 # ============================================================
 
+# VS Code 터미널 코드 페이지 강제 설정
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ============================================================
 # [FIX] Conflict Aliases (사용자 정의 별칭과 충돌하는 시스템 별칭 사전 제거)
@@ -365,16 +368,8 @@ function ggd  { gh gist delete $args }
 function gga  { gh gist create $args }
 function ggaa { python3 C:\Users\x\.dotfolders\common\python\util\gistup\basic_srzst_gh.py }
 
-
 # ============================================================
 # Git 태그 관리
-# ============================================================
-# gt               - 태그 목록
-# gt1 "msg"        - 빈 커밋 + 태그 생성      → 260412_2210(msg)
-# gt2 <tag>        - 전체 복원
-# gt2 <tag> <file> - 단일/복수 파일 복원
-# gt3 <tag>        - 태그 삭제
-# gt4              - 전체 태그 삭제
 # ============================================================
 function gt { git tag }
 
@@ -383,7 +378,7 @@ function gt1 {
     $tag_name = "$(Get-Date -Format 'yyMMdd_HHmm')($($m -replace ' ','_'))"
     git commit --allow-empty -m "checkpoint: $m"
     git tag -a $tag_name -m $m
-    Write-Host "✅ 태그 백업: $tag_name" -ForegroundColor Green
+    Write-Host "✅ 태그 백업: $tag_name " -ForegroundColor Green
 }
 
 function gt2 {
@@ -393,55 +388,129 @@ function gt2 {
         foreach ($f in $files) {
             $rel = [System.IO.Path]::GetRelativePath($root, (Resolve-Path $f))
             git -C $root restore --source=$tag $rel
-            Write-Host "✅ 복원: $f (from $tag)" -ForegroundColor Green
+            Write-Host "✅ 복원: $f (from $tag) " -ForegroundColor Green
         }
     } else {
         git -C $root restore --source=$tag .
-        Write-Host "✅ 전체 복원 (from $tag)" -ForegroundColor Green
+        Write-Host "✅ 전체 복원 (from $tag) " -ForegroundColor Green
     }
 }
 
 function gt3 {
     param([Parameter(Mandatory=$true)][string]$tag)
     git tag -d $tag
-    Write-Host "✅ 태그 삭제: $tag" -ForegroundColor Green
+    Write-Host "✅ 태그 삭제: $tag " -ForegroundColor Green
 }
 
 function gt4 {
     $confirm = Read-Host "⚠️  모든 태그를 삭제합니다. 계속할까요? (y/N)"
     if ($confirm -match '^[Yy]$') {
         git tag | ForEach-Object { git tag -d $_ }
-        Write-Host "✅ 전체 태그 삭제 완료" -ForegroundColor Green
-    } else { Write-Host "취소됨" }
+        Write-Host "✅ 전체 태그 삭제 완료 " -ForegroundColor Green
+    } else { Write-Host "취소됨 " }
 }
 
-function gtd { param([string]$t) git tag -d $t }                   # 태그 삭제 단축
+function gtd { param([string]$t) git tag -d $t }
 
 
 # ============================================================
 # Git 파일 단위 백업/복원
 # ============================================================
-# gf1 <file>        - 파일 백업 커밋 (기본 메시지: 260412_2210 수정전)
-# gf1 <file> "msg"  - 커스텀 메시지로 백업
-# gf2 <hash>        - 해시로 파일 자동 인식 후 복원
-# gl                - 백업 이력 확인
-# ============================================================
 function gf1 {
-    param([Parameter(Mandatory=$true)][string]$file, [string]$msg = "$(Get-Date -Format 'yyMMdd_HHmm') 수정전")
-    if (-not (Test-Path $file)) { Write-Host "❌ 파일 없음: $file" -ForegroundColor Red; return }
+    param([Parameter(Mandatory=$true)][string]$file, [string]$msg = "$(Get-Date -Format 'yyMMdd_HHmm') 수정전 ")
+    if (-not (Test-Path $file)) { Write-Host "❌ 파일 없음: $file " -ForegroundColor Red; return }
     $root = git rev-parse --show-toplevel
     $rel  = [System.IO.Path]::GetRelativePath($root, (Resolve-Path $file))
     Add-Content $file ""
     git -C $root add $rel
     git -C $root commit -m "backup: $rel - $msg"
-    Write-Host "✅ 저장: $rel - $msg" -ForegroundColor Green
+    Write-Host "✅ 저장: $rel - $msg " -ForegroundColor Green
 }
 
 function gf2 {
     param([Parameter(Mandatory=$true)][string]$hash)
     $root = git rev-parse --show-toplevel
     $rel  = git -C $root show --name-only --format="" $hash | Select-Object -First 1
-    if (-not $rel) { Write-Host "❌ 해시를 찾을 수 없습니다." -ForegroundColor Red; return }
+    if (-not $rel) { Write-Host "❌ 해시를 찾을 수 없습니다. " -ForegroundColor Red; return }
     git -C $root restore --source=$hash $rel
-    Write-Host "✅ 복원: $rel" -ForegroundColor Green
+    Write-Host "✅ 복원: $rel " -ForegroundColor Green
 }
+# # ============================================================
+# # Git 태그 관리
+# # ============================================================
+# # gt               - 태그 목록
+# # gt1 "msg"        - 빈 커밋 + 태그 생성      → 260412_2210(msg)
+# # gt2 <tag>        - 전체 복원
+# # gt2 <tag> <file> - 단일/복수 파일 복원
+# # gt3 <tag>        - 태그 삭제
+# # gt4              - 전체 태그 삭제
+# # ============================================================
+# function gt { git tag }
+
+# function gt1 {
+#     param([Parameter(Mandatory=$true)][string]$m)
+#     $tag_name = "$(Get-Date -Format 'yyMMdd_HHmm')($($m -replace ' ','_'))"
+#     git commit --allow-empty -m "checkpoint: $m"
+#     git tag -a $tag_name -m $m
+#     Write-Host "✅ 태그 백업: $tag_name" -ForegroundColor Green
+# }
+
+# function gt2 {
+#     param([Parameter(Mandatory=$true)][string]$tag, [Parameter(ValueFromRemainingArguments=$true)][string[]]$files)
+#     $root = git rev-parse --show-toplevel
+#     if ($files.Count -gt 0) {
+#         foreach ($f in $files) {
+#             $rel = [System.IO.Path]::GetRelativePath($root, (Resolve-Path $f))
+#             git -C $root restore --source=$tag $rel
+#             Write-Host "✅ 복원: $f (from $tag)" -ForegroundColor Green
+#         }
+#     } else {
+#         git -C $root restore --source=$tag .
+#         Write-Host "✅ 전체 복원 (from $tag)" -ForegroundColor Green
+#     }
+# }
+
+# function gt3 {
+#     param([Parameter(Mandatory=$true)][string]$tag)
+#     git tag -d $tag
+#     Write-Host "✅ 태그 삭제: $tag" -ForegroundColor Green
+# }
+
+# function gt4 {
+#     $confirm = Read-Host "⚠️  모든 태그를 삭제합니다. 계속할까요? (y/N)"
+#     if ($confirm -match '^[Yy]$') {
+#         git tag | ForEach-Object { git tag -d $_ }
+#         Write-Host "✅ 전체 태그 삭제 완료" -ForegroundColor Green
+#     } else { Write-Host "취소됨" }
+# }
+
+# function gtd { param([string]$t) git tag -d $t }                   # 태그 삭제 단축
+
+
+# # ============================================================
+# # Git 파일 단위 백업/복원
+# # ============================================================
+# # gf1 <file>        - 파일 백업 커밋 (기본 메시지: 260412_2210 수정전)
+# # gf1 <file> "msg"  - 커스텀 메시지로 백업
+# # gf2 <hash>        - 해시로 파일 자동 인식 후 복원
+# # gl                - 백업 이력 확인
+# # ============================================================
+# function gf1 {
+#     param([Parameter(Mandatory=$true)][string]$file, [string]$msg = "$(Get-Date -Format 'yyMMdd_HHmm') 수정전")
+#     if (-not (Test-Path $file)) { Write-Host "❌ 파일 없음: $file" -ForegroundColor Red; return }
+#     $root = git rev-parse --show-toplevel
+#     $rel  = [System.IO.Path]::GetRelativePath($root, (Resolve-Path $file))
+#     Add-Content $file ""
+#     git -C $root add $rel
+#     git -C $root commit -m "backup: $rel - $msg"
+#     Write-Host "✅ 저장: $rel - $msg" -ForegroundColor Green
+# }
+
+# function gf2 {
+#     param([Parameter(Mandatory=$true)][string]$hash)
+#     $root = git rev-parse --show-toplevel
+#     $rel  = git -C $root show --name-only --format="" $hash | Select-Object -First 1
+#     if (-not $rel) { Write-Host "❌ 해시를 찾을 수 없습니다." -ForegroundColor Red; return }
+#     git -C $root restore --source=$hash $rel
+#     Write-Host "✅ 복원: $rel" -ForegroundColor Green
+# }
