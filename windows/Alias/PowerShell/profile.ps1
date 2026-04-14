@@ -271,44 +271,38 @@ function gtpl  { gita pull }                                       # 전체 저�
 function gtps  { gita super push }                                 # 전체 저장소 일괄 push (기존 gtp 대체 가능)
 function gtp   { gita super push }
 
-# gta: 특정 저장소 애드 + 커밋 (제목/설명 대응)
-# # 사용법: gta .dotfolders "제목" "설명"
+
+# 사용법: gta .dotfolders "제목" "설명"
 # function gta {
-#     param([Parameter(Mandatory=$true)][string]$repo, [string]$title = "auto commit", [string]$body)
+#     param([Parameter(Mandatory=$true)][string]$repo, [string]$title = "auto commit ", [string]$body)
 #     gita shell $repo git add -A
 #     if ($body) {
-#         # gita shell의 따옴표 문제를 피하기 위해 백틱 이스케이프 적용
 #         gita shell $repo git commit -m "`"$title`"" -m "`"$body`""
 #     } else {
 #         gita shell $repo git commit -m "`"$title`""
 #     }
+#     # 커밋 성공 여부와 상관없이 해당 저장소 푸시 실행
+#     gita push $repo
 # }
 # gta: 특정 저장소 애드 + 커밋 + 푸시 (제목/설명 대응)
 # 사용법: gta .dotfolders "제목" "설명"
 function gta {
     param([Parameter(Mandatory=$true)][string]$repo, [string]$title = "auto commit ", [string]$body)
+    
+    # 1. Add
     gita shell $repo git add -A
+    
+    # 2. Commit
     if ($body) {
         gita shell $repo git commit -m "`"$title`"" -m "`"$body`""
     } else {
         gita shell $repo git commit -m "`"$title`""
     }
-    # 커밋 성공 여부와 상관없이 해당 저장소 푸시 실행
-    gita push $repo
+    
+    # 3. Push (gita shell을 통해 git push 직접 실행)
+    Write-Host "→ Pushing $repo..." -ForegroundColor Cyan
+    gita shell $repo git push
 }
-function gtac {
-    $msg = if ($args[0]) { $args[0] } else { "auto commit " }
-    gita super add -A
-    gita super commit -m $msg
-}
-
-function gtacp {
-    $msg = if ($args[0]) { $args[0] } else { "auto commit " }
-    gita super add -A
-    gita super commit -m $msg
-    gita super push
-}
-
 # ============================================================
 # Git 기본
 # ============================================================
