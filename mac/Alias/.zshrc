@@ -234,27 +234,50 @@ alias dlog='docker logs -f'                               # 로그 스트림
 dstop() { docker stop $(docker ps -q); }                  # 실행 중 전체 중지
 alias dprune='docker system prune -af'                    # 미사용 리소스 정리
 
-
-# ============================================================
+==========================================================
 # gita
 # ============================================================
-alias gtl='gita ll'                                       # 전체 저장소 상태
-alias gtpl='gita pull'                                    # 전체 저장소 pull
-alias gtp='gita super push'                               # 전체 저장소 push
+alias gtl='gita ll'                                        # 전체 저장소 상태
+alias gtpl='gita pull'                                     # 전체 저장소 일괄 pull
+alias gtps='gita super push'                               # 전체 저장소 일괄 push
+alias gtp='gita super push'
 
-gtac() {
-    local msg="${1:-auto commit}"
-    gita super add -A
-    gita super commit -m "$msg"
+# gta: 특정 저장소 애드 + 커밋 + 푸시
+# 사용법: gta .dotfolders "제목" "설명"
+gta() {
+    local repo="$1"
+    local title="${2:-auto commit }"
+    local body="$3"
+
+    if [ -z "$repo" ]; then
+        echo "Usage: gta <repo_name> [title] [body]"
+        return 1
+    fi
+
+    echo -e "\033[0;36m→ Processing repository: $repo \033[0m"
+
+    # 1. Add
+    gita shell "$repo" git add -A
+
+    # 2. Commit (따옴표 중첩으로 공백 및 한글 이슈 방지)
+    if [ -n "$body" ]; then
+        gita shell "$repo" git commit -m "$title" -m "$body"
+    else
+        gita shell "$repo" git commit -m "$title"
+    fi
+
+    # 3. Push
+    echo -e "\033[0;32m→ Pushing to remote... \033[0m"
+    gita shell "$repo" git push
 }
 
+# gtacp: 전체 저장소 일괄 애드 + 커밋 + 푸시
 gtacp() {
-    local msg="${1:-auto commit}"
+    local msg="${1:-auto commit }"
     gita super add -A
     gita super commit -m "$msg"
     gita super push
 }
-
 
 # ============================================================
 # Git 기본
