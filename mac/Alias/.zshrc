@@ -1,8 +1,15 @@
 # /Users/x/.dotfiles/mac/Alias/.zshrc
-# 수정 직전 기존버전: https://gist.github.com/srzst/81049f5bf03a094c8e669fd225d024cb
+# 수정 직전 2026-04-13(월): https://gist.github.com/srzst/81049f5bf03a094c8e669fd225d024cb
+# 정리 직전 2026-04-14(화): https://gist.github.com/srzst/dcffcf60b6ada701b64ce637e0dbfe06
 # ============================================================
 # macOS Zsh 설정 (.zshrc)
 # ============================================================
+
+
+# ============================================================
+# [FIX] Conflict Aliases (사용자 정의 별칭과 충돌하는 시스템 별칭 사전 제거)
+# ============================================================
+unalias zz  2>/dev/null   # zoxide 또는 기타 툴이 설정한 zz 제거
 
 
 # ============================================================
@@ -108,8 +115,6 @@ fi
 
 alias ff='fzf'
 alias vf='nvim $(fzf)'                                    # fzf로 파일 선택 후 nvim
-
-unalias zz 2>/dev/null
 
 # zz: zoxide 기록 기반 스마트 점프
 zz() {
@@ -324,19 +329,21 @@ mrdpy() {
 # ============================================================
 # Git Gist
 # ============================================================
-# gsl              - 목록 50개
-# gsd <ID>         - 삭제
-# gsa <file>       - 파일 직접 업로드
-# gsa <f1> <f2>    - 다중 파일 업로드
-# gsca             - 클립보드 업로드
-# gsv <ID>         - 내용 터미널 출력
-# gsv <ID> -raw    - 파일 원문만 출력
+# ggl              - 목록 20개
+# ggd <ID>         - 삭제
+# gga <file>       - 파일 직접 업로드
+# gga <f1> <f2>    - 다중 파일 업로드
+# ggaa             - 클립보드 업로드
+# ggv <ID>         - 내용 터미널 출력
+# ggv <ID> -raw    - 파일 원문만 출력
 # ============================================================
-alias gsl='gh gist list --limit 20'
-alias gsd='gh gist delete'
-alias gsa='gh gist create'
-alias gsca='python3 /Users/x/.dotfolders/common/python/util/gistup/basic_srzst_gh.py'
-alias gsv='gh gist view'
+alias ggl='gh gist list --limit 20'
+alias ggd='gh gist delete'
+alias gga='gh gist create'
+alias ggaa='python3 /Users/x/.dotfolders/common/python/util/gistup/basic_srzst_gh.py'
+alias ggv='gh gist view'
+
+
 # ============================================================
 # Git 태그 관리
 # ============================================================
@@ -349,6 +356,7 @@ alias gsv='gh gist view'
 # gt4              - 전체 태그 삭제
 # ============================================================
 alias gt='git tag'
+alias gtd='git tag -d'                                    # 태그 삭제 단축
 
 gta() {
     [ -z "$1" ] && echo "❌ 메시지를 입력하세요." && return 1
@@ -393,13 +401,13 @@ gt4() {
 # ============================================================
 # Git 파일 단위 백업/복원
 # ============================================================
-# g1 <file>        - 파일 백업 커밋 (기본 메시지: 260412_2210 수정전)
-# g1 <file> "msg"  - 커스텀 메시지로 백업
-# g2 <hash>        - 해시로 파일 자동 인식 후 복원
-# gl               - 백업 이력 확인
+# gf1 <file>        - 파일 백업 커밋 (기본 메시지: 260412_2210 수정전)
+# gf1 <file> "msg"  - 커스텀 메시지로 백업
+# gf2 <hash>        - 해시로 파일 자동 인식 후 복원
+# gl                - 백업 이력 확인
 # ============================================================
-g1() {
-    [ -z "$1" ] && echo "❌ 사용법: g1 파일명 [메시지]" && return 1
+gf1() {
+    [ -z "$1" ] && echo "❌ 사용법: gf1 파일명 [메시지]" && return 1
     local file="$1"
     local msg="${2:-$(date +'%y%m%d_%H%M') 수정전}"
     local root=$(git rev-parse --show-toplevel)
@@ -411,8 +419,8 @@ g1() {
     echo "✅ 저장: $rel - $msg"
 }
 
-g2() {
-    [ -z "$1" ] && echo "❌ 사용법: g2 <hash>" && return 1
+gf2() {
+    [ -z "$1" ] && echo "❌ 사용법: gf2 <hash>" && return 1
     local root=$(git rev-parse --show-toplevel)
     local rel=$(git -C "$root" show --name-only --format="" "$1" | head -1)
     git -C "$root" restore --source="$1" "$rel"

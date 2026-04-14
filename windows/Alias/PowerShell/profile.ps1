@@ -1,9 +1,30 @@
 # /Users/x/.dotfiles/windows/Alias/PowerShell/profile.ps1
-# 수정 직전: https://gist.github.com/srzst/034e5b1763331f9e5f9ab2098627a737
-
+# 수정 직전: 2026-04-13(월) https://gist.github.com/srzst/034e5b1763331f9e5f9ab2098627a737
+# 정리 직전: 2026-04-14(화) https://gist.github.com/srzst/f8eacdb3069490f838f1e84a438767ac
 # ============================================================
 # Windows PowerShell Profile
 # ============================================================
+
+
+# ============================================================
+# [FIX] Conflict Aliases (사용자 정의 별칭과 충돌하는 시스템 별칭 사전 제거)
+# ============================================================
+$conflict_aliases = @(
+    "rm",   # Remove-Item (사용자 정의로 덮어씀)
+    "sl",   # Set-Location (scoop list 용도로 재정의)
+    "si",   # Start-Process (scoop install 용도로 재정의)
+    "su",   # 없음 (scoop uninstall 용도로 재정의)
+    "zz",   # 없음 (zoxide 점프 용도로 재정의)
+    "gs",   # 없음 (git status 용도로 재정의)
+    "gsv",  # Get-Service
+    "sc",   # Set-Content
+    "gt"    # 없음 (git tag 용도로 재정의)
+)
+foreach ($alias in $conflict_aliases) {
+    if (Get-Alias $alias -ErrorAction SilentlyContinue) {
+        Remove-Item "Alias:$alias" -Force
+    }
+}
 
 
 # ============================================================
@@ -82,7 +103,6 @@ function fn {
         Where-Object { $_.FullName -notmatch '\\(node_modules|\.git|go\\pkg\\mod)\\' }
 }
 
-if (Test-Path "Alias:rm") { Remove-Item "Alias:rm" -Force }
 function rm { Remove-Item -Path $args -Force -Recurse -Verbose }
 
 function qq { Set-Location ~/.dotfiles;   eza -F --group-directories-first }
@@ -99,10 +119,6 @@ function cd {
 # fzf 설정
 # ============================================================
 $env:FZF_DEFAULT_OPTS = "--height 40% --layout=reverse --border=rounded --info=inline"
-
-if (Get-Command zz -ErrorAction SilentlyContinue) {
-    if ((Get-Command zz).CommandType -eq 'Alias') { Remove-Item Alias:zz }
-}
 
 function ff { fzf }
 function vf { nvim $(fzf) }                                        # fzf로 파일 선택 후 nvim
@@ -154,9 +170,6 @@ function ci  { param($p) gsudo choco install $p -y }
 function cu  { param($p) gsudo choco uninstall $p -y }
 
 # Scoop
-if (Get-Alias si -ErrorAction SilentlyContinue) { Remove-Item Alias:si -Force }
-if (Get-Alias su -ErrorAction SilentlyContinue) { Remove-Item Alias:su -Force }
-if (Get-Alias sl -ErrorAction SilentlyContinue) { Remove-Item Alias:sl -Force }
 function sl  { scoop list }
 function sll { scoop list }
 function si  { if ($args.Count -gt 0) { scoop install @args }   else { Write-Host "설치할 앱 이름을 입력하세요." -ForegroundColor Yellow } }
@@ -279,27 +292,27 @@ function gpl   { git pull }                                        # 풀
 function gpf   { git push origin --force-with-lease }             # 안전한 강제 푸시
 function gl    { git log --oneline -n 10 }                        # 최근 로그 10개
 function gll   { git log --oneline --graph --all }                 # 전체 브랜치 그래프
-function gd    { git diff }                                        # 변경사항 비교
-function gdc   { git diff --staged }                               # 스테이징된 변경사항 비교
-function gb    { git branch }                                      # 로컬 브랜치 목록
-function gba   { git branch -a }                                   # 전체 브랜치 (원격 포함)
-function gsw   { param([string]$b) git switch $b }                 # 브랜치 전환
-function gsc   { param([string]$b) git switch -c $b }             # 브랜치 생성 및 전환
-function gbd   { param([string]$b) git branch -d $b }             # 브랜치 삭제 (병합 완료)
-function gbD   { param([string]$b) git branch -D $b }             # 브랜치 강제 삭제
-function gm    { param([string]$b) git merge $b }                  # 브랜치 병합
+# function gd    { git diff }                                        # 변경사항 비교
+# function gdc   { git diff --staged }                               # 스테이징된 변경사항 비교
+# function gb    { git branch }                                      # 로컬 브랜치 목록
+# function gba   { git branch -a }                                   # 전체 브랜치 (원격 포함)
+# function gsw   { param([string]$b) git switch $b }                 # 브랜치 전환
+# function gsc   { param([string]$b) git switch -c $b }             # 브랜치 생성 및 전환
+# function gbd   { param([string]$b) git branch -d $b }             # 브랜치 삭제 (병합 완료)
+# function gbD   { param([string]$b) git branch -D $b }             # 브랜치 강제 삭제
+# function gm    { param([string]$b) git merge $b }                  # 브랜치 병합
 function gg    { lazygit $args }                                   # lazygit 실행
 function gc    { git commit -m "$args" }                           # 메시지와 함께 커밋
 function gca   { git commit -m "auto commit" }                     # 자동 메시지 커밋
 function gup   { git add .; git commit -m "auto commit"; git push }
-function gst   { git stash }                                       # 작업 임시 저장
-function gstp  { git stash pop }                                   # 임시 저장 복원
-function gstl  { git stash list }                                  # 임시 저장 목록
-function gr    { param([string]$ref) git reset --hard $ref }       # 강제 초기화
-function grs   { git reset --soft HEAD~1 }                         # 최근 커밋 취소 (내용 유지)
-function gre   { param([string]$f) git restore $f }                # 파일 변경사항 복구
-function gres  { param([string]$f) git restore --staged $f }       # 스테이징 취소
-function gclean { git clean -fd }                                  # 미추적 파일 삭제
+# function gst   { git stash }                                       # 작업 임시 저장
+# function gstp  { git stash pop }                                   # 임시 저장 복원
+# function gstl  { git stash list }                                  # 임시 저장 목록
+# function gr    { param([string]$ref) git reset --hard $ref }       # 강제 초기화
+# function grs   { git reset --soft HEAD~1 }                         # 최근 커밋 취소 (내용 유지)
+# function gre   { param([string]$f) git restore $f }                # 파일 변경사항 복구
+# function gres  { param([string]$f) git restore --staged $f }       # 스테이징 취소
+# function gclean { git clean -fd }                                  # 미추적 파일 삭제
 
 function gac {
     param([string]$msg = "auto commit", [string]$body)
@@ -341,23 +354,22 @@ function mrdpy {
 # ============================================================
 # Git Gist
 # ============================================================
-# gsl              - 목록 50개
-# gsd <ID>         - 삭제
-# gsa <file>       - 파일 직접 업로드
-# gsa <f1> <f2>    - 다중 파일 업로드
-# gsca             - 클립보드 업로드
+# ggl              - 목록 50개
+# ggd <ID>         - 삭제
+# gga <file>       - 파일 직접 업로드
+# gga <f1> <f2>    - 다중 파일 업로드
+# ggaa             - 클립보드 업로드
 # ============================================================
-function gsl  { gh gist list --limit 50 }
-function gsd  { gh gist delete $args }
-function gsa  { gh gist create $args }
-function gsca { python3 C:\Users\x\.dotfolders\common\python\util\gistup\basic_srzst_gh.py }
+function ggl  { gh gist list --limit 50 }
+function ggd  { gh gist delete $args }
+function gga  { gh gist create $args }
+function ggaa { python3 C:\Users\x\.dotfolders\common\python\util\gistup\basic_srzst_gh.py }
 
 
 # ============================================================
 # Git 태그 관리
 # ============================================================
 # gt               - 태그 목록
-# gta "msg"        - 현재 커밋에 태그 생성    → 260412_2210(msg)
 # gt1 "msg"        - 빈 커밋 + 태그 생성      → 260412_2210(msg)
 # gt2 <tag>        - 전체 복원
 # gt2 <tag> <file> - 단일/복수 파일 복원
@@ -365,13 +377,6 @@ function gsca { python3 C:\Users\x\.dotfolders\common\python\util\gistup\basic_s
 # gt4              - 전체 태그 삭제
 # ============================================================
 function gt { git tag }
-
-function gta {
-    param([Parameter(Mandatory=$true)][string]$m)
-    $tag_name = "$(Get-Date -Format 'yyMMdd_HHmm')($($m -replace ' ','_'))"
-    git tag -a $tag_name -m $m
-    Write-Host "✅ 태그 생성: $tag_name" -ForegroundColor Green
-}
 
 function gt1 {
     param([Parameter(Mandatory=$true)][string]$m)
@@ -416,12 +421,12 @@ function gtd { param([string]$t) git tag -d $t }                   # 태그 삭�
 # ============================================================
 # Git 파일 단위 백업/복원
 # ============================================================
-# g1 <file>        - 파일 백업 커밋 (기본 메시지: 260412_2210 수정전)
-# g1 <file> "msg"  - 커스텀 메시지로 백업
-# g2 <hash>        - 해시로 파일 자동 인식 후 복원
-# gl               - 백업 이력 확인
+# gf1 <file>        - 파일 백업 커밋 (기본 메시지: 260412_2210 수정전)
+# gf1 <file> "msg"  - 커스텀 메시지로 백업
+# gf2 <hash>        - 해시로 파일 자동 인식 후 복원
+# gl                - 백업 이력 확인
 # ============================================================
-function g1 {
+function gf1 {
     param([Parameter(Mandatory=$true)][string]$file, [string]$msg = "$(Get-Date -Format 'yyMMdd_HHmm') 수정전")
     if (-not (Test-Path $file)) { Write-Host "❌ 파일 없음: $file" -ForegroundColor Red; return }
     $root = git rev-parse --show-toplevel
@@ -432,7 +437,7 @@ function g1 {
     Write-Host "✅ 저장: $rel - $msg" -ForegroundColor Green
 }
 
-function g2 {
+function gf2 {
     param([Parameter(Mandatory=$true)][string]$hash)
     $root = git rev-parse --show-toplevel
     $rel  = git -C $root show --name-only --format="" $hash | Select-Object -First 1
@@ -440,4 +445,3 @@ function g2 {
     git -C $root restore --source=$hash $rel
     Write-Host "✅ 복원: $rel" -ForegroundColor Green
 }
-

@@ -1,8 +1,19 @@
+# C:\Users\x\.dotfiles\linux\ubuntu\Alias\.bashrc
+# 수정전: 26-04-14(화) 11:28 https://gist.github.com/srzst/822e02ed21a307c5a10820076b832af6
 # ============================================================
-# Ubuntu 24.04 Server 설정 bashrc
+# Ubuntu 24.04 Server 설정 (.bashrc)
 # ============================================================
 
-# 인터랙티브 쉘 및 기본 환경 설정
+
+# ============================================================
+# [FIX] Conflict Aliases (사용자 정의 별칭과 충돌하는 시스템 별칭 사전 제거)
+# ============================================================
+unalias zz 2>/dev/null   # zoxide 또는 기타 툴이 설정한 zz 제거
+
+
+# ============================================================
+# 기본 환경 설정
+# ============================================================
 [ -z "$PS1" ] && return
 
 HISTCONTROL=ignoredups:ignorespace
@@ -12,14 +23,6 @@ HISTFILESIZE=2000
 shopt -s checkwinsize
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-# Infisical secrets 함수
-infs() {
-    local path="${1:-/}"
-    INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets \
-        --projectId=bc893247-af3f-4118-a8ec-bcb429338acb \
-        --env=dev \
-        --path="$path"
-}
 
 # ============================================================
 # 프롬프트 설정 (사용자@호스트:전체경로$)
@@ -28,11 +31,24 @@ if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# 컬러 프롬프트 적용 (전체 경로 \w 유지)
 PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 
+
 # ============================================================
-# 기본 별칭 및 파일 조작
+# 에디터 및 설정 파일
+# ============================================================
+export EDITOR=nvim
+export VISUAL=nvim
+
+alias vi='vim'
+alias v='nvim'
+alias nrc='nvim ~/.config/nvim'           # nvim 설정 열기
+alias vrc='vi ~/.bashrc'                  # bashrc 편집
+alias src='source ~/.bashrc'              # bashrc 재로드
+
+
+# ============================================================
+# 파일 및 디렉토리 관리
 # ============================================================
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -44,6 +60,22 @@ alias l='ls -lah'
 alias ll='ls -lah'
 alias la='ls -lAh'
 alias lt='ls -laht'
+
+alias cp='cp -iv'
+alias mv='mv -iv'
+alias rm='rm -iv'
+
+cd() { builtin cd "$@" && ls -F --color=auto; }
+
+mc() { mkdir -p "$1" && cd "$1"; }        # 디렉토리 생성 후 이동
+f()  { find . -iname "*$1*" 2>/dev/null; } # 파일명 검색
+ds() { du -sh "${1:-.}" 2>/dev/null | sort -h; }  # 디렉토리 용량
+pk() { ps aux | grep -i "$1" | grep -v grep | awk '{print $2}' | xargs -r sudo kill -9; }  # 프로세스 종료
+
+
+# ============================================================
+# 시스템 유틸리티
+# ============================================================
 alias c='clear'
 alias cc='clear'
 alias ..='cd ..'
@@ -52,297 +84,58 @@ alias h='cd ~'
 alias e='exit'
 alias ee='exit'
 
-alias cp='cp -iv'
-alias mv='mv -iv'
-alias rm='rm -iv'
+alias port='sudo lsof -i -P | grep LISTEN'   # 열린 포트 확인
+alias myip='curl -s ifconfig.me'              # 외부 IP
+alias cron='crontab -e'                       # 크론탭 편집
+
+alias qq='cd ~/.dotfiles'
+alias ww='cd ~/.dotfolders'
+
 
 # ============================================================
-# 시스템 및 웹 서버 관리
+# 웹 서버 관리 (Nginx)
 # ============================================================
 alias www='cd /var/www'
 alias cdw='cd /var/www'
 alias cdwp='cd /var/www/wordpress'
 alias cdnginx='cd /etc/nginx'
 alias cdn='cd /etc/nginx'
-alias nt='sudo nginx -t'
-alias nr='sudo systemctl restart nginx'
-alias nconf='nvim /etc/nginx/nginx.conf'
-alias s='sudo systemctl'
-alias cron='crontab -e'
-alias port='sudo lsof -i -P | grep LISTEN'
-alias myip='curl -s ifconfig.me'
-alias qq='cd ~/.dotfiles'
-alias ww='cd ~/.dotfolders'
+alias nt='sudo nginx -t'                      # nginx 설정 테스트
+alias nr='sudo systemctl restart nginx'       # nginx 재시작
+alias nconf='nvim /etc/nginx/nginx.conf'      # nginx 설정 편집
+alias s='sudo systemctl'                      # systemctl 단축
 
-# [APT] 시스템 업데이트 및 패키지 관리
+
+# ============================================================
+# 패키지 관리 (APT)
+# ============================================================
 u() {
     echo "=== System Update Started (APT) ==="
     sudo apt update && sudo apt upgrade -y
     echo "=== Update Completed ==="
 }
 alias uu='u'
-alias al='apt list --installed'
-ai() { sudo apt install "$1" -y; }
-au() { sudo apt remove "$1" -y; }
+
+alias al='apt list --installed'               # 설치된 패키지 목록
+ai() { sudo apt install "$1" -y; }            # 패키지 설치
+au() { sudo apt remove "$1" -y; }             # 패키지 제거
+
 
 # ============================================================
-# Git 관련 (최신 문법 및 본문 지원 커밋)
+# Infisical
 # ============================================================
-
-# 기본 및 상태 확인
-alias gi='git init -b main'               # 저장소 초기화
-alias gs='git status'                     # 상태 확인
-alias gss='git status -s'                 # 상태 요약
-alias ga='git add .'                      # 스테이징
-alias gaa='git add --all'                 # 전체 스테이징
-alias gp='git push'                       # 푸시
-alias gpl='git pull'                      # 풀
-alias gpf='git push origin --force-with-lease' # 안전 강제 푸시
-
-# 로그 및 브랜치 관리 (switch 반영)
-alias gl='git log --oneline -n 10'        # 한 줄 로그 10개
-alias gll='git log --oneline --graph --all' # 전체 로그 그래프
-alias gd='git diff'                       # 변경사항 비교
-alias gdc='git diff --staged'             # 스테이징 비교
-alias gb='git branch'                     # 브랜치 목록
-alias gba='git branch -a'                 # 원격 포함 모든 브랜치
-alias gsw='git switch'                    # 브랜치 전환
-alias gsc='git switch -c'                 # 새 브랜치 생성/전환
-alias gbd='git branch -d'                 # 브랜치 삭제
-alias gm='git merge'                      # 브랜치 병합
-alias gg='lazygit'                        # lazygit
-
-
-# 태그 관리
-alias gt='git tag'                        # 태그 목록 확인
-
-# gta: 날짜_시간(메시지) 형식으로 태그명 자동 생성
-gta() {
-    if [ -z "$1" ]; then
-        echo "❌ 에러: 태그 메시지를 입력해주세요."
-        return 1
-    fi
-    local msg_clean="${1// /_}"
-    local tag_name="$(date +'%y%m%d_%H%M')(${msg_clean})"
-    git tag -a "$tag_name" -m "$1"
-    echo "✅ 태그 생성 완료: $tag_name"
+infs() {
+    local path="${1:-/}"
+    INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets \
+        --projectId=bc893247-af3f-4118-a8ec-bcb429338acb \
+        --env=dev \
+        --path="$path"
 }
 
-# gt1: 현재 상태 태그 백업 (빈 커밋 후 태그)
-gt1() {
-    if [ -z "$1" ]; then
-        echo "❌ 에러: 태그 메시지를 입력해주세요."
-        return 1
-    fi
-    local msg_clean="${1// /_}"
-    local tag_name="$(date +'%y%m%d_%H%M')(${msg_clean})"
-    git commit --allow-empty -m "checkpoint: $1"
-    git tag -a "$tag_name" -m "$1"
-    echo "✅ 태그 백업 완료: $tag_name"
-}
-
-# gt2: 특정 태그에서 파일 복원
-# 사용: gt2 태그명 [파일명 ...] (파일명 생략 시 전체 복원)
-gt2() {
-    if [ -z "$1" ]; then
-        echo "❌ 에러: 태그명을 입력해주세요."
-        return 1
-    fi
-    local tag="$1"
-    shift
-    if [ $# -gt 0 ]; then
-        for f in "$@"; do
-            git restore --source="$tag" "$f"
-            echo "✅ 복원 완료: $f (from $tag)"
-        done
-    else
-        git restore --source="$tag" .
-        echo "✅ 전체 복원 완료 (from $tag)"
-    fi
-}
-# gt3: 특정 태그 삭제
-# 사용: gt3 태그명
-gt3() {
-    if [ -z "$1" ]; then
-        echo "❌ 에러: 태그명을 입력해주세요."
-        return 1
-    fi
-    git tag -d "$1"
-    echo "✅ 태그 삭제 완료: $1"
-}
-
-# gt4: 등록된 태그 모두 삭제
-gt4() {
-    echo "⚠️  모든 태그를 삭제합니다. 계속할까요? (y/N): "
-    read confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        git tag | xargs git tag -d
-        echo "✅ 모든 태그 삭제 완료"
-    else
-        echo "취소됨"
-    fi
-}
 
 # ============================================================
-# Git 태그 백업/복원 함수 사용법
+# Yazi / zoxide / fzf
 # ============================================================
-#
-# [gt] 태그 목록 확인
-#   gt
-#
-# [gta] 현재 커밋에 태그만 붙이기
-#   gta "메시지"
-#   gta "functions.php 수정 완료"
-#   → 260412_2210(functions.php_수정_완료)
-#
-# [gt1] 빈 커밋 생성 후 태그 백업 (변경사항 없어도 스냅샷 가능)
-#   gt1 "메시지"
-#   gt1 "functions.php 수정 전"
-#   → 260412_2210(functions.php_수정_전)
-#
-# [gt2] 특정 태그에서 복원
-#   gt2 태그명                                      # 전체 복원
-#   gt2 태그명 functions.php                        # 단일 파일 복원
-#   gt2 태그명 functions.php header.php style.css   # 복수 파일 복원
-#
-# [gt3] 특정 태그 삭제
-#   gt3 태그명
-#   gt3 260412_2210(functions.php_수정_전)
-#
-# [gt4] 등록된 태그 모두 삭제
-#   gt4
-#
-# ============================================================ 
-# 상태 보존 및 복구 (최신 restore 반영)
-# ============================================================
-alias gst='git stash'                     # 작업 임시 저장
-alias gstp='git stash pop'                # 임시 저장 불러오기 및 삭제
-alias gstl='git stash list'               # 임시 저장 목록 확인
-alias gr='git reset --hard'               # 특정 시점으로 강제 초기화
-alias grs='git reset --soft HEAD~1'       # 최근 커밋 취소 (내용은 유지)
-alias gre='git restore'                   # 파일 변경사항 복구 (checkout -- 대체)
-alias gres='git restore --staged'         # 스테이징 취소
-alias gclean='git clean -fd'              # 추적되지 않는 파일 강제 삭제
-
-# ------------------------------------------------------------
-# git 파일 단위 백업/복원 함수
-# ------------------------------------------------------------
-# g1: 특정 파일 백업 커밋 (gb 파일명 "메시지")
-
-# g1 ytb_dl.py              # → backup: .../ytb_dl.py - 260412_2145 수정전
-# g1 ytb_dl.py "기능1 전"   # → backup: .../ytb_dl.py - 기능1 전
-g1() {
-    if [ -z "$1" ]; then
-        echo "❌ 사용법: g1 파일명 [메시지]"
-        return 1
-    fi
-    local file="$1"
-    local msg="${2:-$(date +'%y%m%d_%h%m') 수정전}"
-    local root=$(git rev-parse --show-toplevel)
-    local abs=$(builtin cd "$(dirname "$file")" && pwd)/$(basename "$file")
-    local rel="${abs#$root/}"
-    echo "" >> "$abs"
-    git -c "$root" add "$rel"
-    local hash=$(git -c "$root" commit -m "backup: $rel - $msg" | awk '/^\[/{print $2}' | tr -d ']')
-    echo "$hash $rel" >> ~/.git_backups
-    echo "✅ 저장: $rel - $msg ($hash)"
-}
-# g2: 특정 커밋에서 특정 파일 복원 (gr 커밋해시)
-g2() {
-    local hash="$1"
-    local root=$(git rev-parse --show-toplevel)
-    local rel=$(git -c "$root" show --name-only --format="" "$hash" | head -1)
-    git -c "$root" restore --source="$hash" "$rel"
-    echo "✅ 복원: $rel"
-}
-# ============================================================
-# Git 파일 단위 백업/복원 함수 사용법 (단일 파일 전용)
-# ============================================================
-#
-# [g1] 특정 파일 백업 커밋
-#   g1 파일명              # 기본 메시지: 260412_2210 수정전
-#   g1 파일명 "메시지"     # 커스텀 메시지
-#   g1 ytb_dl.py
-#   g1 ytb_dl.py "기능1 추가 전"
-#
-# [g2] 해시로 파일 복원 (파일명 자동 인식)
-#   g2 커밋해시
-#   g2 9c24313
-#
-# [gl] 백업 이력 확인
-#   gl
-#   → 9c24313 backup: common/python/util/ytb_dl/ytb_dl.py - 260412_2210 수정전
-# ============================================================
-
-
-
-
-
-
-# ------------------------------------------------------------
-# Git & 유틸리티 자동화 함수
-# ------------------------------------------------------------
-
-# gac: 제목($1)과 본문($2) 구분 커밋 (복사+붙여넣기 최적화)
-gac() {
-    git add -A
-    if [ -n "$2" ]; then
-        git commit -m "$1" -m "$2"
-    else
-        git commit -m "${1:-auto commit}"
-    fi
-}
-
-# gacp: 제목($1)과 본문($2) 커밋 후 자동 푸시
-gacp() {
-    gac "$1" "$2"
-    local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
-    git push origin "$branch"
-}
-
-# gfo: 원격 기준 강제 초기화
-gfo() {
-    local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
-    echo -e "\033[0;33mFetching from origin and resetting to $branch...\033[0m"
-    git fetch origin && git reset --hard "origin/$branch"
-}
-
-# mrd: 폴더 생성 + README.md 생성
-mrd() {
-    mkdir -p "$1"
-    echo "# ${1##*/}" > "$1/README.md"
-    echo -e "\033[0;32mFolder '$1' created with README.md\033[0m"
-}
-
-# mrdpy: 폴더 생성 + README.md + basic.py 생성
-mrdpy() {
-    mkdir -p "$1"
-    echo "# ${1##*/}" > "$1/README.md"
-    touch "$1/basic.py"
-    echo -e "\033[0;32mFolder '$1' created with README.md and basic.py\033[0m"
-}
-
-# ------------------------------------------------------------
-# 기타 유틸리티 (Yazi, fzf, gita, 캐시 삭제)
-# ------------------------------------------------------------
-
-# gita 관련
-alias gtl='gita ll'
-alias gtpl='gita pull'
-alias gtp='gita super push'
-gtac() { gita super add -A; gita super commit -m "${1:-auto commit}"; }
-gtacp() { gtac "$1"; gita super push; }
-
-# 유틸리티
-mc() { mkdir -p "$1" && cd "$1"; }
-f() { find . -iname "*$1*" 2>/dev/null; }
-ds() { du -sh "${1:-.}" 2>/dev/null | sort -h; }
-pk() { ps aux | grep -i "$1" | grep -v grep | awk '{print $2}' | xargs -r sudo kill -9; }
-
-# cd 후 자동 ls
-cd() { builtin cd "$@" && ls -F --color=auto; }
-
-# Yazi
 y() {
     local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
     command yazi "$@" --cwd-file="$tmp"
@@ -351,57 +144,219 @@ y() {
     fi
     rm -f -- "$tmp"
 }
-cf() {
-  local result query dir
-  result=$(fd --type d --hidden --exclude .git . 2>/dev/null | fzf --print-query)
-  query=$(echo "$result" | head -1)
-  dir=$(echo "$result" | sed -n '2p')
 
-  if [[ "$query" == ".." && -z "$dir" ]]; then
-    cd ..
-    cf
-  elif [[ -n "$dir" ]]; then
-    cd "$dir"
-  fi
+cf() {
+    local result query dir
+    result=$(fd --type d --hidden --exclude .git . 2>/dev/null | fzf --print-query)
+    query=$(echo "$result" | head -1)
+    dir=$(echo "$result" | sed -n '2p')
+    if [[ "$query" == ".." && -z "$dir" ]]; then cd ..; cf
+    elif [[ -n "$dir" ]]; then cd "$dir"
+    fi
 }
 
-# zoxide / fzf 로드
 [ -x "$(command -v zoxide)" ] && eval "$(zoxide init bash)"
+
 if [ -d /usr/share/doc/fzf/examples ]; then
     [ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && source /usr/share/doc/fzf/examples/key-bindings.bash
-    [ -f /usr/share/doc/fzf/examples/completion.bash ] && source /usr/share/doc/fzf/examples/completion.bash
+    [ -f /usr/share/doc/fzf/examples/completion.bash ]   && source /usr/share/doc/fzf/examples/completion.bash
 fi
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
-[ -x "$(command -v fzf)" ] && alias fe='nvim $(fzf)'
+[ -x "$(command -v fzf)" ] && alias fe='nvim $(fzf)'     # fzf로 파일 선택 후 nvim
+
 
 # ============================================================
-# Cloudflare 캐시 삭제 로직 (기존 유지)
+# gita
+# ============================================================
+alias gtl='gita ll'                                       # 전체 저장소 상태
+alias gtpl='gita pull'                                    # 전체 저장소 pull
+alias gtp='gita super push'                               # 전체 저장소 push
+
+gtac()  { gita super add -A; gita super commit -m "${1:-auto commit}"; }
+gtacp() { gtac "$1"; gita super push; }
+
+
+# ============================================================
+# Git 기본
+# ============================================================
+alias gi='git init -b main'                               # main 브랜치로 초기화
+alias gs='git status'                                     # 변경 상태 확인
+alias gss='git status -s'                                 # 상태 요약
+alias ga='git add .'                                      # 현재 폴더 스테이징
+alias gaa='git add --all'                                 # 전체 스테이징
+alias gp='git push'                                       # 푸시
+alias gpl='git pull'                                      # 풀
+alias gpf='git push origin --force-with-lease'            # 안전한 강제 푸시
+alias gl='git log --oneline -n 10'                        # 최근 로그 10개
+alias gll='git log --oneline --graph --all'               # 전체 브랜치 그래프
+alias gd='git diff'                                       # 변경사항 비교
+alias gdc='git diff --staged'                             # 스테이징된 변경사항 비교
+alias gb='git branch'                                     # 로컬 브랜치 목록
+alias gba='git branch -a'                                 # 전체 브랜치 (원격 포함)
+alias gsw='git switch'                                    # 브랜치 전환
+alias gsc='git switch -c'                                 # 브랜치 생성 및 전환
+alias gbd='git branch -d'                                 # 브랜치 삭제 (병합 완료)
+alias gm='git merge'                                      # 브랜치 병합
+alias gg='lazygit'                                        # lazygit 실행
+alias gst='git stash'                                     # 작업 임시 저장
+alias gstp='git stash pop'                                # 임시 저장 복원
+alias gstl='git stash list'                               # 임시 저장 목록
+alias gr='git reset --hard'                               # 강제 초기화
+alias grs='git reset --soft HEAD~1'                       # 최근 커밋 취소 (내용 유지)
+alias gre='git restore'                                   # 파일 변경사항 복구
+alias gres='git restore --staged'                         # 스테이징 취소
+alias gclean='git clean -fd'                              # 미추적 파일 삭제
+
+gac() {
+    git add -A
+    if [ -n "$2" ]; then git commit -m "$1" -m "$2"
+    else                 git commit -m "${1:-auto commit}"
+    fi
+}
+
+gacp() {
+    gac "$1" "$2"
+    local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+    git push origin "$branch"
+}
+
+gfo() {
+    local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+    echo -e "\033[0;33mFetching from origin and resetting to $branch...\033[0m"
+    git fetch origin && git reset --hard "origin/$branch"
+}
+
+mrd() {
+    mkdir -p "$1"
+    echo "# ${1##*/}" > "$1/README.md"
+    echo -e "\033[0;32m✅ $1 (README.md)\033[0m"
+}
+
+mrdpy() {
+    mkdir -p "$1"
+    echo "# ${1##*/}" > "$1/README.md"
+    touch "$1/basic.py"
+    echo -e "\033[0;32m✅ $1 (README.md + basic.py)\033[0m"
+}
+
+
+# ============================================================
+# Git 태그 관리
+# ============================================================
+# gt               - 태그 목록
+# gta "msg"        - 현재 커밋에 태그 생성    → 260412_2210(msg)
+# gt1 "msg"        - 빈 커밋 + 태그 생성      → 260412_2210(msg)
+# gt2 <tag>        - 전체 복원
+# gt2 <tag> <file> - 단일/복수 파일 복원
+# gt3 <tag>        - 태그 삭제
+# gt4              - 전체 태그 삭제
+# ============================================================
+alias gt='git tag'
+alias gtd='git tag -d'                                    # 태그 삭제 단축
+
+gta() {
+    [ -z "$1" ] && echo "❌ 메시지를 입력하세요." && return 1
+    local tag_name="$(date +'%y%m%d_%H%M')(${1// /_})"
+    git tag -a "$tag_name" -m "$1"
+    echo "✅ 태그 생성: $tag_name"
+}
+
+gt1() {
+    [ -z "$1" ] && echo "❌ 메시지를 입력하세요." && return 1
+    local tag_name="$(date +'%y%m%d_%H%M')(${1// /_})"
+    git commit --allow-empty -m "checkpoint: $1"
+    git tag -a "$tag_name" -m "$1"
+    echo "✅ 태그 백업: $tag_name"
+}
+
+gt2() {
+    [ -z "$1" ] && echo "❌ 태그명을 입력하세요." && return 1
+    local tag="$1"; shift
+    if [ $# -gt 0 ]; then
+        for f in "$@"; do git restore --source="$tag" "$f" && echo "✅ 복원: $f (from $tag)"; done
+    else
+        git restore --source="$tag" . && echo "✅ 전체 복원 (from $tag)"
+    fi
+}
+
+gt3() {
+    [ -z "$1" ] && echo "❌ 태그명을 입력하세요." && return 1
+    git tag -d "$1" && echo "✅ 태그 삭제: $1"
+}
+
+gt4() {
+    echo -n "⚠️  모든 태그를 삭제합니다. 계속할까요? (y/N): "
+    read confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        git tag | xargs git tag -d && echo "✅ 전체 태그 삭제 완료"
+    else echo "취소됨"
+    fi
+}
+
+
+# ============================================================
+# Git 파일 단위 백업/복원
+# ============================================================
+# gf1 <file>        - 파일 백업 커밋 (기본 메시지: 260412_2210 수정전)
+# gf1 <file> "msg"  - 커스텀 메시지로 백업
+# gf2 <hash>        - 해시로 파일 자동 인식 후 복원
+# gl                - 백업 이력 확인
+# ============================================================
+gf1() {
+    [ -z "$1" ] && echo "❌ 사용법: gf1 파일명 [메시지]" && return 1
+    local file="$1"
+    local msg="${2:-$(date +'%y%m%d_%H%M') 수정전}"
+    local root=$(git rev-parse --show-toplevel)
+    local abs=$(builtin cd "$(dirname "$file")" && pwd)/$(basename "$file")
+    local rel="${abs#$root/}"
+    echo "" >> "$abs"
+    git -C "$root" add "$rel"
+    git -C "$root" commit -m "backup: $rel - $msg"
+    echo "✅ 저장: $rel - $msg"
+}
+
+gf2() {
+    [ -z "$1" ] && echo "❌ 사용법: gf2 <hash>" && return 1
+    local root=$(git rev-parse --show-toplevel)
+    local rel=$(git -C "$root" show --name-only --format="" "$1" | head -1)
+    git -C "$root" restore --source="$1" "$rel"
+    echo "✅ 복원: $rel"
+}
+
+
+# ============================================================
+# Cloudflare 캐시 삭제
+# ============================================================
+# p          - 현재 호스트 기준 자동 퍼지
+# w1p~w5p    - 사이트별 퍼지
+# ap         - 전체 퍼지
 # ============================================================
 _cf_purge() {
-  local zone=$1
-  sudo find /var/cache/nginx/wp -type f -delete 2>/dev/null && echo "Nginx 캐시 삭제 완료"
-  local redis_pass=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get main_password --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/ --plain --silent 2>/dev/null')
-  redis-cli -a "$redis_pass" --no-auth-warning FLUSHALL > /dev/null && echo "Redis 캐시 삭제 완료"
-  local token=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get cf_cache_purge_token --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/cloudflare --plain --silent 2>/dev/null')
-  curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone/purge_cache" \
-    -H "Authorization: Bearer $token" \
-    -H "Content-Type: application/json" \
-    --data '{"purge_everything":true}'
-  echo ""
+    local zone=$1
+    sudo find /var/cache/nginx/wp -type f -delete 2>/dev/null && echo "Nginx 캐시 삭제 완료"
+    local redis_pass=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get main_password --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/ --plain --silent 2>/dev/null')
+    redis-cli -a "$redis_pass" --no-auth-warning FLUSHALL > /dev/null && echo "Redis 캐시 삭제 완료"
+    local token=$(sudo bash -c 'source /root/.bashrc_secrets && INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get cf_cache_purge_token --projectId=bc893247-af3f-4118-a8ec-bcb429338acb --env=dev --path=/cloudflare --plain --silent 2>/dev/null')
+    curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone/purge_cache" \
+        -H "Authorization: Bearer $token" \
+        -H "Content-Type: application/json" \
+        --data '{"purge_everything":true}'
+    echo ""
 }
 
 p() {
-  local host=$(hostname | tr '[:upper:]' '[:lower:]')
-  local zone=""
-  case "$host" in
-    w1) zone="81717dea734982b7daf583287346f949" ;;
-    w2) zone="0e5c7d391be06e7f8e0e5c4dfa88e8fc" ;;
-    w3) zone="0ebddc7bb5feb60e2e2eeac29dd14d7d" ;;
-    w5) zone="97155be9a57b0f9e31b0b1cd083154a2" ;;
-    *) echo "등록되지 않은 호스트($host)입니다."; return 1 ;;
-  esac
-  _cf_purge "$zone"
+    local host=$(hostname | tr '[:upper:]' '[:lower:]')
+    local zone=""
+    case "$host" in
+        w1) zone="81717dea734982b7daf583287346f949" ;;
+        w2) zone="0e5c7d391be06e7f8e0e5c4dfa88e8fc" ;;
+        w3) zone="0ebddc7bb5feb60e2e2eeac29dd14d7d" ;;
+        w5) zone="97155be9a57b0f9e31b0b1cd083154a2" ;;
+        *)  echo "등록되지 않은 호스트($host)입니다."; return 1 ;;
+    esac
+    _cf_purge "$zone"
 }
+
 alias purge='p'
 alias w1p='_cf_purge 81717dea734982b7daf583287346f949'
 alias w2p='_cf_purge 0e5c7d391be06e7f8e0e5c4dfa88e8fc'
@@ -409,14 +364,8 @@ alias w3p='_cf_purge 0ebddc7bb5feb60e2e2eeac29dd14d7d'
 alias w5p='_cf_purge 97155be9a57b0f9e31b0b1cd083154a2'
 alias ap='w1p && w2p && w3p && w5p'
 
-# 에디터 설정
-export EDITOR=nvim
-export VISUAL=nvim
-alias vi='vim'
-alias v='nvim'
-alias nrc='nvim ~/.config/nvim'
-alias vrc='vi ~/.bashrc'
-alias src='source ~/.bashrc'
 
+# ============================================================
 # 기타 로드
+# ============================================================
 [ -f ~/.bash_aliases ] && . ~/.bash_aliases
