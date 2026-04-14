@@ -263,23 +263,6 @@ Set-PSReadLineOption -Colors @{
 Set-PSReadLineKeyHandler -Chord Ctrl+U -Function BackwardDeleteLine
 
 
-# # ============================================================
-# # gita
-# # ============================================================
-# function gtl  { gita ll }                                          # 전체 저장소 상태
-# function gtpl { gita pull }                                        # 전체 저장소 pull
-# function gtp  { gita super push }                                  # 전체 저장소 push
-# function gtac {
-#     $msg = if ($args[0]) { $args[0] } else { "auto commit" }
-#     gita super add -A
-#     gita super commit -m $msg
-# }
-# function gtacp {
-#     $msg = if ($args[0]) { $args[0] } else { "auto commit" }
-#     gita super add -A
-#     gita super commit -m $msg
-#     gita super push
-# }
 # ============================================================
 # gita
 # ============================================================
@@ -289,18 +272,30 @@ function gtps  { gita super push }                                 # 전체 저�
 function gtp   { gita super push }
 
 # gta: 특정 저장소 애드 + 커밋 (제목/설명 대응)
+# # 사용법: gta .dotfolders "제목" "설명"
+# function gta {
+#     param([Parameter(Mandatory=$true)][string]$repo, [string]$title = "auto commit", [string]$body)
+#     gita shell $repo git add -A
+#     if ($body) {
+#         # gita shell의 따옴표 문제를 피하기 위해 백틱 이스케이프 적용
+#         gita shell $repo git commit -m "`"$title`"" -m "`"$body`""
+#     } else {
+#         gita shell $repo git commit -m "`"$title`""
+#     }
+# }
+# gta: 특정 저장소 애드 + 커밋 + 푸시 (제목/설명 대응)
 # 사용법: gta .dotfolders "제목" "설명"
 function gta {
-    param([Parameter(Mandatory=$true)][string]$repo, [string]$title = "auto commit", [string]$body)
+    param([Parameter(Mandatory=$true)][string]$repo, [string]$title = "auto commit ", [string]$body)
     gita shell $repo git add -A
     if ($body) {
-        # gita shell의 따옴표 문제를 피하기 위해 백틱 이스케이프 적용
         gita shell $repo git commit -m "`"$title`"" -m "`"$body`""
     } else {
         gita shell $repo git commit -m "`"$title`""
     }
+    # 커밋 성공 여부와 상관없이 해당 저장소 푸시 실행
+    gita push $repo
 }
-
 function gtac {
     $msg = if ($args[0]) { $args[0] } else { "auto commit " }
     gita super add -A
