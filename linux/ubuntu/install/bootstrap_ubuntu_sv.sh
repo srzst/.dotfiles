@@ -287,11 +287,11 @@ printf "%b" "$(fetch_secret_multiline "git_credentials" "/github")" > ~/.git-cre
 chmod 600 ~/.git-credentials
 echo "OK .git-credentials 완료"
 
+
 mkdir -p ~/.config/rclone
-printf "%b" "$(fetch_secret_multiline "rclone_onedrive_sv" "/rclone")" > ~/.config/rclone/rclone.conf
+printf "%b" "$(fetch_secret_multiline "rclone_conf" "/rclone")" > ~/.config/rclone/rclone.conf
 chmod 600 ~/.config/rclone/rclone.conf
 echo "OK rclone.conf 복원 완료"
-
 
 # ============================================================
 # 시간대 설정

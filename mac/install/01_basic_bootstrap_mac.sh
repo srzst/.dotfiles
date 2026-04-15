@@ -224,6 +224,31 @@ ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" \
   && echo "OK GitHub SSH 인증 성공" \
   || echo "WARN GitHub SSH 인증 실패 - Infisical 키 또는 GitHub 등록 확인 필요"
 
+
+# ============================================================
+# rclone 설정 복원
+# ============================================================
+mkdir -p ~/.config/rclone
+val=$(fetch_secret "rclone_conf" "/rclone")
+if [[ -n "$val" ]]; then
+    printf "%s" "$val" > ~/.config/rclone/rclone.conf
+    chmod 600 ~/.config/rclone/rclone.conf
+    echo "OK rclone.conf 복원 완료"
+else
+    echo "WARN rclone.conf 복원 실패 (값 없음)"
+fi
+
+# ============================================================
+# gh CLI GitHub 인증
+# ============================================================
+ghToken=$(fetch_secret "personal_access_tokens_classic_srzst" "/github")
+if [[ -n "$ghToken" ]]; then
+    echo "$ghToken" | gh auth login --with-token
+    echo "OK gh CLI 인증 완료"
+else
+    echo "WARN gh CLI 인증 실패 → Infisical 토큰 확인 필요"
+fi
+
 # ============================================================
 # 글로벌 gitignore 설정
 # ============================================================
