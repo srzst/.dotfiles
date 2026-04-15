@@ -9,7 +9,11 @@
 //C:\Users\x\.dotfiles\common\zed\settings.json
 //
 {
-  "icon_theme": "Colored Zed Icons Theme Light",
+  "icon_theme": {
+    "mode": "system",
+    "light": "Colored Zed Icons Theme Light",
+    "dark": "Colored Zed Icons Theme Light"
+  },
   "colorize_brackets": true,
   "soft_wrap": "prefer_line",
   "toolbar": {
@@ -26,7 +30,7 @@
   "ui_font_size": 16.0,
   "buffer_font_size": 14.0,
   "theme": {
-    "mode": "dark",
+    "mode": "light",
     "light": "One Light",
     "dark": "Catppuccin Espresso (Blur)",
   },
