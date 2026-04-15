@@ -439,7 +439,16 @@ if ($sshTest -match "successfully authenticated")
 {
     Write-LogWarn "GitHub SSH 인증 실패 → Infisical 키 또는 GitHub 등록 확인 필요"
 }
-
+# gh CLI GitHub 인증
+$ghToken = Get-InfisicalSecret "personal_access_tokens_classic_srzst" "/"
+if ($ghToken)
+{
+    $ghToken | gh auth login --with-token
+    Write-LogOK "gh CLI 인증 완료"
+} else
+{
+    Write-LogWarn "gh CLI 인증 실패 → Infisical 토큰 확인 필요"
+}
 if ($TARGET -eq 3)
 {
     Write-Host ""
