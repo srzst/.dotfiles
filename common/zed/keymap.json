@@ -33,4 +33,11 @@
       "x": ["workspace::SendKeystrokes", "\" + d"],
     },
   },
+  {
+    "context": "ProjectPanel",
+    "bindings": {
+      "a": "project_panel::NewFile",
+      "shift-a": "project_panel::NewDirectory",
+    },
+  },
 ]

@@ -15,7 +15,7 @@
   "toolbar": {
     "agent_review": false
   },
-  "restore_on_startup": "launchpad",
+  "restore_on_startup": "last_workspace",
   "vim_mode": true,
   "active_pane_modifiers": {
     "inactive_opacity": 0.3,
@@ -49,6 +49,7 @@
 
   // 터미널
   "terminal": {
+    "keep_selection_on_copy": true,
     "copy_on_select": true,
     "font_family": "Hack Nerd Font Mono",
     "font_size": 14.0,
