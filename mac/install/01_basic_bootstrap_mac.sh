@@ -295,13 +295,14 @@ ln -sf "$REPO/Common/Vim/.vimrc" ~/.vimrc
 # 2. .config 하위 디렉토리 생성
 mkdir -p ~/.config/nvim ~/.config/yazi ~/.config/zed ~/.config/ghostty
 mkdir -p "$HOME/Library/Application Support"
-
 # 3. .dotfiles(REPO) 기반 설정 연결
 ln -sf "$REPO/Common/neovim" ~/.config/nvim
 ln -sf "$REPO/Common/yazi" ~/.config/yazi
-rm -rf ~/.config/zed
-ln -sf "$REPO/Common/zed" ~/.config/zed
+ln -sf "$REPO/Common/zed/settings.json" ~/.config/zed/settings.json
+ln -sf "$REPO/Common/zed/keymap.json"   ~/.config/zed/keymap.json
+ln -sf "$REPO/Common/zed/tasks.json"    ~/.config/zed/tasks.json
 # 4. .dotfolders(FOLDERS) 기반 설정 연결
+
 
 # Ghostty
 if [ -f "$FOLDERS/common/ghostty/config.ghosty" ]; then
