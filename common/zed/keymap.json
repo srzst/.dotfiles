@@ -16,6 +16,7 @@
     "context": "Editor && vim_mode == insert",
     "bindings": {
       // "j k": "vim::NormalBefore"
+      "ctrl-v": "editor::Paste",
     },
   },
   {
@@ -31,6 +32,7 @@
     "context": "Editor && vim_mode == visual && !menu",
     "bindings": {
       "x": ["workspace::SendKeystrokes", "\" + d"],
+      "ctrl-c": "editor::Copy",
     },
   },
   {
