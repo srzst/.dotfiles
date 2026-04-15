@@ -1,36 +1,40 @@
 // Zed settings
-//
+//C:\Users\x\.dotfiles\common\zed\settings.json
 // For information on how to configure Zed, see the Zed
 // documentation: https://zed.dev/docs/configuring-zed
 //
 // To see all of Zed's default settings without changing your
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
+//C:\Users\x\.dotfiles\common\zed\settings.json
+//
 {
+  "restore_on_startup": "launchpad",
   "vim_mode": true,
   "active_pane_modifiers": {
-    "inactive_opacity": 0.3
+    "inactive_opacity": 0.3,
   },
   "session": {
-    "trust_all_worktrees": true
+    "trust_all_worktrees": true,
   },
-  "ui_font_size": 16,
-  "buffer_font_size": 15,
+  "ui_font_size": 16.0,
+  "buffer_font_size": 14.0,
   "theme": {
     "mode": "dark",
     "light": "One Light",
-    "dark": "Catppuccin Espresso (Blur)"
+    "dark": "Catppuccin Espresso (Blur)",
   },
 
   // 폰트
   "buffer_font_family": "Hack Nerd Font Mono",
-  "buffer_font_weight": 500,
+  "buffer_font_weight": 500.0,
 
   // 에디터
   "word_wrap": "on",
+  "auto_copy_on_select": true,
   "show_whitespaces": "selection",
   "indent_guides": {
-    "enabled": true
+    "enabled": true,
   },
 
   // 저장
@@ -39,10 +43,11 @@
 
   // 터미널
   "terminal": {
+    "copy_on_select": true,
     "font_family": "Hack Nerd Font Mono",
-    "font_size": 15
+    "font_size": 14.0,
   },
 
   // 파일 탐색기
-  "file_scan_exclusions": ["**/.git", "**/node_modules", "**/.DS_Store"]
+  "file_scan_exclusions": ["**/.git", "**/node_modules", "**/.DS_Store"],
 }

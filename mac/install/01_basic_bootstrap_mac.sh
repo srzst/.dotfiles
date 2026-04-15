@@ -67,11 +67,11 @@ if [ "$MODE" -eq 2 ]; then
   curl -sL "$BOOTSTRAP_TOKEN_URL" -o /tmp/t.enc
   # Zsh read 문법 적용
   read -s "DECODE_PASS?복호화 암호: "; echo
-  
+
   # 인코딩 오류 방지를 위해 tr 대신 Zsh 내장 치환 사용
   RAW_TOKEN=$(openssl enc -aes-256-cbc -pbkdf2 -d -in /tmp/t.enc -pass pass:"$DECODE_PASS" 2>/dev/null)
   INFISICAL_TOKEN="${RAW_TOKEN//[$'\t\r\n']/}"
-  
+
   rm -f /tmp/t.enc
   if [ -z "$INFISICAL_TOKEN" ]; then
     echo "ERR 토큰 복호화 실패"
@@ -300,6 +300,7 @@ mkdir -p "$HOME/Library/Application Support"
 ln -sf "$REPO/Common/neovim" ~/.config/nvim
 ln -sf "$REPO/Common/yazi" ~/.config/yazi
 ln -sf "$REPO/Common/zed/settings.json" ~/.config/zed/settings.json
+ln -sf "$REPO/Common/zed/keymap.json"   ~/.config/zed/keymap.json
 
 # 4. .dotfolders(FOLDERS) 기반 설정 연결
 
@@ -344,7 +345,7 @@ if [ -d "$AGENT_SRC" ]; then
     for plist in "$AGENT_SRC"/*.plist; do
         filename=$(basename "$plist")
         ln -sf "$plist" ~/Library/LaunchAgents/"$filename"
-        
+
         # 3. 에이전트 로드 (이미 로드된 경우 unload 후 다시 load)
         launchctl unload ~/Library/LaunchAgents/"$filename" 2>/dev/null
         launchctl load ~/Library/LaunchAgents/"$filename"
@@ -364,16 +365,16 @@ typeset -a apps casks
 if [ "$TARGET" -eq 1 ]; then
     # --- CLI Tools & Plugins ---
     apps=(
-        git python python-tk node ffmpeg yt-dlp 
-        pngpaste wget terminal-notifier pipx rclone 
-        neovim lazygit eza yazi sevenzip jq poppler 
-        fd ripgrep fzf zoxide imagemagick 
+        git python python-tk node ffmpeg yt-dlp
+        pngpaste wget terminal-notifier pipx rclone
+        neovim lazygit eza yazi sevenzip jq poppler
+        fd ripgrep fzf zoxide imagemagick
         zsh-syntax-highlighting zsh-autosuggestions
         font-d2coding-nerd-font font-d2coding
     )
     # --- GUI Applications (Casks) ---
     casks=(
-        google-chrome 
+        google-chrome
         raycast               # 런처
         hammerspoon           # 자동화
         karabiner-elements    # 키 매핑
@@ -381,18 +382,18 @@ if [ "$TARGET" -eq 1 ]; then
         keyboard-maestro      # 매크로 자동화
         shottr                # 스크린샷
         popclip               # 텍스트 팝업 메뉴
-        font-hack-nerd-font 
+        font-hack-nerd-font
         font-symbols-only-nerd-font
     )
 elif [ "$TARGET" -eq 2 ]; then
     apps=(
-        git python node wget pipx neovim 
-        lazygit yazi fd ripgrep fzf zoxide 
+        git python node wget pipx neovim
+        lazygit yazi fd ripgrep fzf zoxide
         zsh-syntax-highlighting zsh-autosuggestions
     )
     casks=(
         raycast
-        font-hack-nerd-font 
+        font-hack-nerd-font
         font-symbols-only-nerd-font
     )
 else
@@ -462,4 +463,4 @@ echo ""
 echo "OK Mac 설치 완료 (TARGET=$TARGET, MODE=$MODE)"
 
 
-# 데이지  디스크 설치  
+# 데이지  디스크 설치

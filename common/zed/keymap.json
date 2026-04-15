@@ -1,18 +1,36 @@
+// Zed keymap
+//C:\Users\x\.dotfiles\common\zed\keymap.json
+// For information on binding keys, see the Zed
+// documentation: https://zed.dev/docs/key-bindings
+//
+// To see the default key bindings run `zed: open default keymap`
+// from the command palette.
 [
   {
-    "context": "Editor && VimControl && !VimWaiting && !menu",
+    "context": "Workspace",
     "bindings": {
-      "g d": ["workspace::SendKeystrokes", "gg\"_dG"],
-      "g y": ["workspace::SendKeystrokes", "gg\"+yG"],
-      "d": ["workspace::SendKeystrokes", "\"_d"],
-      "x": ["workspace::SendKeystrokes", "\"_x"],
+      // "shift shift": "file_finder::Toggle"
+    },
+  },
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      // "j k": "vim::NormalBefore"
+    },
+  },
+  {
+    "context": "Editor && vim_mode == normal && !menu",
+    "bindings": {
+      "g y": ["workspace::SendKeystrokes", "g g \" + y G"],
+      "g d": ["workspace::SendKeystrokes", "g g d G"],
+      "g x": ["workspace::SendKeystrokes", "g g \" + d G"],
+      "x": ["workspace::SendKeystrokes", "\" + x"],
     },
   },
   {
     "context": "Editor && vim_mode == visual && !menu",
     "bindings": {
-      "d": ["workspace::SendKeystrokes", "\"_d"],
-      "x": ["workspace::SendKeystrokes", "\"_x"],
+      "x": ["workspace::SendKeystrokes", "\" + d"],
     },
   },
 ]
