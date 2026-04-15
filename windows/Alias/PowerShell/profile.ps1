@@ -391,6 +391,9 @@ function wtt
 { _ssh_connect "x" "100.107.192.115"
 }
 
+function jjf
+{ _ssh_connect "root" "192.168.0.165"
+}
 
 # ============================================================
 # Yazi / zoxide
@@ -717,7 +720,7 @@ function gf2
 }
 
 function rcw
-{ rclone rcd --rc-web-gui 
+{ rclone rcd --rc-web-gui
 } # rclone web gui
 # # ============================================================
 # # Git 태그 관리
