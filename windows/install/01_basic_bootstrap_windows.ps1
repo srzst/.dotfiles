@@ -525,9 +525,9 @@ if (Test-Path $yaziTarget)
 New-Item -ItemType Directory -Force -Path "$env:APPDATA\yazi" | Out-Null
 New-Symlink $yaziTarget "$REPO\common\yazi"
 
-New-Symlink "$HOME\AppData\Roaming\Zed\settings.json"        "$REPO\common\zed\settings.json"
-New-Symlink "$HOME\AppData\Roaming\Zed\keymap.json"          "$REPO\common\zed\keymap.json"
-
+# New-Symlink "$HOME\AppData\Roaming\Zed\settings.json"        "$REPO\common\zed\settings.json"
+# New-Symlink "$HOME\AppData\Roaming\Zed\keymap.json"          "$REPO\common\zed\keymap.json"
+New-Symlink "$HOME\AppData\Roaming\Zed"   "$REPO\common\zed"
 New-Symlink "$env:APPDATA\Code\User\keybindings.json"        "$REPO\common\vscode\keybindings.json"
 New-Symlink "$env:APPDATA\Code\User\settings.json"           "$REPO\common\vscode\settings.json"
 New-Symlink "$env:APPDATA\Cursor\User\keybindings.json"      "$REPO\common\cursor\keybindings.json"
