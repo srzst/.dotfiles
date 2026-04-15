@@ -397,7 +397,7 @@ alias w3p='_cf_purge 0ebddc7bb5feb60e2e2eeac29dd14d7d'
 alias w5p='_cf_purge 97155be9a57b0f9e31b0b1cd083154a2'
 alias ap='w1p && w2p && w3p && w5p'
 
-
+alias rcw="rclone rcd --rc-web-gui"  # rclone web gui
 # ============================================================
 # 기타 로드
 # ============================================================

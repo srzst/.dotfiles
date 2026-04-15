@@ -23,8 +23,10 @@ $conflict_aliases = @(
     "sc",   # Set-Content
     "gt"    # 없음 (git tag 용도로 재정의)
 )
-foreach ($alias in $conflict_aliases) {
-    if (Get-Alias $alias -ErrorAction SilentlyContinue) {
+foreach ($alias in $conflict_aliases)
+{
+    if (Get-Alias $alias -ErrorAction SilentlyContinue)
+    {
         Remove-Item "Alias:$alias" -Force
     }
 }
@@ -34,7 +36,8 @@ foreach ($alias in $conflict_aliases) {
 # [FIX] Scoop Shims Path Priority
 # ============================================================
 $scoopShims = "$env:USERPROFILE\scoop\shims"
-if (Test-Path $scoopShims) {
+if (Test-Path $scoopShims)
+{
     $currentPaths = $env:PATH -split ';' | Where-Object { $_ -ne $scoopShims -and $_ -ne "" }
     $env:PATH = ($scoopShims, ($currentPaths -join ';')) -join ';'
 }
@@ -44,76 +47,156 @@ if (Test-Path $scoopShims) {
 # 외부 도구 및 환경 변수
 # ============================================================
 $nvimPath = "$env:LOCALAPPDATA\nvim-win64\bin"
-if ((Test-Path $nvimPath) -and ($env:Path -notlike "*$nvimPath*")) {
+if ((Test-Path $nvimPath) -and ($env:Path -notlike "*$nvimPath*"))
+{
     $env:Path += ";$nvimPath"
 }
 $env:PATH += ";C:\Users\x\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude-code\2.1.70"
 
 $chocoProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-if (Test-Path $chocoProfile) { Import-Module $chocoProfile }
+if (Test-Path $chocoProfile)
+{ Import-Module $chocoProfile
+}
 
 
 # ============================================================
 # 에디터 및 설정 파일
 # ============================================================
-function v      { if ($args.Count -eq 0) { nvim . } else { nvim $args } }
-function vi     { if ($args.Count -eq 0) { nvim . } else { vim $args } }
-function nrc    { Set-Location "$env:LOCALAPPDATA\nvim"; nvim . }  # nvim 설정 열기
-function vrc    { nvim $PROFILE }                                   # 프로필 편집
-function src    { . $PROFILE }                                      # 프로필 재로드
-function srcrc  { . $PROFILE }
+function v
+{ if ($args.Count -eq 0)
+    { nvim .
+    } else
+    { nvim $args
+    }
+}
+function vi
+{ if ($args.Count -eq 0)
+    { nvim .
+    } else
+    { vim $args
+    }
+}
+function nrc
+{ Set-Location "$env:LOCALAPPDATA\nvim"; nvim .
+}  # nvim 설정 열기
+function vrc
+{ nvim $PROFILE
+}                                   # 프로필 편집
+function src
+{ . $PROFILE
+}                                      # 프로필 재로드
+function srcrc
+{ . $PROFILE
+}
 
 
 # ============================================================
 # 파일 및 디렉토리 관리 (eza)
 # ============================================================
-function l   { eza -alF --group-directories-first $args }
-function ll  { eza -alF --group-directories-first --git $args }    # git 상태 포함
-function la  { eza -aF --group-directories-first $args }           # 숨김 파일 포함
-function lt  { eza -alF --sort=modified $args }                    # 수정 시간순
+function l
+{ eza -alF --group-directories-first $args
+}
+function ll
+{ eza -alF --group-directories-first --git $args
+}    # git 상태 포함
+function la
+{ eza -aF --group-directories-first $args
+}           # 숨김 파일 포함
+function lt
+{ eza -alF --sort=modified $args
+}                    # 수정 시간순
 
-function et  { eza --tree -a -I ".git" --git-ignore $args }
-function et1 { eza --tree --level=1 -a -I ".git" --git-ignore $args }
-function et2 { eza --tree --level=2 -a -I ".git" --git-ignore $args }
-function et3 { eza --tree --level=3 -a -I ".git" --git-ignore $args }
+function et
+{ eza --tree -a -I ".git" --git-ignore $args
+}
+function et1
+{ eza --tree --level=1 -a -I ".git" --git-ignore $args
+}
+function et2
+{ eza --tree --level=2 -a -I ".git" --git-ignore $args
+}
+function et3
+{ eza --tree --level=3 -a -I ".git" --git-ignore $args
+}
 
 
 # ============================================================
 # 시스템 유틸리티
 # ============================================================
-function c     { Clear-Host }
-function cc    { Clear-Host }
-function e     { Exit }
-function ee    { Exit }
-function ..    { Set-Location .. }
-function ...   { Set-Location ../.. }
-function h     { Set-Location ~ }
-function s     { gsudo }
-function sudo  { gsudo }
+function c
+{ Clear-Host
+}
+function cc
+{ Clear-Host
+}
+function e
+{ Exit
+}
+function ee
+{ Exit
+}
+function ..
+{ Set-Location ..
+}
+function ...
+{ Set-Location ../..
+}
+function h
+{ Set-Location ~
+}
+function s
+{ gsudo
+}
+function sudo
+{ gsudo
+}
 
-function port  { param($p) if ($p) { netstat -ano | findstr ":$p" } else { netstat -ano | findstr LISTENING } }  # 포트 확인
-function myip  { Invoke-RestMethod -Uri "https://ifconfig.me" }    # 외부 IP
+function port
+{ param($p) if ($p)
+    { netstat -ano | findstr ":$p"
+    } else
+    { netstat -ano | findstr LISTENING
+    }
+}  # 포트 확인
+function myip
+{ Invoke-RestMethod -Uri "https://ifconfig.me"
+}    # 외부 IP
 
-function mc ($path) {
+function mc ($path)
+{
     New-Item -ItemType Directory -Path $path -Force | Out-Null
     Set-Location $path
 }
 
-function fn {
+function fn
+{
     param($name)
-    if (!$name) { Write-Host "사용법: fn <검색어>" -ForegroundColor Yellow; return }
+    if (!$name)
+    { Write-Host "사용법: fn <검색어>" -ForegroundColor Yellow; return
+    }
     Get-ChildItem -Recurse -Filter "*$name*" -ErrorAction SilentlyContinue |
         Where-Object { $_.FullName -notmatch '\\(node_modules|\.git|go\\pkg\\mod)\\' }
 }
 
-function rm { Remove-Item -Path $args -Force -Recurse -Verbose }
+function rm
+{ Remove-Item -Path $args -Force -Recurse -Verbose
+}
 
-function qq { Set-Location ~/.dotfiles;   eza -F --group-directories-first }
-function ww { Set-Location ~/.dotfolders; eza -F --group-directories-first }
+function qq
+{ Set-Location ~/.dotfiles;   eza -F --group-directories-first
+}
+function ww
+{ Set-Location ~/.dotfolders; eza -F --group-directories-first
+}
 
-function cd {
+function cd
+{
     param([string]$path)
-    if ($path) { Set-Location $path } else { Set-Location ~ }
+    if ($path)
+    { Set-Location $path
+    } else
+    { Set-Location ~
+    }
     eza -F --group-directories-first
 }
 
@@ -123,33 +206,56 @@ function cd {
 # ============================================================
 $env:FZF_DEFAULT_OPTS = "--height 40% --layout=reverse --border=rounded --info=inline"
 
-function ff { fzf }
-function vf { nvim $(fzf) }                                        # fzf로 파일 선택 후 nvim
+function ff
+{ fzf
+}
+function vf
+{ nvim $(fzf)
+}                                        # fzf로 파일 선택 후 nvim
 
 # zz: zoxide 기록 기반 스마트 점프
-function zz {
+function zz
+{
     $zPaths = zoxide query -l | Select-Object -First 50
     $target = $zPaths | ForEach-Object { fd . $_ --max-depth 2 2>$null } |
         fzf --prompt="Jump to (History) > " --exact --bind 'ctrl-k:up,ctrl-j:down'
-    if (-not $target) { return }
-    if (Test-Path $target -PathType Container)  { Set-Location $target }
-    elseif (Test-Path $target -PathType Leaf)   { Set-Location (Split-Path $target -Parent) }
+    if (-not $target)
+    { return
+    }
+    if (Test-Path $target -PathType Container)
+    { Set-Location $target
+    } elseif (Test-Path $target -PathType Leaf)
+    { Set-Location (Split-Path $target -Parent)
+    }
     Write-Host "→ $PWD" -ForegroundColor Green
 }
 
 # cf: 현재 디렉토리 기반 fzf 탐색
-function cf {
+function cf
+{
     $result = fd --hidden --exclude .git -t f -t d . 2>$null | fzf `
         '--print-query' '--layout=reverse' '--info=inline' `
         '--bind' 'ctrl-k:up,ctrl-j:down' '--prompt=> ' '--exact'
-    if (-not $result) { return }
+    if (-not $result)
+    { return
+    }
     $lines  = $result -split "`r?`n"
     $query  = $lines[0].Trim()
-    $target = if ($lines.Count -gt 1) { $lines[1].Trim() } else { $null }
-    if ($query -eq ".." -and -not $target) { Set-Location ..; cf; return }
-    if ($target) {
-        if (Test-Path $target -PathType Container) { Set-Location $target }
-        elseif (Test-Path $target -PathType Leaf)  { Set-Location (Split-Path $target -Parent) }
+    $target = if ($lines.Count -gt 1)
+    { $lines[1].Trim()
+    } else
+    { $null
+    }
+    if ($query -eq ".." -and -not $target)
+    { Set-Location ..; cf; return
+    }
+    if ($target)
+    {
+        if (Test-Path $target -PathType Container)
+        { Set-Location $target
+        } elseif (Test-Path $target -PathType Leaf)
+        { Set-Location (Split-Path $target -Parent)
+        }
         Write-Host "→ $PWD" -ForegroundColor Green
     }
 }
@@ -158,39 +264,85 @@ function cf {
 # ============================================================
 # 패키지 관리자
 # ============================================================
-function u {
+function u
+{
     Write-Host "=== System Update ===" -ForegroundColor Green
-    if (Get-Command choco  -ErrorAction SilentlyContinue) { Write-Host "[Chocolatey]"; gsudo choco upgrade all -y }
-    if (Get-Command scoop  -ErrorAction SilentlyContinue) { Write-Host "[Scoop]";      scoop update * }
-    if (Get-Command winget -ErrorAction SilentlyContinue) { Write-Host "[Winget]";     winget upgrade --all }
+    if (Get-Command choco  -ErrorAction SilentlyContinue)
+    { Write-Host "[Chocolatey]"; gsudo choco upgrade all -y
+    }
+    if (Get-Command scoop  -ErrorAction SilentlyContinue)
+    { Write-Host "[Scoop]";      scoop update *
+    }
+    if (Get-Command winget -ErrorAction SilentlyContinue)
+    { Write-Host "[Winget]";     winget upgrade --all
+    }
 }
-function uu { u }
+function uu
+{ u
+}
 
 # Chocolatey
-function cl  { choco list }
-function cll { choco list }
-function ci  { param($p) gsudo choco install $p -y }
-function cu  { param($p) gsudo choco uninstall $p -y }
+function cl
+{ choco list
+}
+function cll
+{ choco list
+}
+function ci
+{ param($p) gsudo choco install $p -y
+}
+function cu
+{ param($p) gsudo choco uninstall $p -y
+}
 
 # Scoop
-function sl  { scoop list }
-function sll { scoop list }
-function si  { if ($args.Count -gt 0) { scoop install @args }   else { Write-Host "설치할 앱 이름을 입력하세요." -ForegroundColor Yellow } }
-function su  { if ($args.Count -gt 0) { scoop uninstall @args } else { Write-Host "삭제할 앱 이름을 입력하세요." -ForegroundColor Yellow } }
+function sl
+{ scoop list
+}
+function sll
+{ scoop list
+}
+function si
+{ if ($args.Count -gt 0)
+    { scoop install @args
+    } else
+    { Write-Host "설치할 앱 이름을 입력하세요." -ForegroundColor Yellow
+    }
+}
+function su
+{ if ($args.Count -gt 0)
+    { scoop uninstall @args
+    } else
+    { Write-Host "삭제할 앱 이름을 입력하세요." -ForegroundColor Yellow
+    }
+}
 
 # Winget
-function wl  { winget list }
-function wll { winget list }
-function wi  { param($p) winget install $p }
-function wu  { param($p) winget uninstall $p }
+function wl
+{ winget list
+}
+function wll
+{ winget list
+}
+function wi
+{ param($p) winget install $p
+}
+function wu
+{ param($p) winget uninstall $p
+}
 
 
 # ============================================================
 # Infisical
 # ============================================================
-function infs {
+function infs
+{
     param([string]$Path = "")
-    $finalPath = if ($Path) { "/$Path" } else { "/" }
+    $finalPath = if ($Path)
+    { "/$Path"
+    } else
+    { "/"
+    }
     infisical secrets `
         --projectId=bc893247-af3f-4118-a8ec-bcb429338acb `
         --env=dev `
@@ -201,10 +353,12 @@ function infs {
 # ============================================================
 # SSH 접속 자동화 (Master Key)
 # ============================================================
-function _ssh_connect {
+function _ssh_connect
+{
     param([string]$user_name, [string]$target_host)
     $key_path = "$HOME\.ssh\main_ssh_key"
-    if (!(Test-Path $key_path)) {
+    if (!(Test-Path $key_path))
+    {
         Write-Host "[Error] 마스터 키($key_path)가 없습니다." -ForegroundColor Red
         return
     }
@@ -212,34 +366,58 @@ function _ssh_connect {
     ssh -i "$key_path" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes "$user_name@$target_host"
 }
 
-function pve     { _ssh_connect "root" "pve" }
-function w1      { _ssh_connect "x" "w1" }
-function w2      { _ssh_connect "x" "w2" }
-function w3      { _ssh_connect "x" "w3" }
-function w5      { _ssh_connect "x" "w5" }
-function shorten { _ssh_connect "x" "shorten" }
-function stn     { _ssh_connect "x" "shorten" }
-function wtt     { _ssh_connect "x" "100.107.192.115" }
+function pve
+{ _ssh_connect "root" "pve"
+}
+function w1
+{ _ssh_connect "x" "w1"
+}
+function w2
+{ _ssh_connect "x" "w2"
+}
+function w3
+{ _ssh_connect "x" "w3"
+}
+function w5
+{ _ssh_connect "x" "w5"
+}
+function shorten
+{ _ssh_connect "x" "shorten"
+}
+function stn
+{ _ssh_connect "x" "shorten"
+}
+function wtt
+{ _ssh_connect "x" "100.107.192.115"
+}
 
 
 # ============================================================
 # Yazi / zoxide
 # ============================================================
-function y {
+function y
+{
     $tmp = [System.IO.Path]::GetTempFileName()
     yazi $args --cwd-file="$tmp"
-    if (Test-Path $tmp) {
+    if (Test-Path $tmp)
+    {
         $cwd = Get-Content $tmp
-        if ($cwd -and $cwd -ne $pwd.Path) {
-            if (Test-Path $cwd) { Set-Location $cwd }
+        if ($cwd -and $cwd -ne $pwd.Path)
+        {
+            if (Test-Path $cwd)
+            { Set-Location $cwd
+            }
         }
         Remove-Item $tmp
     }
 }
 
-if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+if (Get-Command zoxide -ErrorAction SilentlyContinue)
+{
     $zoxideInit = zoxide init powershell | Out-String
-    if ($zoxideInit) { Invoke-Expression $zoxideInit }
+    if ($zoxideInit)
+    { Invoke-Expression $zoxideInit
+    }
 }
 
 
@@ -266,35 +444,51 @@ Set-PSReadLineKeyHandler -Chord Ctrl+U -Function BackwardDeleteLine
 # ============================================================
 # gita
 # ============================================================
-function gtl   { gita ll }                                         # 전체 저장소 상태
-function gtpl  { gita pull }                                       # 전체 저장소 일괄 pull
-function gtps  { gita super push }                                 # 전체 저장소 일괄 push (기존 gtp 대체 가능)
-function gtp   { gita super push }
+function gtl
+{ gita ll
+}                                         # 전체 저장소 상태
+function gtpl
+{ gita pull
+}                                       # 전체 저장소 일괄 pull
+function gtps
+{ gita super push
+}                                 # 전체 저장소 일괄 push (기존 gtp 대체 가능)
+function gtp
+{ gita super push
+}
 
 # gta: 특정 저장소 애드 + 커밋 + 푸시 (gita shell 직접 연동)
 # 사용법: gta .dotfolders "제목" "설명"
-function gta {
+function gta
+{
     param([Parameter(Mandatory=$true)][string]$repo, [string]$title = "auto commit ", [string]$body)
-    
+
     Write-Host "→ Processing repository: $repo " -ForegroundColor Cyan
-    
+
     # 1. Add
     gita shell $repo git add -A
-    
+
     # 2. Commit (백틱으로 따옴표 감싸기 유지)
-    if ($body) {
+    if ($body)
+    {
         gita shell $repo git commit -m "`"$title`"" -m "`"$body`""
-    } else {
+    } else
+    {
         gita shell $repo git commit -m "`"$title`""
     }
-    
+
     # 3. Push (gita shell 내에서 직접 실행)
     Write-Host "→ Pushing to remote... " -ForegroundColor Green
     gita shell $repo git push
 }
 # gtacp: 전체 저장소 일괄 애드 + 커밋 + 푸시
-function gtacp {
-    $msg = if ($args[0]) { $args[0] } else { "auto commit " }
+function gtacp
+{
+    $msg = if ($args[0])
+    { $args[0]
+    } else
+    { "auto commit "
+    }
     gita super add -A
     gita super commit -m $msg
     gita super push
@@ -302,16 +496,36 @@ function gtacp {
 # ============================================================
 # Git 기본
 # ============================================================
-function gi    { git init -b main }                                # main 브랜치로 초기화
-function gs    { git status }                                      # 변경 상태 확인
-function gss   { git status -s }                                   # 상태 요약
-function ga    { git add . }                                       # 현재 폴더 스테이징
-function gaa   { git add --all }                                   # 전체 스테이징
-function gp    { git push }                                        # 푸시
-function gpl   { git pull }                                        # 풀
-function gpf   { git push origin --force-with-lease }             # 안전한 강제 푸시
-function gl    { git log --oneline -n 10 }                        # 최근 로그 10개
-function gll   { git log --oneline --graph --all }                 # 전체 브랜치 그래프
+function gi
+{ git init -b main
+}                                # main 브랜치로 초기화
+function gs
+{ git status
+}                                      # 변경 상태 확인
+function gss
+{ git status -s
+}                                   # 상태 요약
+function ga
+{ git add .
+}                                       # 현재 폴더 스테이징
+function gaa
+{ git add --all
+}                                   # 전체 스테이징
+function gp
+{ git push
+}                                        # 푸시
+function gpl
+{ git pull
+}                                        # 풀
+function gpf
+{ git push origin --force-with-lease
+}             # 안전한 강제 푸시
+function gl
+{ git log --oneline -n 10
+}                        # 최근 로그 10개
+function gll
+{ git log --oneline --graph --all
+}                 # 전체 브랜치 그래프
 # function gd    { git diff }                                        # 변경사항 비교
 # function gdc   { git diff --staged }                               # 스테이징된 변경사항 비교
 # function gb    { git branch }                                      # 로컬 브랜치 목록
@@ -321,10 +535,18 @@ function gll   { git log --oneline --graph --all }                 # 전체 브�
 # function gbd   { param([string]$b) git branch -d $b }             # 브랜치 삭제 (병합 완료)
 # function gbD   { param([string]$b) git branch -D $b }             # 브랜치 강제 삭제
 # function gm    { param([string]$b) git merge $b }                  # 브랜치 병합
-function gg    { lazygit $args }                                   # lazygit 실행
-function gc    { git commit -m "$args" }                           # 메시지와 함께 커밋
-function gca   { git commit -m "auto commit" }                     # 자동 메시지 커밋
-function gup   { git add .; git commit -m "auto commit"; git push }
+function gg
+{ lazygit $args
+}                                   # lazygit 실행
+function gc
+{ git commit -m "$args"
+}                           # 메시지와 함께 커밋
+function gca
+{ git commit -m "auto commit"
+}                     # 자동 메시지 커밋
+function gup
+{ git add .; git commit -m "auto commit"; git push
+}
 # function gst   { git stash }                                       # 작업 임시 저장
 # function gstp  { git stash pop }                                   # 임시 저장 복원
 # function gstl  { git stash list }                                  # 임시 저장 목록
@@ -334,36 +556,49 @@ function gup   { git add .; git commit -m "auto commit"; git push }
 # function gres  { param([string]$f) git restore --staged $f }       # 스테이징 취소
 # function gclean { git clean -fd }                                  # 미추적 파일 삭제
 
-function gac {
+function gac
+{
     param([string]$msg = "auto commit", [string]$body)
     git add -A
-    if ($body) { git commit -m $msg -m $body } else { git commit -m $msg }
+    if ($body)
+    { git commit -m $msg -m $body
+    } else
+    { git commit -m $msg
+    }
 }
 
-function gacp {
+function gacp
+{
     param([string]$msg = "auto commit", [string]$body)
     gac $msg $body
     $branch = git rev-parse --abbrev-ref HEAD 2>$null
-    if (!$branch) { $branch = "main" }
+    if (!$branch)
+    { $branch = "main"
+    }
     git push origin $branch
 }
 
-function gfo {
+function gfo
+{
     $branch = git rev-parse --abbrev-ref HEAD 2>$null
-    if (!$branch) { $branch = "main" }
+    if (!$branch)
+    { $branch = "main"
+    }
     Write-Host "Resetting to origin/$branch..." -ForegroundColor Yellow
     git fetch origin
     git reset --hard "origin/$branch"
 }
 
-function mrd {
+function mrd
+{
     param([string]$name)
     New-Item -ItemType Directory -Path $name -Force | Out-Null
     New-Item -ItemType File -Path "$name\README.md" -Value "# $name" -Force | Out-Null
     Write-Host "✅ $name (README.md)" -ForegroundColor Green
 }
 
-function mrdpy {
+function mrdpy
+{
     param([string]$name)
     mrd $name
     New-Item -ItemType File -Path "$name\basic.py" -Force | Out-Null
@@ -380,17 +615,28 @@ function mrdpy {
 # gga <f1> <f2>    - 다중 파일 업로드
 # ggaa             - 클립보드 업로드
 # ============================================================
-function ggl  { gh gist list --limit 20 }
-function ggd  { gh gist delete $args }
-function gga  { gh gist create $args }
-function ggaa { python3 C:\Users\x\.dotfolders\common\python\util\gistup\basic_srzst_gh.py }
+function ggl
+{ gh gist list --limit 20
+}
+function ggd
+{ gh gist delete $args
+}
+function gga
+{ gh gist create $args
+}
+function ggaa
+{ python3 C:\Users\x\.dotfolders\common\python\util\gistup\basic_srzst_gh.py
+}
 
 # ============================================================
 # Git 태그 관리
 # ============================================================
-function gt { git tag }
+function gt
+{ git tag
+}
 
-function gt1 {
+function gt1
+{
     param([Parameter(Mandatory=$true)][string]$m)
     $tag_name = "$(Get-Date -Format 'yyMMdd_HHmm')($($m -replace ' ','_'))"
     git commit --allow-empty -m "checkpoint: $m"
@@ -398,44 +644,58 @@ function gt1 {
     Write-Host "✅ 태그 백업: $tag_name " -ForegroundColor Green
 }
 
-function gt2 {
+function gt2
+{
     param([Parameter(Mandatory=$true)][string]$tag, [Parameter(ValueFromRemainingArguments=$true)][string[]]$files)
     $root = git rev-parse --show-toplevel
-    if ($files.Count -gt 0) {
-        foreach ($f in $files) {
+    if ($files.Count -gt 0)
+    {
+        foreach ($f in $files)
+        {
             $rel = [System.IO.Path]::GetRelativePath($root, (Resolve-Path $f))
             git -C $root restore --source=$tag $rel
             Write-Host "✅ 복원: $f (from $tag) " -ForegroundColor Green
         }
-    } else {
+    } else
+    {
         git -C $root restore --source=$tag .
         Write-Host "✅ 전체 복원 (from $tag) " -ForegroundColor Green
     }
 }
 
-function gt3 {
+function gt3
+{
     param([Parameter(Mandatory=$true)][string]$tag)
     git tag -d $tag
     Write-Host "✅ 태그 삭제: $tag " -ForegroundColor Green
 }
 
-function gt4 {
+function gt4
+{
     $confirm = Read-Host "⚠️  모든 태그를 삭제합니다. 계속할까요? (y/N)"
-    if ($confirm -match '^[Yy]$') {
+    if ($confirm -match '^[Yy]$')
+    {
         git tag | ForEach-Object { git tag -d $_ }
         Write-Host "✅ 전체 태그 삭제 완료 " -ForegroundColor Green
-    } else { Write-Host "취소됨 " }
+    } else
+    { Write-Host "취소됨 "
+    }
 }
 
-function gtd { param([string]$t) git tag -d $t }
+function gtd
+{ param([string]$t) git tag -d $t
+}
 
 
 # ============================================================
 # Git 파일 단위 백업/복원
 # ============================================================
-function gf1 {
+function gf1
+{
     param([Parameter(Mandatory=$true)][string]$file, [string]$msg = "$(Get-Date -Format 'yyMMdd_HHmm') 수정전 ")
-    if (-not (Test-Path $file)) { Write-Host "❌ 파일 없음: $file " -ForegroundColor Red; return }
+    if (-not (Test-Path $file))
+    { Write-Host "❌ 파일 없음: $file " -ForegroundColor Red; return
+    }
     $root = git rev-parse --show-toplevel
     $rel  = [System.IO.Path]::GetRelativePath($root, (Resolve-Path $file))
     Add-Content $file ""
@@ -444,14 +704,21 @@ function gf1 {
     Write-Host "✅ 저장: $rel - $msg " -ForegroundColor Green
 }
 
-function gf2 {
+function gf2
+{
     param([Parameter(Mandatory=$true)][string]$hash)
     $root = git rev-parse --show-toplevel
     $rel  = git -C $root show --name-only --format="" $hash | Select-Object -First 1
-    if (-not $rel) { Write-Host "❌ 해시를 찾을 수 없습니다. " -ForegroundColor Red; return }
+    if (-not $rel)
+    { Write-Host "❌ 해시를 찾을 수 없습니다. " -ForegroundColor Red; return
+    }
     git -C $root restore --source=$hash $rel
     Write-Host "✅ 복원: $rel " -ForegroundColor Green
 }
+
+function rcw
+{ rclone rcd --rc-web-gui 
+} # rclone web gui
 # # ============================================================
 # # Git 태그 관리
 # # ============================================================
