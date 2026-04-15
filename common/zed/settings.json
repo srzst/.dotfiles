@@ -9,6 +9,12 @@
 //C:\Users\x\.dotfiles\common\zed\settings.json
 //
 {
+  "icon_theme": "Colored Zed Icons Theme Light",
+  "colorize_brackets": true,
+  "soft_wrap": "prefer_line",
+  "toolbar": {
+    "agent_review": false
+  },
   "restore_on_startup": "launchpad",
   "vim_mode": true,
   "active_pane_modifiers": {

@@ -299,9 +299,8 @@ mkdir -p "$HOME/Library/Application Support"
 # 3. .dotfiles(REPO) 기반 설정 연결
 ln -sf "$REPO/Common/neovim" ~/.config/nvim
 ln -sf "$REPO/Common/yazi" ~/.config/yazi
-ln -sf "$REPO/Common/zed/settings.json" ~/.config/zed/settings.json
-ln -sf "$REPO/Common/zed/keymap.json"   ~/.config/zed/keymap.json
-
+rm -rf ~/.config/zed
+ln -sf "$REPO/Common/zed" ~/.config/zed
 # 4. .dotfolders(FOLDERS) 기반 설정 연결
 
 # Ghostty
