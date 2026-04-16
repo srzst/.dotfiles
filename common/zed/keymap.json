@@ -36,10 +36,11 @@
     },
   },
   {
-    "context": "ProjectPanel",
+    "context": "ProjectPanel && !editing",
     "bindings": {
       "a": "project_panel::NewFile",
       "shift-a": "project_panel::NewDirectory",
+      "r": "project_panel::Rename",
     },
   },
 ]
