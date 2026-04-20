@@ -391,8 +391,11 @@ function wtt
 { _ssh_connect "x" "100.107.192.115"
 }
 
-function jjf
+function jlf
 { _ssh_connect "root" "192.168.0.165"
+}
+function ad
+{ _ssh_connect "root" "192.168.0.166"
 }
 
 # ============================================================

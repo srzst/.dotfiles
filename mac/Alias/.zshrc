@@ -204,7 +204,8 @@ w5()      { _ssh_connect "x" "w5"; }
 shorten() { _ssh_connect "x" "shorten"; }
 stn()     { _ssh_connect "x" "shorten"; }
 
-jjf()     { _ssh_connect "root" "192.168.0.165"; }
+jlf()     { _ssh_connect "root" "192.168.0.165"; }
+ad()      { _ssh_connect "root" "192.168.0.166"; }
 
 # ============================================================
 # Yazi / zoxide
