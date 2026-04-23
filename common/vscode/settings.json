@@ -155,4 +155,5 @@
   "http.proxyAuthorization": null,
   "remote.SSH.defaultForwardedPorts": [],
   "explorer.confirmDragAndDrop": false,
+  "explorer.confirmPasteNative": false,
 }

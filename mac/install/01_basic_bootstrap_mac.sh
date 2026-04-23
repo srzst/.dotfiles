@@ -390,7 +390,7 @@ typeset -a apps casks
 if [ "$TARGET" -eq 1 ]; then
     # --- CLI Tools & Plugins ---
     apps=(
-        git python python-tk node ffmpeg yt-dlp
+        git python python-tk node ffmpeg-full yt-dlp
         pngpaste wget terminal-notifier pipx rclone
         neovim lazygit eza yazi sevenzip jq poppler
         fd ripgrep fzf zoxide imagemagick
