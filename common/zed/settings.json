@@ -9,7 +9,22 @@
 //C:\Users\x\.dotfiles\common\zed\settings.json
 //
 {
+  "outline_panel": {
+    "dock": "left"
+  },
+  "collaboration_panel": {
+    "dock": "left"
+  },
+  "agent": {
+    "dock": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "git_panel": {
+    "dock": "left"
+  },
   "project_panel": {
+    "dock": "left",
     "sticky_scroll": false
   },
   "show_wrap_guides": false,
