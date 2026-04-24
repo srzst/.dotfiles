@@ -189,6 +189,10 @@ function ww
 { Set-Location ~/.dotfolders; eza -F --group-directories-first
 }
 
+function w0
+{ Set-Location ~/w0; eza -F --group-directories-first
+}
+
 function cd
 {
     param([string]$path)

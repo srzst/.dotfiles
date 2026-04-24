@@ -97,14 +97,14 @@ alias ww='cd ~/.dotfolders'
 # ============================================================
 alias www='cd /var/www'
 alias cdw='cd /var/www'
-alias cdwp='cd /var/www/wordpress'
+alias wp='cd /var/www/wp'
 alias cdnginx='cd /etc/nginx'
 alias cdn='cd /etc/nginx'
 alias nt='sudo nginx -t'                      # nginx 설정 테스트
 alias nr='sudo systemctl restart nginx'       # nginx 재시작
 alias nconf='nvim /etc/nginx/nginx.conf'      # nginx 설정 편집
 alias s='sudo systemctl'                      # systemctl 단축
-
+alias w0='cd ~/wo'
 
 # ============================================================
 # 패키지 관리 (APT)
