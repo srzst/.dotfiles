@@ -79,7 +79,7 @@ alias cc='clear'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias h='cd ~'
-alias w0='cd ~/wo'
+alias w0='cd ~/w0'
 
 alias port='lsof -i -P | grep LISTEN'                    # 열린 포트 확인
 alias myip='curl -s ifconfig.me'                          # 외부 IP
@@ -93,8 +93,8 @@ fn() { find . -iname "*$1*" 2>/dev/null; }                # 파일명 검색
 ds() { du -sh "${1:-.}" 2>/dev/null | sort -h; }          # 디렉토리 용량
 pk() { ps aux | grep -i "$1" | grep -v grep | awk '{print $2}' | xargs kill -9; }  # 프로세스 종료
 
-qq() { cd ~/.dotfiles;   eza -F --group-directories-first; }
-ww() { cd ~/.dotfolders; eza -F --group-directories-first; }
+qq() { cd ~/.dotfiles; }
+ww() { cd ~/.dotfolders; }
 
 cd() {
     if [ -n "$*" ]; then builtin cd "$*" && eza -F --group-directories-first
