@@ -402,3 +402,32 @@ alias rcw="rclone rcd --rc-web-gui"  # rclone web gui
 # 기타 로드
 # ============================================================
 [ -f ~/.bash_aliases ] && . ~/.bash_aliases
+# ============================================================
+# Bash Readline: 프롬프트 전용 이동 / 단어 이동 / 삭제
+# Windows Alt = macOS Option 감각 기준
+# vim, nvim, less, ssh 내부에는 영향 없음
+# ============================================================
+
+# 기본 이동
+bind '"\ej": backward-char'
+bind '"\el": forward-char'
+bind '"\ei": previous-history'
+bind '"\ek": next-history'
+
+# 단어 단위 이동
+bind '"\eu": backward-word'
+bind '"\eo": forward-word'
+
+# 줄 처음 / 끝
+bind '"\ey": beginning-of-line'
+bind '"\ep": end-of-line'
+
+# 글자 삭제
+bind '"\eh": backward-delete-char'
+bind '"\eq": backward-delete-char'
+bind '"\ew": delete-char'
+bind '"\em": delete-char'
+
+# 단어 단위 삭제
+bind '"\e\C-j": backward-kill-word'
+bind '"\e\C-l": kill-word'

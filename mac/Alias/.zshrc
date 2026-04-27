@@ -460,3 +460,32 @@ alias rcw="rclone rcd --rc-web-gui"  # rclone web gui
 PROMPT='%n@%m %~ %# '
 
 source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# ============================================================
+# Zsh ZLE: 프롬프트 전용 이동 / 단어 이동 / 삭제
+# Windows Alt = macOS Option 감각 기준
+# vim, nvim, less, ssh 내부에는 영향 없음
+# ============================================================
+
+# 기본 이동
+bindkey '^[j' backward-char
+bindkey '^[l' forward-char
+bindkey '^[i' up-line-or-history
+bindkey '^[k' down-line-or-history
+
+# 단어 단위 이동
+bindkey '^[u' backward-word
+bindkey '^[o' forward-word
+
+# 줄 처음 / 끝
+bindkey '^[y' beginning-of-line
+bindkey '^[p' end-of-line
+
+# 글자 삭제
+bindkey '^[h' backward-delete-char
+bindkey '^[q' backward-delete-char
+bindkey '^[w' delete-char
+bindkey '^[m' delete-char
+
+# 단어 단위 삭제
+bindkey '^[^J' backward-kill-word
+bindkey '^[^L' kill-word

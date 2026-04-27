@@ -10,14 +10,14 @@
     "context": "Workspace",
     "bindings": {
       // "shift shift": "file_finder::Toggle"
-    },
+    }
   },
   {
     "context": "Editor && vim_mode == insert",
     "bindings": {
       // "j k": "vim::NormalBefore"
-      "ctrl-v": "editor::Paste",
-    },
+      "ctrl-v": "editor::Paste"
+    }
   },
   {
     "context": "Editor && vim_mode == normal && !menu",
@@ -25,22 +25,22 @@
       "g y": ["workspace::SendKeystrokes", "g g \" + y G"],
       "g d": ["workspace::SendKeystrokes", "g g d G"],
       "g x": ["workspace::SendKeystrokes", "g g \" + d G"],
-      "x": ["workspace::SendKeystrokes", "\" + x"],
-    },
+      "x": ["workspace::SendKeystrokes", "\" + x"]
+    }
   },
   {
     "context": "Editor && vim_mode == visual && !menu",
     "bindings": {
       "x": ["workspace::SendKeystrokes", "\" + d"],
-      "ctrl-c": "editor::Copy",
-    },
+      "ctrl-c": "editor::Copy"
+    }
   },
   {
     "context": "ProjectPanel && !editing",
     "bindings": {
       "a": "project_panel::NewFile",
       "shift-a": "project_panel::NewDirectory",
-      "r": "project_panel::Rename",
-    },
-  },
+      "r": "project_panel::Rename"
+    }
+  }
 ]

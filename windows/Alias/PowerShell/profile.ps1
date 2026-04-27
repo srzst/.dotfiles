@@ -808,3 +808,39 @@ function rcw
 #     git -C $root restore --source=$hash $rel
 #     Write-Host "✅ 복원: $rel" -ForegroundColor Green
 # }
+
+
+# ============================================================
+# PSReadLine: 프롬프트 전용 커서 이동 / 단어 이동 / 삭제
+# Vim, nvim, less, ssh 내부에는 영향 없음
+# ============================================================
+
+# 기본 이동
+Set-PSReadLineKeyHandler -Chord 'Alt+j' -Function BackwardChar
+Set-PSReadLineKeyHandler -Chord 'Alt+l' -Function ForwardChar
+Set-PSReadLineKeyHandler -Chord 'Alt+i' -Function PreviousHistory
+Set-PSReadLineKeyHandler -Chord 'Alt+k' -Function NextHistory
+
+# 단어 단위 이동
+Set-PSReadLineKeyHandler -Chord 'Alt+u' -Function BackwardWord
+Set-PSReadLineKeyHandler -Chord 'Alt+o' -Function ForwardWord
+
+# Home / End
+Set-PSReadLineKeyHandler -Chord 'Alt+y' -Function BeginningOfLine
+Set-PSReadLineKeyHandler -Chord 'Alt+p' -Function EndOfLine
+
+# 기본 삭제
+Set-PSReadLineKeyHandler -Chord 'Alt+h' -Function BackwardDeleteChar
+Set-PSReadLineKeyHandler -Chord 'Alt+w' -Function DeleteChar
+
+# 단어 단위 삭제
+Set-PSReadLineKeyHandler -Chord 'Alt+Ctrl+j' -Function BackwardKillWord
+Set-PSReadLineKeyHandler -Chord 'Alt+Ctrl+l' -Function KillWord
+
+# 기존 AHK 감각에 맞춘 보조 단축키
+Set-PSReadLineKeyHandler -Chord 'Alt+q' -Function BackwardDeleteChar
+Set-PSReadLineKeyHandler -Chord 'Alt+m' -Function DeleteChar
+
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new()
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
