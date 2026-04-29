@@ -1039,6 +1039,52 @@ if (-Not (Test-Path $snipSrc))
     Copy-Item "$snipSrc\*" $snipDst -Force -Recurse -Exclude "*.appinstaller"
     Write-LogOK "Snipdo 설정 복원 완료"
 }
+
+# VSCodium
+$vscodiumCommon = "$FOLDERS\common\vscodium"
+$vscodiumWin = "$FOLDERS\windows\vscodium\project-manager"
+$vscodiumUser = "$env:APPDATA\VSCodium\User"
+
+if (Test-Path $vscodiumCommon)
+{
+    # Windows 전용 디렉토리 생성
+    New-Item -ItemType Directory -Force -Path $vscodiumWin | Out-Null
+    
+    # VSCodium User 디렉토리 Junction 생성
+    if (Test-Path $vscodiumUser)
+    {
+        $Item = Get-Item $vscodiumUser -Force
+        if ($Item.LinkType -eq "Junction" -or $Item.LinkType -eq "SymbolicLink")
+        {
+            Remove-Item $vscodiumUser -Force
+        } else
+        {
+            Move-Item $vscodiumUser "$vscodiumUser.bak.$(Get-Date -Format yyyyMMddHHmmss)"
+        }
+    }
+    New-Item -ItemType Junction -Path $vscodiumUser -Target $vscodiumCommon | Out-Null
+    
+    # globalStorage 디렉토리 생성
+    New-Item -ItemType Directory -Force -Path "$vscodiumCommon\globalStorage" | Out-Null
+    
+    # Project Manager 심볼릭 링크
+    $PMLink = "$vscodiumCommon\globalStorage\alefragnani.project-manager"
+    if (Test-Path $PMLink)
+    {
+        Remove-Item $PMLink -Force -Recurse
+    }
+    try
+    {
+        New-Item -ItemType SymbolicLink -Path $PMLink -Target $vscodiumWin -ErrorAction Stop | Out-Null
+        Write-LogOK "VSCodium 설정 연결 완료"
+    } catch
+    {
+        Write-LogErr "VSCodium Project Manager 심볼릭 링크 생성 실패 (관리자 권한 필요): $_"
+    }
+} else
+{
+    Write-LogWarn "VSCodium 설정 파일 없음 (스킵): $vscodiumCommon"
+}
 # ============================================================
 # 안내 메시지
 # ============================================================
