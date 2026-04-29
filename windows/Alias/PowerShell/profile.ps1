@@ -321,21 +321,144 @@ function su
     }
 }
 
+# # Winget
+# function wl
+# { winget list
+# }
+# function wll
+# { winget list
+# }
+# function wi
+# { param($p) winget install $p
+# }
+# function wu
+# { param($p) winget uninstall $p
+# }
+#
 # Winget
+$WingetManagedFile = "$HOME\.dotfolders\windows\winget\packages.txt"
+
+function _winget_ensure_managed_file
+{
+    $dir = Split-Path $WingetManagedFile
+    if (!(Test-Path $dir))
+    {
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    }
+
+    if (!(Test-Path $WingetManagedFile))
+    {
+        New-Item -ItemType File -Force -Path $WingetManagedFile | Out-Null
+    }
+}
+
+function _winget_get_managed_ids
+{
+    _winget_ensure_managed_file
+
+    Get-Content $WingetManagedFile -ErrorAction SilentlyContinue |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_ -and !$_.StartsWith("#") }
+}
+
+function _winget_add_managed
+{
+    param([Parameter(Mandatory=$true)][string]$Id)
+
+    _winget_ensure_managed_file
+
+    $existing = _winget_get_managed_ids
+
+    if ($existing -notcontains $Id)
+    {
+        Add-Content $WingetManagedFile $Id
+        Write-Host "✅ winget 관리 목록에 추가됨: $Id" -ForegroundColor Green
+    }
+    else
+    {
+        Write-Host "이미 winget 관리 목록에 있음: $Id" -ForegroundColor DarkGray
+    }
+}
+
 function wl
-{ winget list
+{
+    $ids = _winget_get_managed_ids
+
+    if (!$ids)
+    {
+        Write-Host "winget 관리 목록이 비어 있습니다: $WingetManagedFile" -ForegroundColor Yellow
+        Write-Host "wi <패키지ID> 로 설치하면 자동 추가됩니다." -ForegroundColor DarkGray
+        return
+    }
+
+    foreach ($id in $ids)
+    {
+        $result = winget list --id $id --exact 2>&1
+
+        if ($LASTEXITCODE -eq 0 -and ($result -match [regex]::Escape($id)))
+        {
+            $result
+        }
+        else
+        {
+            Write-Host "[missing] $id" -ForegroundColor Red
+        }
+    }
 }
 function wll
-{ winget list
+{
+    winget list
 }
+
+function wle
+{
+    _winget_ensure_managed_file
+    nvim $WingetManagedFile
+}
+
+# 기존 wi 별칭은 주석 처리
+# function wi
+# { param($p) winget install $p
+# }
+
 function wi
-{ param($p) winget install $p
+{
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Id
+    )
+
+    winget install --id $Id --exact --accept-package-agreements --accept-source-agreements
+
+    if ($LASTEXITCODE -eq 0)
+    {
+        _winget_add_managed $Id
+    }
+    else
+    {
+        Write-Host "❌ 설치 실패. 관리 목록에는 추가하지 않았습니다: $Id" -ForegroundColor Red
+    }
 }
+
 function wu
-{ param($p) winget uninstall $p
+{
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Id
+    )
+
+    winget uninstall --id $Id --exact
+
+    if ($LASTEXITCODE -eq 0 -and (Test-Path $WingetManagedFile))
+    {
+        $remaining = Get-Content $WingetManagedFile |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -and $_ -ne $Id }
+
+        Set-Content -Path $WingetManagedFile -Value $remaining
+        Write-Host "✅ winget 관리 목록에서 제거됨: $Id" -ForegroundColor Green
+    }
 }
-
-
 # ============================================================
 # Infisical
 # ============================================================
