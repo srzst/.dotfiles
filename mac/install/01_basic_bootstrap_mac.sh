@@ -297,7 +297,21 @@ echo "OK Cursor keybindings 연결 완료"
 rm -f "$HOME/Library/Application Support/Cursor/User/settings.json"
 ln -sf "$REPO/common/cursor/settings.json" "$HOME/Library/Application Support/Cursor/User/settings.json"
 echo "OK Cursor settings 연결 완료"
-
+# VSCodium 설정 연결
+vscodium_user="$HOME/Library/Application Support/VSCodium/User"
+if [ -L "$vscodium_user" ]; then
+  rm "$vscodium_user"
+elif [ -e "$vscodium_user" ]; then
+  mv "$vscodium_user" "$vscodium_user.bak.$(date +%Y%m%d%H%M%S)"
+fi
+ln -s "$FOLDERS/common/vscodium" "$vscodium_user"
+mkdir -p "$FOLDERS/common/vscodium/globalStorage"
+mkdir -p "$FOLDERS/mac/vscodium/project-manager"
+pmlink="$FOLDERS/common/vscodium/globalStorage/alefragnani.project-manager"
+[ -L "$pmlink" ] && rm "$pmlink"
+[ -d "$pmlink" ] && rm -rf "$pmlink"
+ln -s "$FOLDERS/mac/vscodium/project-manager" "$pmlink"
+echo "OK VSCodium 설정 연결 완료"
 # ============================================================
 # 심볼릭 링크 - .dotfolders/mac (기본/경량)
 # ============================================================
