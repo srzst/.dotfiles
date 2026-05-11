@@ -79,7 +79,8 @@ alias cc='clear'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias h='cd ~'
-alias w0='cd ~/w0'
+alias w0='cd ~/W0'
+alias d0='cd ~/D0'
 
 alias port='lsof -i -P | grep LISTEN'                    # 열린 포트 확인
 alias myip='curl -s ifconfig.me'                          # 외부 IP

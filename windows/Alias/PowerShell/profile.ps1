@@ -190,7 +190,11 @@ function ww
 }
 
 function w0
-{ Set-Location ~/w0; eza -F --group-directories-first
+{ Set-Location ~/W0; eza -F --group-directories-first
+}
+
+function d0
+{ Set-Location ~/D0; eza -F --group-directories-first
 }
 
 function cd
