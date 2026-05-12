@@ -197,6 +197,14 @@ function d0
 { Set-Location ~/D0; eza -F --group-directories-first
 }
 
+function util
+{ Set-Location ~/.dotfolders/common/python/util eza -F --group-directories-first
+}
+
+function wp
+{ Set-Location ~/.dotfolders/common/python/util/wordpress eza -F --group-directories-first
+}
+
 function cd
 {
     param([string]$path)
