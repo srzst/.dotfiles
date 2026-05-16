@@ -198,11 +198,11 @@ function d0
 }
 
 function util
-{ Set-Location ~/.dotfolders/common/python/util eza -F --group-directories-first
+{ Set-Location ~/.dotfolders/common/python/util; eza -F --group-directories-first
 }
 
 function wp
-{ Set-Location ~/.dotfolders/common/python/util/wordpress eza -F --group-directories-first
+{ Set-Location ~/.dotfolders/common/python/util/wordpress; eza -F --group-directories-first
 }
 
 function cd
