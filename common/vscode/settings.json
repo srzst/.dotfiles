@@ -156,5 +156,4 @@
   "remote.SSH.defaultForwardedPorts": [],
   "explorer.confirmDragAndDrop": false,
   "explorer.confirmPasteNative": false,
-  "chat.viewSessions.orientation": "stacked",
 }
