@@ -12,6 +12,7 @@ BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.enc"
 INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV="dev"
 REPO="/home/x/.dotfiles"
+X_HOME="/home/x"
 # ============================================================
 # ============================================================
 # 사전 입력
@@ -307,6 +308,51 @@ chmod 600 ~/.config/rclone/rclone.conf
 echo "OK rclone.conf 복원 완료"
 
 # ============================================================
+# x 유저 환경 설정 (시크릿 파일 복사 + SSH 설정)
+# ============================================================
+sudo mkdir -p "$X_HOME/.ssh" "$X_HOME/.aws" "$X_HOME/.backblaze" "$X_HOME/.config/rclone"
+sudo chmod 700 "$X_HOME/.ssh"
+
+sudo cp ~/.ssh/main_ssh_key "$X_HOME/.ssh/main_ssh_key"
+sudo cp ~/.ssh/main_ssh_key.pub "$X_HOME/.ssh/main_ssh_key.pub"
+sudo chmod 600 "$X_HOME/.ssh/main_ssh_key"
+sudo chmod 644 "$X_HOME/.ssh/main_ssh_key.pub"
+
+# 현재 유저 authorized_keys + main_ssh_key 모두 x 유저에게 부여
+cat ~/.ssh/authorized_keys 2>/dev/null | sudo tee "$X_HOME/.ssh/authorized_keys" > /dev/null
+PUB_KEY_CONTENT=$(cat ~/.ssh/main_ssh_key.pub)
+if ! sudo grep -qF "$PUB_KEY_CONTENT" "$X_HOME/.ssh/authorized_keys" 2>/dev/null; then
+    echo "$PUB_KEY_CONTENT" | sudo tee -a "$X_HOME/.ssh/authorized_keys" > /dev/null
+fi
+sudo chmod 600 "$X_HOME/.ssh/authorized_keys"
+
+sudo tee "$X_HOME/.ssh/config" > /dev/null << 'EOF'
+Host *
+    IdentityFile ~/.ssh/main_ssh_key
+    IdentityFile ~/.ssh/id_ed25519
+    StrictHostKeyChecking no
+
+Host github.com
+    IdentityFile ~/.ssh/id_ed25519
+    User git
+EOF
+sudo chmod 600 "$X_HOME/.ssh/config"
+
+sudo cp ~/.git-credentials "$X_HOME/.git-credentials"
+sudo chmod 600 "$X_HOME/.git-credentials"
+sudo cp ~/.aws/config "$X_HOME/.aws/config" 2>/dev/null || true
+sudo cp ~/.aws/credentials "$X_HOME/.aws/credentials" 2>/dev/null || true
+sudo chmod 600 "$X_HOME/.aws/credentials" 2>/dev/null || true
+sudo cp ~/.backblaze/backblazeapi "$X_HOME/.backblaze/backblazeapi" 2>/dev/null || true
+sudo chmod 600 "$X_HOME/.backblaze/backblazeapi" 2>/dev/null || true
+sudo cp ~/.config/rclone/rclone.conf "$X_HOME/.config/rclone/rclone.conf"
+sudo chmod 600 "$X_HOME/.config/rclone/rclone.conf"
+sudo cp ~/.bashrc_secrets "$X_HOME/.bashrc_secrets"
+sudo chmod 600 "$X_HOME/.bashrc_secrets"
+sudo chown -R x:x "$X_HOME/.ssh" "$X_HOME/.aws" "$X_HOME/.backblaze" "$X_HOME/.config" "$X_HOME/.git-credentials" "$X_HOME/.bashrc_secrets"
+echo "OK x 유저 환경 설정 완료"
+
+# ============================================================
 # 시간대 설정
 # ============================================================
 sudo timedatectl set-timezone Asia/Seoul
@@ -319,25 +365,23 @@ echo "root:$ROOT_PASSWORD" | sudo chpasswd
 echo "OK root 계정 활성화 완료"
 
 # ============================================================
-# Git 설정
+# Git 설정 (현재 유저 + x 유저)
 # ============================================================
 git config --global user.email "x@srzst.com"
 git config --global user.name "x"
 git config --global pull.rebase true
-echo "OK Git 설정 완료"
-
-# ============================================================
-# 글로벌 gitignore 설정
-# ============================================================
+git config --global credential.helper store
 git config --global core.excludesfile ~/.gitignore_global
 grep -qxF '*_secrets*' ~/.gitignore_global 2>/dev/null || echo '*_secrets*' >> ~/.gitignore_global
-echo "OK 글로벌 gitignore 설정 완료"
+echo "OK Git 설정 완료"
 
-# ============================================================
-# credential helper 설정
-# ============================================================
-git config --global credential.helper store
-echo "OK credential.helper 설정 완료"
+sudo -u x git config --global user.email "x@srzst.com"
+sudo -u x git config --global user.name "x"
+sudo -u x git config --global pull.rebase true
+sudo -u x git config --global credential.helper store
+sudo -u x git config --global core.excludesfile "$X_HOME/.gitignore_global"
+sudo -u x bash -c "grep -qxF '*_secrets*' $X_HOME/.gitignore_global 2>/dev/null || echo '*_secrets*' >> $X_HOME/.gitignore_global"
+echo "OK x 유저 Git 설정 완료"
 
 # ============================================================
 # SSH config 설정
@@ -374,16 +418,16 @@ ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" \
 echo ""
 echo "저장소 clone 중..."
 repos=(
-  "git@github.com:srzst/.dotfiles.git"
-  "git@github.com:srzst/.dotfolders.git"
+  "https://github.com/srzst/.dotfiles.git"
+  "https://github.com/srzst/.dotfolders.git"
 )
 for repo in "${repos[@]}"; do
   repo_name=$(basename "$repo" .git)
-  if [ ! -d "$HOME/$repo_name" ]; then
-    git clone "$repo" "$HOME/$repo_name"
+  if [ ! -d "$X_HOME/$repo_name" ]; then
+    sudo -u x git clone "$repo" "$X_HOME/$repo_name"
     echo "OK $repo_name clone 완료"
   else
-    git -C "$HOME/$repo_name" pull
+    sudo -u x git -C "$X_HOME/$repo_name" pull
     echo "OK $repo_name 이미 존재 (pull 완료)"
   fi
 done
@@ -398,15 +442,15 @@ if ! grep -q 'bashrc_secrets' "$REPO/linux/ubuntu/Alias/.bashrc" 2>/dev/null; th
 fi
 
 # ============================================================
-# 공통 심볼릭 링크
+# 공통 심볼릭 링크 (x 유저)
 # ============================================================
-rm -f ~/.bashrc
-ln -sf "$REPO/linux/ubuntu/Alias/.bashrc" ~/.bashrc
-echo "OK .bashrc 연결 완료"
+sudo -u x rm -f "$X_HOME/.bashrc"
+sudo -u x ln -sf "$REPO/linux/ubuntu/Alias/.bashrc" "$X_HOME/.bashrc"
+echo "OK .bashrc 연결 완료 (x)"
 
-rm -f ~/.vimrc
-ln -sf "$REPO/common/Vim/.vimrc" ~/.vimrc
-echo "OK .vimrc 연결 완료"
+sudo -u x rm -f "$X_HOME/.vimrc"
+sudo -u x ln -sf "$REPO/common/Vim/.vimrc" "$X_HOME/.vimrc"
+echo "OK .vimrc 연결 완료 (x)"
 
 # ============================================================
 # dev 전용 심볼릭 링크
@@ -425,8 +469,8 @@ fi
 # ============================================================
 # 글로벌 gitattributes 설정
 # ============================================================
-ln -sf "$REPO/.gitattributes" ~/.gitattributes_global
-git config --global core.attributesFile ~/.gitattributes_global
+sudo -u x ln -sf "$REPO/.gitattributes" "$X_HOME/.gitattributes_global"
+sudo -u x git config --global core.attributesFile "$X_HOME/.gitattributes_global"
 echo "OK Git 글로벌 attributes 연결 완료"
 
 # ============================================================
@@ -453,8 +497,8 @@ fi
 # ============================================================
 # Cron 등록
 # ============================================================
-(crontab -l 2>/dev/null | grep -v 'dotfiles.*git pull\|dotfolders.*git pull'; \
-  echo "0 */3 * * * cd $HOME/.dotfiles && git pull origin main && cd $HOME/.dotfolders && git pull origin main") | crontab -
+(sudo -u x crontab -l 2>/dev/null | grep -v 'dotfiles.*git pull\|dotfolders.*git pull'; \
+  echo "0 */3 * * * cd $X_HOME/.dotfiles && git pull origin main && cd $X_HOME/.dotfolders && git pull origin main") | sudo -u x crontab -
 echo "OK Cron 등록 완료 (3시간마다 pull)"
 
 # ============================================================
@@ -475,11 +519,10 @@ fi
 # ============================================================
 # pipx / gita 설치
 # ============================================================
-pipx install gita
-pipx ensurepath
-export PATH="$HOME/.local/bin:$PATH"
-gita add "$REPO" 2>/dev/null
-gita add "$HOME/.dotfolders" 2>/dev/null
+sudo -u x pipx install gita
+sudo -u x pipx ensurepath
+sudo -u x bash -c "PATH=\"$X_HOME/.local/bin:/usr/local/bin:\$PATH\" gita add $X_HOME/.dotfiles" 2>/dev/null
+sudo -u x bash -c "PATH=\"$X_HOME/.local/bin:/usr/local/bin:\$PATH\" gita add $X_HOME/.dotfolders" 2>/dev/null
 echo "OK gita 설치 및 .dotfiles/.dotfolders 등록 완료"
 
 # ============================================================
@@ -501,7 +544,7 @@ fi
 # ============================================================
 # GitHub Desktop 호환 - remote HTTPS 변경
 # ============================================================
-git -C "$REPO" remote set-url origin "https://github.com/srzst/.dotfiles.git"
+sudo -u x git -C "$REPO" remote set-url origin "https://github.com/srzst/.dotfiles.git"
 echo "OK remote HTTPS 변경 완료: .dotfiles"
 
 # ============================================================
@@ -511,7 +554,7 @@ echo ""
 echo "root 환경 동기화 중..."
 sudo mkdir -p /root/.config
 sudo ln -sf "$REPO/linux/ubuntu/Alias/.bashrc" /root/.bashrc
-sudo ln -sf "$HOME/.bashrc_secrets" /root/.bashrc_secrets
+sudo ln -sf "$X_HOME/.bashrc_secrets" /root/.bashrc_secrets
 sudo ln -sf "$REPO/common/Vim/.vimrc" /root/.vimrc
 if [ "$TARGET" = "2" ]; then
   sudo ln -sf "$REPO/common/neovim" /root/.config/nvim
