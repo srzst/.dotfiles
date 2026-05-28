@@ -69,11 +69,17 @@ echo "OK 기본 패키지 설치 완료"
 # ============================================================
 if [ "$MODE" = "2" ]; then
   TMP_ENC=$(mktemp /tmp/t_XXXXXX.enc)
+  TMP_DEC=$(mktemp /tmp/t_XXXXXX.dec)
+  
   curl -sL "$BOOTSTRAP_TOKEN_URL" -o "$TMP_ENC"
   
-  # 데비안/우분투 양대 환경의 널 바이트 및 공백 오염을 원천 차단하는 정제 파이프라인
-  INFISICAL_INPUT_TOKEN=$(openssl enc -d -aes-256-cbc -pbkdf2 -in "$TMP_ENC" -pass pass:"$SAVED_PASSWORD" 2>/dev/null | tr -d '\000\r\n ')
-  rm -f "$TMP_ENC"
+  # 괄호 감지 에러를 피하기 위해 파일로 먼저 온전히 복호화 추출
+  openssl enc -d -aes-256-cbc -pbkdf2 -in "$TMP_ENC" -pass pass:"$SAVED_PASSWORD" -out "$TMP_DEC" 2>/dev/null
+  
+  # 복호화된 파일에서 널 바이트와 공백을 완전히 제거하여 변수에 주입
+  INFISICAL_INPUT_TOKEN=$(tr -d '\000\r\n ' < "$TMP_DEC")
+  
+  rm -f "$TMP_ENC" "$TMP_DEC"
   
   if [ -z "$INFISICAL_INPUT_TOKEN" ] || [[ ! "$INFISICAL_INPUT_TOKEN" == st.* ]]; then
     echo "ERR 토큰 복호화 실패 또는 토큰 규격 불일치"
@@ -89,12 +95,6 @@ else
     read -p "Infisical 서비스 토큰: " -r INFISICAL_INPUT_TOKEN
   fi
 fi
-
-mkdir -p ~/.bashrc_secrets_dir
-echo "export INFISICAL_TOKEN=\"$INFISICAL_INPUT_TOKEN\"" > ~/.bashrc_secrets
-chmod 600 ~/.bashrc_secrets
-export INFISICAL_TOKEN="$INFISICAL_INPUT_TOKEN"
-echo "OK 토큰 주입 완료"
 # ============================================================
 # 공통 패키지 설치
 # ============================================================
