@@ -57,6 +57,7 @@ sudo hostnamectl set-hostname "$NEW_HOSTNAME"
 sudo sed -i "s/127.0.1.1.*/127.0.1.1 $NEW_HOSTNAME/" /etc/hosts
 export HOSTNAME="$NEW_HOSTNAME"
 echo "OK hostname 설정 완료: $NEW_HOSTNAME"
+
 # ============================================================
 # 기본 선행 패키지 설치
 # ============================================================
@@ -66,9 +67,29 @@ echo "OK 기본 패키지 설치 완료"
 # ============================================================
 # 토큰 획득
 # ============================================================
-# ============================================================
-# 토큰 주입 완료
-# ============================================================
+if [ "$MODE" = "2" ]; then
+  TMP_ENC=$(mktemp /tmp/t_XXXXXX.enc)
+  curl -sL "$BOOTSTRAP_TOKEN_URL" -o "$TMP_ENC"
+  
+  # 데비안/우분투 양대 환경의 널 바이트 및 공백 오염을 원천 차단하는 정제 파이프라인
+  INFISICAL_INPUT_TOKEN=$(openssl enc -d -aes-256-cbc -pbkdf2 -in "$TMP_ENC" -pass pass:"$SAVED_PASSWORD" 2>/dev/null | tr -d '\000\r\n ')
+  rm -f "$TMP_ENC"
+  
+  if [ -z "$INFISICAL_INPUT_TOKEN" ] || [[ ! "$INFISICAL_INPUT_TOKEN" == st.* ]]; then
+    echo "ERR 토큰 복호화 실패 또는 토큰 규격 불일치"
+    exit 1
+  fi
+  echo "OK 토큰 복호화 완료"
+else
+  if [ -f ~/.bashrc_secrets ]; then
+    source ~/.bashrc_secrets
+    INFISICAL_INPUT_TOKEN="$INFISICAL_TOKEN"
+    echo "OK ~/.bashrc_secrets에서 토큰 로드"
+  else
+    read -p "Infisical 서비스 토큰: " -r INFISICAL_INPUT_TOKEN
+  fi
+fi
+
 mkdir -p ~/.bashrc_secrets_dir
 echo "export INFISICAL_TOKEN=\"$INFISICAL_INPUT_TOKEN\"" > ~/.bashrc_secrets
 chmod 600 ~/.bashrc_secrets
@@ -78,40 +99,15 @@ echo "OK 토큰 주입 완료"
 # 공통 패키지 설치
 # ============================================================
 echo "패키지 설치 중..."
-# 1차 핵심 패키지 안전 설치 (실패할 가능성이 없는 순정 패키지 그룹)
 sudo apt install -y curl wget vim git htop net-tools sudo python3 python3-pip pipx
-
-# 2차 OS별 선택적 패키지 설치 (Debian 환경에서 에러가 나더라도 스크립트가 멈추지 않도록 격리 처리)
 sudo apt install -y software-properties-common 2>/dev/null || true
-
 echo "OK 공통 패키지 설치 완료"
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
-if ! command -v infisical &>/dev/null; then
 
 
-# ============================================================
-# 공통 패키지 설치
-# ============================================================
-# echo "패키지 설치 중..."
-# sudo apt install -y \
-#   curl wget vim git htop net-tools sudo \
-#   python3 python3-pip pipx \
-#   # build-essential unzip zip rclone \
-#   software-properties-common
-# echo "OK 공통 패키지 설치 완료"
-# ============================================================
-# Infisical CLI 설치
-# ============================================================
-# if ! command -v infisical &>/dev/null; then
-#   echo "Infisical CLI 설치 중..."
-#   curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
-#   sudo apt-get install -y infisical
-#   echo "OK Infisical CLI 설치 완료"
-# else
-#   echo "OK Infisical CLI 이미 설치됨 (스킵)"
-# fi
+
 # ============================================================
 # root 암호 결정
 # ============================================================
