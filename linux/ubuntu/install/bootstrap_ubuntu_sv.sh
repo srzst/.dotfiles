@@ -308,8 +308,8 @@ echo "OK .git-credentials 완료"
 
 
 mkdir -p ~/.config/rclone
-printf "%b" "$(fetch_secret_multiline "rclone_conf" "/rclone")" > ~/.config/rclone/rclone.conf
-printf "%b" "$(fetch_secret_multiline "rclone_onedrive_sv_pve" "/rclone")" >> ~/.config/rclone/rclone.conf
+fetch_secret_multiline "rclone_conf" "/rclone" > ~/.config/rclone/rclone.conf
+fetch_secret_multiline "rclone_onedrive_sv_pve" "/rclone" >> ~/.config/rclone/rclone.conf
 chmod 600 ~/.config/rclone/rclone.conf
 echo "OK rclone.conf 복원 완료"
 
