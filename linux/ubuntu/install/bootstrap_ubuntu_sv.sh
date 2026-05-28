@@ -130,7 +130,7 @@ sudo apt install -y \
   curl wget vim git htop net-tools sudo \
   python3 python3-pip pipx \
   build-essential unzip zip rclone \
-  tree tmux apt-transport-https
+  tree tmux apt-transport-https software-properties-common
 echo "OK 공통 패키지 설치 완료"
 
 # ============================================================
