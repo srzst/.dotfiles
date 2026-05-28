@@ -99,10 +99,16 @@ fi
 # 공통 패키지 설치
 # ============================================================
 echo "패키지 설치 중..."
-sudo apt install -y curl wget vim git htop net-tools sudo python3 python3-pip pipx
+sudo apt install -y curl wget rclone vim git htop net-tools sudo python3 python3-pip pipx
 sudo apt install -y software-properties-common 2>/dev/null || true
 echo "OK 공통 패키지 설치 완료"
-
+# ============================================================
+# RCLONE OFFICIAL STABLE INSTALLATION & UPGRADE
+# ============================================================
+# 데비안 내장 패키지 버그(OneDrive 대용량 unauthenticated) 방지를 위해 공식 빌드 강제
+if ! command -v rclone &> /dev/null || [[ "$(rclone version | head -n 1 | awk '{print $2}')" < "v1.74.2" ]]; then
+    curl https://rclone.org/install.sh | sudo bash -s -- --quiet
+fi
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
