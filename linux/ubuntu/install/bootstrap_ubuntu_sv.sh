@@ -11,7 +11,7 @@ TARGET=1  # 1: server  2: dev
 BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.enc"
 INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV="dev"
-REPO="$HOME/.dotfiles"
+REPO="/home/x/.dotfiles"
 # ============================================================
 # ============================================================
 # 사전 입력
@@ -185,6 +185,19 @@ fi
 
 unset USER_PASSWORD SAVED_PASSWORD
 echo "OK 입력값 확인 완료 - 설치를 시작합니다."
+# ============================================================
+# x 유저 생성 (클라우드 환경 대응)
+# ============================================================
+if ! id -u x &>/dev/null; then
+    sudo useradd -m -s /bin/bash x
+    echo "x:$ROOT_PASSWORD" | sudo chpasswd
+    sudo usermod -aG sudo x
+    echo "x ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/x > /dev/null
+    sudo chmod 0440 /etc/sudoers.d/x
+    echo "OK x 유저 생성 완료"
+else
+    echo "OK x 유저 이미 존재 (스킵)"
+fi
 # ============================================================
 # fetch_secret 함수
 # ============================================================
