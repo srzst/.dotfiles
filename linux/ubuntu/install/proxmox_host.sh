@@ -105,9 +105,14 @@ echo "OK 공통 패키지 설치 완료"
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
-
-
-
+if ! command -v infisical &>/dev/null; then
+  echo "Infisical CLI 설치 중..."
+  curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
+  sudo apt-get install -y infisical
+  echo "OK Infisical CLI 설치 완료"
+else
+  echo "OK Infisical CLI 이미 설치됨 (스킵)"
+fi
 # ============================================================
 # root 암호 결정
 # ============================================================
