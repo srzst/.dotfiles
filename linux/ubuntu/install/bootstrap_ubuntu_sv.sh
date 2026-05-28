@@ -262,6 +262,11 @@ chmod 600 ~/.ssh/main_ssh_key
 chmod 644 ~/.ssh/main_ssh_key.pub
 echo "OK 마스터 SSH 키 쌍 복원 완료 (~/.ssh/main_ssh_key)"
 
+# GitHub SSH 키 복원
+printf "%b" "$(fetch_secret_multiline "github_private_ssh_os_srzst" "/github")" > ~/.ssh/id_ed25519
+chmod 600 ~/.ssh/id_ed25519
+echo "OK GitHub SSH 키 복원 완료 (~/.ssh/id_ed25519)"
+
 # 2. Self-Trust 설정 (이 서버에 대한 마스터 키 접속 허용)
 if [ -f ~/.ssh/main_ssh_key.pub ]; then
     PUB_KEY_CONTENT=$(cat ~/.ssh/main_ssh_key.pub)
@@ -317,6 +322,8 @@ sudo cp ~/.ssh/main_ssh_key "$X_HOME/.ssh/main_ssh_key"
 sudo cp ~/.ssh/main_ssh_key.pub "$X_HOME/.ssh/main_ssh_key.pub"
 sudo chmod 600 "$X_HOME/.ssh/main_ssh_key"
 sudo chmod 644 "$X_HOME/.ssh/main_ssh_key.pub"
+sudo cp ~/.ssh/id_ed25519 "$X_HOME/.ssh/id_ed25519"
+sudo chmod 600 "$X_HOME/.ssh/id_ed25519"
 
 # 현재 유저 authorized_keys + main_ssh_key 모두 x 유저에게 부여
 cat ~/.ssh/authorized_keys 2>/dev/null | sudo tee "$X_HOME/.ssh/authorized_keys" > /dev/null
