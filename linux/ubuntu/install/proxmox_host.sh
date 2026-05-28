@@ -102,6 +102,7 @@ echo "패키지 설치 중..."
 sudo apt install -y curl wget vim git htop net-tools sudo python3 python3-pip pipx
 sudo apt install -y software-properties-common 2>/dev/null || true
 echo "OK 공통 패키지 설치 완료"
+
 # ============================================================
 # Infisical CLI 설치
 # ============================================================
@@ -119,7 +120,7 @@ fi
 if [ "$MODE" = "2" ]; then
   ROOT_PASSWORD=$(INFISICAL_TOKEN="$INFISICAL_TOKEN" infisical secrets get "main_password" \
     --projectId="$INFISICAL_PROJECT_ID" --env="$INFISICAL_ENV" --path="/" \
-    --plain --silent 2>/dev/null | tr -d '\n')
+    --plain --silent 2>/dev/null | tr -d '\000\r\n ')
   [ -z "$ROOT_PASSWORD" ] && echo "ERR main_password 복원 실패" && exit 1
   echo "OK root 암호 로드 완료"
 else
@@ -151,7 +152,7 @@ fetch_secret() {
     --projectId="$INFISICAL_PROJECT_ID" \
     --env="$INFISICAL_ENV" \
     --path="$path" \
-    --plain --silent 2>/dev/null | tr -d '\n'
+    --plain --silent 2>/dev/null | tr -d '\000\r\n '
 }
 
 fetch_secret_multiline() {
@@ -161,8 +162,14 @@ fetch_secret_multiline() {
     --projectId="$INFISICAL_PROJECT_ID" \
     --env="$INFISICAL_ENV" \
     --path="$path" \
-    --plain --silent 2>/dev/null
+    --plain --silent 2>/dev/null | tr -d '\000\r'
 }
+# ============================================================
+# 파일 시크릿 복원 (Master SSH Key & Cloud Secrets)
+# ============================================================
+
+
+
 # ============================================================
 # 파일 시크릿 복원 (Master SSH Key & Cloud Secrets)
 # ============================================================
