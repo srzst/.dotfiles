@@ -544,6 +544,7 @@ tailscale_authkey=$(fetch_secret "tailscale_authkey" "/")
 if [ -n "$tailscale_authkey" ]; then
   sudo tailscale up --authkey="$tailscale_authkey"
   echo "OK Tailscale 인증 완료"
+  echo "Tailscale ip"
 else
   echo "INFO Tailscale Auth Key를 가져오지 못했습니다. 수동으로 실행하세요:"
   echo "  sudo tailscale up"
