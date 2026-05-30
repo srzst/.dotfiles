@@ -508,6 +508,9 @@ function _ssh_connect
 function pve
 { _ssh_connect "root" "pve"
 }
+function xpve
+{ _ssh_connect "x" "pve"
+}
 function w1
 { _ssh_connect "x" "w1"
 }
@@ -528,13 +531,6 @@ function stn
 }
 function wtt
 { _ssh_connect "x" "100.107.192.115"
-}
-
-function jlf
-{ _ssh_connect "root" "192.168.0.165"
-}
-function ad
-{ _ssh_connect "root" "192.168.0.166"
 }
 
 # ============================================================

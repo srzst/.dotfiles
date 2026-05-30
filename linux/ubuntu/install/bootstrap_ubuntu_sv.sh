@@ -443,7 +443,7 @@ done
 # ============================================================
 # secrets 로드 구문 추가
 # ============================================================
-if ! sudo -u x grep -q 'bashrc_secrets' "$REPO/linux/ubuntu/Alias/.bashrc" 2>/dev/null; then
+if ! sudo -u x grep -q 'source ~/.bashrc_secrets' "$REPO/linux/ubuntu/Alias/.bashrc" 2>/dev/null; then
   sudo -u x bash -c "echo '' >> '$REPO/linux/ubuntu/Alias/.bashrc'"
   sudo -u x bash -c "echo '[[ -f ~/.bashrc_secrets ]] && source ~/.bashrc_secrets' >> '$REPO/linux/ubuntu/Alias/.bashrc'"
   echo "OK .bashrc에 secrets 로드 구문 추가 완료"

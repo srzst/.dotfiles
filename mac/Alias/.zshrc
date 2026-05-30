@@ -201,16 +201,13 @@ _ssh_connect() {
 }
 
 pve()     { _ssh_connect "root" "pve"; }
+xpve()     { _ssh_connect "x" "pve"; }
 w1()      { _ssh_connect "x" "w1"; }
 w2()      { _ssh_connect "x" "w2"; }
 w3()      { _ssh_connect "x" "w3"; }
 w5()      { _ssh_connect "x" "w5"; }
 shorten() { _ssh_connect "x" "shorten"; }
 stn()     { _ssh_connect "x" "shorten"; }
-
-jlf()     { _ssh_connect "root" "192.168.0.165"; }
-ad()      { _ssh_connect "root" "192.168.0.166"; }
-
 # ============================================================
 # Yazi / zoxide
 # ============================================================
