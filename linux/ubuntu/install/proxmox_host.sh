@@ -378,9 +378,9 @@ echo "OK Git 글로벌 attributes 연결 완료"
 # ============================================================
 # Cron 등록 (3시간 주기로 변경사항 pull 동기화)
 # ============================================================
-(sudo -u x crontab -l 2>/dev/null | grep -v 'dotfiles.*git pull\|dotfolders.*git pull'; \
-  echo "0 */3 * * * cd $X_HOME/.dotfiles && git pull origin main && cd $X_HOME/.dotfolders && git pull origin main") | sudo -u x crontab -
-echo "OK Cron 등록 완료 (3시간마다 pull)"
+(sudo -u x crontab -l 2>/dev/null | grep -v 'dotfiles.*git\|dotfolders.*git'; \
+  echo "0 */3 * * * cd $X_HOME/.dotfiles && git fetch origin && git reset --hard origin/main && cd $X_HOME/.dotfolders && git fetch origin && git reset --hard origin/main") | sudo -u x crontab -
+echo "OK Cron 등록 완료 (3시간마다 fetch+reset)"
 # ============================================================
 # pipx / gita 설치 및 자산 관리 등록
 # ============================================================
@@ -420,6 +420,7 @@ sudo ln -sf "$REPO/linux/ubuntu/Alias/.bashrc" /root/.bashrc
 sudo ln -sf "$X_HOME/.bashrc_secrets" /root/.bashrc_secrets
 sudo ln -sf "$REPO/common/Vim/.vimrc" /root/.vimrc
 echo "OK root 환경 동기화 완료"
+
 
 echo ""
 echo "OK Proxmox 호스트 전용 부트스트랩 완료"

@@ -1,0 +1,14 @@
+[Unit]
+Description=GitHub Webhook Listener
+After=network.target
+
+[Service]
+Type=simple
+User=x
+EnvironmentFile=/home/x/.bashrc_secrets
+ExecStart=/usr/bin/python3 /home/x/.dotfiles/linux/ubuntu/webhook/webhook_listener.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

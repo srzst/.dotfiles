@@ -403,6 +403,7 @@ alias rcw="rclone rcd --rc-web-gui"  # rclone web gui
 # ============================================================
 [ -f ~/.bash_aliases ] && . ~/.bash_aliases
 [[ -f ~/.bashrc_secrets ]] && source ~/.bashrc_secrets
+export PATH="$PATH:/home/x/.local/bin"
 # ============================================================
 # Bash Readline: 프롬프트 전용 이동 / 단어 이동 / 삭제
 # Windows Alt = macOS Option 감각 기준
