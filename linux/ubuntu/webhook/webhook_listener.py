@@ -6,30 +6,37 @@ GitHub push → 전체 서버 SSH sync → 텔레그램 통합 리포트
 import hashlib
 import hmac
 import json
-import os
 import subprocess
 import urllib.request
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+# ============================================================
+# CONFIG
+# ============================================================
 PORT = 9000
 
 TARGET_SERVERS = [
-    {"name": "W1",  "host": "W1"},
-    {"name": "W2",  "host": "W2"},
-    {"name": "W3",  "host": "W3"},
-    {"name": "W5",  "host": "W5"},
-    {"name": "pve", "host": "pve"},
+    {"name": "shorten", "host": "shorten"},
+    {"name": "W1",      "host": "W1"},
+    {"name": "W2",      "host": "W2"},
+    {"name": "W3",      "host": "W3"},
+    {"name": "W5",      "host": "W5"},
+    {"name": "pve",     "host": "pve"},
 ]
 
-REPOS       = ["/home/x/.dotfiles", "/home/x/.dotfolders"]
-SSH_KEY     = "/home/x/.ssh/main_ssh_key"
-SSH_USER    = "x"
-WATCH_PATHS = ["linux/ubuntu/", "linux/ubuntusv/"]
+REPOS    = ["/home/x/.dotfiles", "/home/x/.dotfolders"]
+SSH_KEY  = "/home/x/.ssh/main_ssh_key"
+SSH_USER = "x"
+
+# 빈 리스트 = 모든 push에 sync. 특정 경로만 트리거하려면 경로 추가.
+# 예: WATCH_PATHS = ["linux/ubuntu/", "linux/ubuntusv/", "common/"]
+WATCH_PATHS: list[str] = []
 
 INFISICAL_PROJECT = "bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV     = "dev"
+# ============================================================
 
 
 def _infisical(key: str, path: str) -> str:
@@ -109,31 +116,34 @@ class WebhookHandler(BaseHTTPRequestHandler):
         for commit in data.get("commits", []):
             modified += commit.get("added", []) + commit.get("modified", []) + commit.get("removed", [])
 
-        relevant = [f for f in modified if any(f.startswith(p) for p in WATCH_PATHS)]
+        if WATCH_PATHS and not any(f.startswith(p) for f in modified for p in WATCH_PATHS):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"OK")
+            return
 
-        if relevant:
-            commit_msg = data.get("head_commit", {}).get("message", "-")
-            files_str  = "\n  ".join(relevant[:5]) + ("\n  ..." if len(relevant) > 5 else "")
+        commit_msg = data.get("head_commit", {}).get("message", "-")
+        files_str  = "\n  ".join(modified[:5]) + ("\n  ..." if len(modified) > 5 else "")
 
-            results = []
-            with ThreadPoolExecutor(max_workers=len(TARGET_SERVERS)) as pool:
-                futures = {pool.submit(sync_server, s): s for s in TARGET_SERVERS}
-                for future in as_completed(futures):
-                    results.append(future.result())
+        results = []
+        with ThreadPoolExecutor(max_workers=len(TARGET_SERVERS)) as pool:
+            futures = {pool.submit(sync_server, s): s for s in TARGET_SERVERS}
+            for future in as_completed(futures):
+                results.append(future.result())
 
-            results.sort(key=lambda x: x[0])
-            lines = [
-                f"{'✓' if ok else '✗'} {name}" + (f" - {msg}" if not ok else "")
-                for name, ok, msg in results
-            ]
-
-            msg = (
-                f"[dotfiles] 배포\n"
-                f"\n".join(lines) + "\n"
-                f"커밋: {commit_msg}\n"
-                f"파일:\n  {files_str}"
-            )
-            send_telegram(msg)
+        results.sort(key=lambda x: x[0])
+        lines     = [
+            f"{'✓' if ok else '✗'} {name}" + (f" - {msg}" if not ok else "")
+            for name, ok, msg in results
+        ]
+        lines_str = "\n".join(lines)
+        msg = (
+            f"[dotfiles] 배포\n"
+            f"{lines_str}\n"
+            f"커밋: {commit_msg}\n"
+            f"파일:\n  {files_str}"
+        )
+        send_telegram(msg)
 
         self.send_response(200)
         self.end_headers()

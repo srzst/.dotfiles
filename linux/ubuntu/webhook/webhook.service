@@ -5,8 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=x
-EnvironmentFile=/home/x/.bashrc_secrets
-ExecStart=/usr/bin/python3 /home/x/.dotfiles/linux/ubuntu/webhook/webhook_listener.py
+ExecStart=/bin/bash -c 'source /home/x/.bashrc_secrets && exec /usr/bin/python3 /home/x/.dotfiles/linux/ubuntu/webhook/webhook_listener.py'
 Restart=always
 RestartSec=10
 
