@@ -182,8 +182,8 @@ fetch_secret_multiline() {
 mkdir -p ~/.ssh ~/.aws ~/.backblaze
 chmod 700 ~/.ssh
 
-printf "%b" "$(fetch_secret_multiline "main_ssh_private_key" "/")" > ~/.ssh/main_ssh_key
-printf "%b" "$(fetch_secret_multiline "main_ssh_public_key" "/")" > ~/.ssh/main_ssh_key.pub
+printf "%b\n" "$(fetch_secret_multiline "main_ssh_private_key" "/")" > ~/.ssh/main_ssh_key
+printf "%b\n" "$(fetch_secret_multiline "main_ssh_public_key" "/")" > ~/.ssh/main_ssh_key.pub
 
 if [ ! -s ~/.ssh/main_ssh_key ]; then
     echo "ERROR 마스터 개인키 복원 실패 → Infisical 설정을 확인하세요."
