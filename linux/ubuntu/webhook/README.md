@@ -70,6 +70,6 @@ GitHub 웹훅 추가 등록 불필요. shorten 이 알아서 포함해서 sync.
 
 | 경로 | 키 |
 |---|---|
-| `/webhook` | `github_webhook_secret` |
+| `/github` | `github_webhook_secret` |
 | `/telegram` | `telegram_bot_token_evervz` |
 | `/telegram` | `chat_id_evervz` |
