@@ -420,8 +420,11 @@ sudo ln -sf "$REPO/linux/ubuntu/Alias/.bashrc" /root/.bashrc
 sudo ln -sf "$X_HOME/.bashrc_secrets" /root/.bashrc_secrets
 sudo ln -sf "$REPO/common/Vim/.vimrc" /root/.vimrc
 echo "OK root 환경 동기화 완료"
-
-
+# ============================================================
+# PVE 호스트 튜닝
+# ============================================================
+sudo systemctl disable --now ksmtuned 2>/dev/null || true
+echo "OK ksmtuned 비활성화 완료"
 # ============================================================
 # PVE VM 리소스 모니터 설치 (Telegram 알림)
 # ============================================================
