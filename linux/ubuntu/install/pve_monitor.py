@@ -10,7 +10,6 @@ POLL_INTERVAL  = 60
 ALERT_COOLDOWN = 300
 
 CPU_THRESHOLD  = 0.70
-MEM_THRESHOLD  = 0.90
 SWAP_THRESHOLD = 0.30
 
 INFISICAL_PROJECT = "bc893247-af3f-4118-a8ec-bcb429338acb"
@@ -84,14 +83,12 @@ def get_vm_stats(node: str) -> list[dict]:
         for vm in vms:
             if vm.get("status") != "running":
                 continue
-            maxmem = vm.get("maxmem", 1) or 1
-            name   = vm.get("name", str(vm.get("vmid")))
+            name = vm.get("name", str(vm.get("vmid")))
             stats.append({
                 "vmid":       vm.get("vmid"),
                 "name":       name,
                 "type":       vm_type,
                 "cpu":        float(vm.get("cpu", 0)),
-                "mem_ratio":  vm.get("mem", 0) / maxmem,
                 "swap_ratio": get_swap_ratio(name),
             })
     return stats
@@ -113,15 +110,10 @@ def main() -> None:
                 vmid = str(vm["vmid"])
                 name = vm["name"]
                 cpu  = vm["cpu"]
-                mem  = vm["mem_ratio"]
-
-                swap = vm["swap_ratio"]
 
                 alerts = []
                 if cpu >= CPU_THRESHOLD:
                     alerts.append(f"CPU {cpu * 100:.1f}% (임계: {CPU_THRESHOLD * 100:.0f}%)")
-                if mem >= MEM_THRESHOLD:
-                    alerts.append(f"메모리 {mem * 100:.1f}% (임계: {MEM_THRESHOLD * 100:.0f}%)")
                 if swap >= SWAP_THRESHOLD:
                     alerts.append(f"Swap {swap * 100:.1f}% (임계: {SWAP_THRESHOLD * 100:.0f}%)")
 
