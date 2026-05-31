@@ -10,7 +10,8 @@ POLL_INTERVAL  = 60
 ALERT_COOLDOWN = 300
 
 CPU_THRESHOLD  = 0.70
-MEM_THRESHOLD  = 0.75
+MEM_THRESHOLD  = 0.90
+SWAP_THRESHOLD = 0.30
 
 INFISICAL_PROJECT = "bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV     = "dev"
@@ -48,6 +49,25 @@ def send_telegram(text: str, secrets: dict) -> None:
         print(f"[TG] 전송 실패: {e}")
 
 
+SSH_KEY  = "/root/.ssh/main_ssh_key"
+SSH_USER = "root"
+
+
+def get_swap_ratio(host: str) -> float:
+    """VM에 SSH 접속해 swap 사용률 반환. 실패 시 0.0."""
+    try:
+        r = subprocess.run([
+            "ssh", "-i", SSH_KEY,
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "ConnectTimeout=5",
+            f"{SSH_USER}@{host}",
+            "awk '/SwapTotal/{t=$2} /SwapFree/{f=$2} END{if(t>0) print (t-f)/t; else print 0}' /proc/meminfo",
+        ], capture_output=True, text=True, timeout=10)
+        return float(r.stdout.strip()) if r.returncode == 0 else 0.0
+    except Exception:
+        return 0.0
+
+
 def get_vm_stats(node: str) -> list[dict]:
     stats = []
     for vm_type in ("qemu", "lxc"):
@@ -65,12 +85,14 @@ def get_vm_stats(node: str) -> list[dict]:
             if vm.get("status") != "running":
                 continue
             maxmem = vm.get("maxmem", 1) or 1
+            name   = vm.get("name", str(vm.get("vmid")))
             stats.append({
-                "vmid":      vm.get("vmid"),
-                "name":      vm.get("name", str(vm.get("vmid"))),
-                "type":      vm_type,
-                "cpu":       float(vm.get("cpu", 0)),
-                "mem_ratio": vm.get("mem", 0) / maxmem,
+                "vmid":       vm.get("vmid"),
+                "name":       name,
+                "type":       vm_type,
+                "cpu":        float(vm.get("cpu", 0)),
+                "mem_ratio":  vm.get("mem", 0) / maxmem,
+                "swap_ratio": get_swap_ratio(name),
             })
     return stats
 
@@ -93,11 +115,15 @@ def main() -> None:
                 cpu  = vm["cpu"]
                 mem  = vm["mem_ratio"]
 
+                swap = vm["swap_ratio"]
+
                 alerts = []
                 if cpu >= CPU_THRESHOLD:
                     alerts.append(f"CPU {cpu * 100:.1f}% (임계: {CPU_THRESHOLD * 100:.0f}%)")
                 if mem >= MEM_THRESHOLD:
                     alerts.append(f"메모리 {mem * 100:.1f}% (임계: {MEM_THRESHOLD * 100:.0f}%)")
+                if swap >= SWAP_THRESHOLD:
+                    alerts.append(f"Swap {swap * 100:.1f}% (임계: {SWAP_THRESHOLD * 100:.0f}%)")
 
                 if not alerts:
                     last_alert.pop(vmid, None)

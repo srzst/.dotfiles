@@ -572,6 +572,25 @@ fi
 echo "OK root 환경 동기화 완료"
 
 
+# ============================================================
+# 디스크 I/O 스케줄러 설정 (mq-deadline)
+# ============================================================
+for dev in $(ls /sys/block/ | grep -E '^(sd|vd|nvme|hd)'); do
+    sched_file="/sys/block/$dev/queue/scheduler"
+    if grep -q "mq-deadline" "$sched_file" 2>/dev/null; then
+        echo mq-deadline | sudo tee "$sched_file" > /dev/null
+        echo "OK I/O 스케줄러: $dev → mq-deadline"
+    fi
+done
+
+if [ -f /etc/default/grub ] && ! grep -q 'elevator=mq-deadline' /etc/default/grub; then
+    sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="[^"]*/& elevator=mq-deadline/' /etc/default/grub
+    sudo update-grub 2>/dev/null || true
+    echo "OK GRUB I/O 스케줄러 영구 설정 완료"
+else
+    echo "OK GRUB I/O 스케줄러 이미 설정됨 (스킵)"
+fi
+
 echo ""
 echo "OK Ubuntu 설치 완료"
 echo "INFO 재시작을 권장합니다: sudo reboot"
