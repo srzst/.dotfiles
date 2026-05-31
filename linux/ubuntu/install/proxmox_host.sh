@@ -422,6 +422,32 @@ sudo ln -sf "$REPO/common/Vim/.vimrc" /root/.vimrc
 echo "OK root 환경 동기화 완료"
 
 
+# ============================================================
+# PVE VM 리소스 모니터 설치 (Telegram 알림)
+# ============================================================
+sudo tee /etc/systemd/system/pve-monitor.service > /dev/null << 'EOF'
+[Unit]
+Description=PVE VM Resource Monitor (Telegram Alert)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/bin/bash -c 'source /root/.bashrc_secrets && exec /usr/bin/python3 /home/x/.dotfiles/linux/ubuntu/install/pve_monitor.py'
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable pve-monitor.service
+sudo systemctl start pve-monitor.service
+echo "OK PVE VM 리소스 모니터 설치 완료"
+
 echo ""
 echo "OK Proxmox 호스트 전용 부트스트랩 완료"
 echo "INFO 시스템 재시작을 권장합니다: sudo reboot"
