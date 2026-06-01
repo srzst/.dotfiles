@@ -76,6 +76,7 @@ export LSCOLORS="ExFxCxDxBxegedabagacad"
 # ============================================================
 alias c='clear'
 alias cc='clear'
+alias cl='claude'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias h='cd ~'

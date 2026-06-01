@@ -126,6 +126,9 @@ function et3
 function c
 { Clear-Host
 }
+function cl
+{ claude
+}
 function cc
 { Clear-Host
 }
