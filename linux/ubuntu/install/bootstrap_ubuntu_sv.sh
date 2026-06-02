@@ -249,21 +249,23 @@ fi
 mkdir -p ~/.ssh ~/.aws ~/.backblaze
 chmod 700 ~/.ssh
 
-# 1. 범용 마스터 키 로드 (printf %b로 \n 문자열 대응)
-printf "%b\n" "$(fetch_secret_multiline "main_ssh_private_key" "/")" > ~/.ssh/main_ssh_key
-printf "%b\n" "$(fetch_secret_multiline "main_ssh_public_key" "/")" > ~/.ssh/main_ssh_key.pub
-
-if [ ! -s ~/.ssh/main_ssh_key ]; then
-    echo "ERROR 마스터 개인키 복원 실패 → Infisical 설정을 확인하세요."
-    exit 1
-fi
-
+# 1. 범용 마스터 키 로드
+# printf "%b" 미사용: base64 내용의 백슬래시를 해석해 키 파일이 손상됨
+# echo >> 로 trailing newline 보장 (Infisical 응답에 미포함 가능)
+fetch_secret_multiline "main_ssh_private_key" "/" > ~/.ssh/main_ssh_key; echo >> ~/.ssh/main_ssh_key
+fetch_secret_multiline "main_ssh_public_key" "/" > ~/.ssh/main_ssh_key.pub; echo >> ~/.ssh/main_ssh_key.pub
 chmod 600 ~/.ssh/main_ssh_key
 chmod 644 ~/.ssh/main_ssh_key.pub
+
+if ! ssh-keygen -y -f ~/.ssh/main_ssh_key > /dev/null 2>&1; then
+    echo "ERROR 마스터 개인키 로드 실패 → 키 손상 또는 Infisical 설정 확인 필요"
+    exit 1
+fi
 echo "OK 마스터 SSH 키 쌍 복원 완료 (~/.ssh/main_ssh_key)"
 
 # GitHub SSH 키 복원
-printf "%b" "$(fetch_secret_multiline "github_private_ssh_os_srzst" "/github")" > ~/.ssh/id_ed25519
+# printf "%b" 미사용: base64 내용의 백슬래시를 해석해 키 파일이 손상됨
+fetch_secret_multiline "github_private_ssh_os_srzst" "/github" > ~/.ssh/id_ed25519; echo >> ~/.ssh/id_ed25519
 chmod 600 ~/.ssh/id_ed25519
 echo "OK GitHub SSH 키 복원 완료 (~/.ssh/id_ed25519)"
 
