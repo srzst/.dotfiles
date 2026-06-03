@@ -41,9 +41,10 @@ echo " 2) W2"
 echo " 3) W3"
 echo " 4) W5"
 echo " 5) shorten"
-echo " 6) 직접 입력"
+echo " 6) multi"
+echo " 7) 직접 입력"
 echo "------------------------------------------------------------"
-read -p " 선택 (1-6): " HOSTNAME_CHOICE
+read -p " 선택 (1-7): " HOSTNAME_CHOICE
 
 case $HOSTNAME_CHOICE in
     1) NEW_HOSTNAME="W1" ;;
@@ -51,7 +52,8 @@ case $HOSTNAME_CHOICE in
     3) NEW_HOSTNAME="W3" ;;
     4) NEW_HOSTNAME="W5" ;;
     5) NEW_HOSTNAME="shorten" ;;
-    6) read -p " hostname 입력: " NEW_HOSTNAME ;;
+    6) NEW_HOSTNAME="multi" ;;
+    7) read -p " hostname 입력: " NEW_HOSTNAME ;;
     *) echo "오류: 올바른 번호를 선택하세요."; exit 1 ;;
 esac
 
