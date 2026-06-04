@@ -535,6 +535,7 @@ function stn
 function wtt
 { _ssh_connect "x" "100.107.192.115"
 }
+function trs { Start-Process powershell -Verb RunAs -ArgumentList "Restart-Service -Name Tailscale" }
 
 # ============================================================
 # Yazi / zoxide

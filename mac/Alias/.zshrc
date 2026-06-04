@@ -209,6 +209,8 @@ w3()      { _ssh_connect "x" "w3"; }
 w5()      { _ssh_connect "x" "w5"; }
 shorten() { _ssh_connect "x" "shorten"; }
 stn()     { _ssh_connect "x" "shorten"; }
+
+alias trs='sudo systemctl restart tailscale'
 # ============================================================
 # Yazi / zoxide
 # ============================================================
