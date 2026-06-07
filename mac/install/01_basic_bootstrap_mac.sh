@@ -249,35 +249,26 @@ git config --global user.email "x@srzst.com"
 git config --global user.name "x"
 echo "OK Git 설정 완료"
 # ============================================================
-# 파일 시크릿 복원 (TARGET != 3)
+# 파일 시크릿 복원 (TARGET != 3, 4)
 # ============================================================
-if [ "$TARGET" -ne 3 ]; then
+if [ "$TARGET" -ne 3 ] && [ "$TARGET" -ne 4 ]; then
     echo ""
     echo "파일 시크릿 복원 중..."
 
-    # Zsh 연관 배열 선언 (typeset -A 사용)
-    typeset -A file_secrets
+    # key:infisical_path:dest:perm 형식의 배열
     file_secrets=(
-        "github_private_ssh_os_srzst" "/github:$HOME/.ssh/id_ed25519:600"
-        "config"                     "/aws:$HOME/.aws/config:644"
-        "credentials"                "/aws:$HOME/.aws/credentials:600"
-        "backblazeapi"               "/backblaze:$HOME/.backblaze/backblazeapi:600"
-        "git_credentials"            "/github:$HOME/.git-credentials:600"
-        "main_ssh_private_key"       "/:$HOME/.ssh/main_ssh_key:600"
-        "main_ssh_public_key"        "/:$HOME/.ssh/main_ssh_key.pub:644"
+        "github_private_ssh_os_srzst:/github:$HOME/.ssh/id_ed25519:600"
+        "config:/aws:$HOME/.aws/config:644"
+        "credentials:/aws:$HOME/.aws/credentials:600"
+        "backblazeapi:/backblaze:$HOME/.backblaze/backblazeapi:600"
+        "git_credentials:/github:$HOME/.git-credentials:600"
+        "main_ssh_private_key:/:$HOME/.ssh/main_ssh_key:600"
+        "main_ssh_public_key:/:$HOME/.ssh/main_ssh_key.pub:644"
     )
 
-    # Zsh에서 연관 배열의 키(k)를 순회하는 표준 문법
-    for key in "${(k)file_secrets[@]}"; do
-        # 값 추출 (path:dest:perm)
-        local val_info="${file_secrets[$key]}"
-        
-        # IFS를 사용한 데이터 분리
-        IFS=':' read -r path dest perm <<EOF
-$val_info
-EOF
-        
-        val=$(fetch_secret "$key" "$path")
+    for entry in "${file_secrets[@]}"; do
+        IFS=':' read -r key secret_path dest perm <<< "$entry"
+        val=$(fetch_secret "$key" "$secret_path")
         if [ -n "$val" ]; then
             mkdir -p "$(dirname "$dest")"
             echo "$val" > "$dest"
@@ -290,9 +281,9 @@ EOF
     echo "OK 파일 시크릿 복원 완료"
 fi
 # ============================================================
-# Keychain 시크릿 주입 (TARGET != 3)
+# Keychain 시크릿 주입 (TARGET != 3, 4)
 # ============================================================
-if [ "$TARGET" -ne 3 ]; then
+if [ "$TARGET" -ne 3 ] && [ "$TARGET" -ne 4 ]; then
   echo ""
   echo "Keychain 시크릿 주입 중..."
   declare -A keychain_secrets=(
@@ -381,6 +372,13 @@ if [ "$TARGET" -eq 4 ]; then
   echo "OK 복구 완료 (TARGET=4)"
   exit 0
 fi
+# TARGET=3: 임시 - 토큰/시크릿 설정 후 종료
+if [ "$TARGET" -eq 3 ]; then
+  echo ""
+  echo "OK 임시 설치 완료 (TARGET=3)"
+  exit 0
+fi
+
 # ============================================================
 # SSH config 설정
 # ============================================================
@@ -490,17 +488,17 @@ rm -f ~/.zshrc
 ln -sf "$REPO/mac/Alias/.zshrc" ~/.zshrc
 echo "OK .zshrc 연결 완료"
 rm -f ~/.vimrc
-ln -sf "$REPO/Common/Vim/.vimrc" ~/.vimrc
+ln -sf "$REPO/common/Vim/.vimrc" ~/.vimrc
 echo "OK .vimrc 연결 완료"
 rm -rf ~/.config/nvim
 mkdir -p ~/.config
-ln -sf "$REPO/Common/neovim" ~/.config/nvim
+ln -sf "$REPO/common/neovim" ~/.config/nvim
 echo "OK Neovim 연결 완료"
 rm -rf ~/.config/yazi
-ln -sf "$REPO/Common/yazi" ~/.config/yazi
+ln -sf "$REPO/common/yazi" ~/.config/yazi
 echo "OK Yazi 설정 연결 완료"
 mkdir -p ~/.config/zed
-ln -sf "$REPO/Common/zed/settings.json" ~/.config/zed/settings.json
+ln -sf "$REPO/common/zed/settings.json" ~/.config/zed/settings.json
 echo "OK Zed 설정 연결 완료"
 mkdir -p "$HOME/Library/Application Support/Code/User"
 rm -f "$HOME/Library/Application Support/Code/User/keybindings.json"
