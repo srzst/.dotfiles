@@ -85,8 +85,8 @@ casks_extra=(
     # min              # 미사용
 
     # 에디터 / 개발
-    cursor
-    vscodium
+    # cursor
+    # vscodium
     claude-code
     github
 
@@ -102,7 +102,7 @@ casks_extra=(
     keyboard-maestro
     raycast
     popclip
-    alt-tab
+    # alt-tab
 
     # 노트 / 문서
     obsidian
@@ -111,7 +111,7 @@ casks_extra=(
     readdle-spark
 
     # 파일 / 클라우드
-    keka
+    # keka
     mountain-duck
     onedrive
     daisydisk
@@ -122,7 +122,7 @@ casks_extra=(
     dockdoor
     bitwarden
     tailscale
-    localsend
+    # localsend
     iina
     figma
     spotify
@@ -147,8 +147,6 @@ pip_pkgs=(
     pync
     pyobjc
     requests
-    mistune
-    watchdog
     pyperclip
     plyer
     PyQt5
@@ -158,10 +156,20 @@ pip_pkgs=(
     pygments
     dropbox
     pandas
-    tabulate
-    oauth2client
     gspread
     google-api-python-client
+    google-auth-oauthlib
+    numpy
+    cairosvg
+    pyimgur
+    invoke
+    paramiko
+    Markdown
+    tkinterdnd2-universal
+    # mistune        # 미설치
+    # watchdog       # 미설치
+    # tabulate       # 미설치
+    # oauth2client   # deprecated → google-auth 계열로 대체됨
 )
 # ============================================================
 
