@@ -11,6 +11,35 @@ INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV="dev"
 REPO="/home/x/.dotfiles"
 X_HOME="/home/x"
+
+# ============================================================
+# 패키지 목록 CONFIG
+# ============================================================
+# 선행 설치 패키지 (토큰 획득 전 필수)
+pre_pkgs=(
+    curl
+    wget
+    git
+    apt-transport-https
+    gnupg
+    dirmngr
+)
+
+# 공통 패키지
+common_pkgs=(
+    curl
+    wget
+    rclone
+    vim
+    git
+    htop
+    net-tools
+    sudo
+    python3
+    python3-pip
+    pipx
+    software-properties-common
+)
 # ============================================================
 # ============================================================
 # 사전 입력 및 sudo 인증 유지
@@ -62,7 +91,7 @@ echo "OK hostname 설정 완료: $NEW_HOSTNAME"
 # 기본 선행 패키지 설치
 # ============================================================
 sudo apt-get update -qq
-sudo apt-get install -y curl wget git apt-transport-https gnupg dirmngr
+sudo apt-get install -y "${pre_pkgs[@]}"
 echo "OK 기본 패키지 설치 완료"
 # ============================================================
 # 토큰 획득
@@ -99,8 +128,7 @@ fi
 # 공통 패키지 설치
 # ============================================================
 echo "패키지 설치 중..."
-sudo apt install -y curl wget rclone vim git htop net-tools sudo python3 python3-pip pipx
-sudo apt install -y software-properties-common 2>/dev/null || true
+sudo apt install -y "${common_pkgs[@]}" 2>/dev/null || true
 echo "OK 공통 패키지 설치 완료"
 # ============================================================
 # RCLONE OFFICIAL STABLE INSTALLATION & UPGRADE

@@ -13,6 +13,60 @@ INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
 INFISICAL_ENV="dev"
 REPO="/home/x/.dotfiles"
 X_HOME="/home/x"
+
+# ============================================================
+# 패키지 목록 CONFIG
+# ============================================================
+# server(1) + dev(2) 공통 패키지
+common_pkgs=(
+    curl
+    wget
+    vim
+    git
+    htop
+    net-tools
+    sudo
+    python3
+    python3-pip
+    pipx
+    build-essential
+    unzip
+    zip
+    rclone
+    tree
+    tmux
+    apt-transport-https
+    software-properties-common
+)
+
+# dev(2) 전용 apt 패키지 (Yazi 의존성 등)
+dev_pkgs=(
+    ffmpeg
+    7zip
+    jq
+    poppler-utils
+    fd-find
+    ripgrep
+    fzf
+    zoxide
+    imagemagick
+)
+
+# dev(2) 전용 pip 패키지
+pip_pkgs=(
+    boto3
+    pillow
+    requests
+    mistune
+    b2sdk
+    pygments
+    pandas
+    tabulate
+    oauth2client
+    gspread
+    google-api-python-client
+    google-auth-oauthlib
+)
 # ============================================================
 # ============================================================
 # 사전 입력
@@ -128,11 +182,7 @@ echo "OK 시스템 업데이트 완료"
 # 공통 패키지 설치
 # ============================================================
 echo "패키지 설치 중..."
-sudo apt install -y \
-  curl wget vim git htop net-tools sudo \
-  python3 python3-pip pipx \
-  build-essential unzip zip rclone \
-  tree tmux apt-transport-https software-properties-common
+sudo apt install -y "${common_pkgs[@]}"
 echo "OK 공통 패키지 설치 완료"
 
 # ============================================================
@@ -148,7 +198,7 @@ if [ "$TARGET" = "2" ]; then
   echo "OK PowerShell 설치 완료"
 
   echo "Yazi 의존성 설치 중..."
-  sudo apt install -y ffmpeg 7zip jq poppler-utils fd-find ripgrep fzf zoxide imagemagick
+  sudo apt install -y "${dev_pkgs[@]}"
   echo "OK Yazi 의존성 설치 완료"
 
   echo "Yazi 설치 중..."
@@ -519,12 +569,7 @@ echo "OK Cron 등록 완료 (3시간마다 fetch+reset)"
 if [ "$TARGET" = "2" ]; then
   echo ""
   echo "pip 패키지 설치 중..."
-  pip3 install --break-system-packages \
-    boto3 pillow requests mistune \
-    b2sdk \
-    pygments pandas tabulate \
-    oauth2client gspread google-api-python-client \
-    google-auth-oauthlib
+  pip3 install --break-system-packages "${pip_pkgs[@]}"
   echo "OK pip 패키지 설치 완료"
 fi
 

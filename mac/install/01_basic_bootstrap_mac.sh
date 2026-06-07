@@ -4,8 +4,23 @@ exec < /dev/tty
 # ============================================================
 # CONFIG
 # ============================================================
-TARGET=1  # 0: 복구  1: 기본  2: 경량  3: 임시
 MODE=2    # 1: install  2: bootstrap
+
+echo ""
+echo "============================================================"
+echo " 설치 유형을 선택하세요"
+echo "============================================================"
+echo " 1) 기본  — 전체 앱/패키지 설치 + 설정 완전 적용"
+echo " 2) 경량  — 핵심 패키지만 설치 (GUI 앱 제외)"
+echo " 3) 임시  — 시크릿/토큰 설정만 (패키지 설치 없음)"
+echo " 4) 복구  — SSH 키 · 자격증명 · 환경변수 초기화"
+echo "------------------------------------------------------------"
+read -rp " 선택 (1-4): " TARGET
+case $TARGET in
+    1|2|3|4) ;;
+    *) echo "오류: 올바른 번호를 선택하세요."; exit 1 ;;
+esac
+echo "OK TARGET=$TARGET 선택 완료"
 
 BOOTSTRAP_TOKEN_URL="https://dl.srz.st/t.enc"
 INFISICAL_PROJECT_ID="bc893247-af3f-4118-a8ec-bcb429338acb"
@@ -13,6 +28,141 @@ INFISICAL_ENV="dev"
 REPO="$HOME/.dotfiles"
 FOLDERS="$HOME/.dotfolders"
 MACHINE_TYPE="main"
+
+# ============================================================
+# 앱 목록 CONFIG
+# ============================================================
+# 경량(2) + 기본(1) 공통 Formulae
+apps_common=(
+    git
+    python
+    node
+    wget
+    pipx
+    neovim
+    lazygit
+    yazi
+    fd
+    ripgrep
+    fzf
+    zoxide
+)
+
+# 기본(1)에만 추가되는 Formulae
+apps_extra=(
+    python-tk
+    ffmpeg-full
+    yt-dlp
+    pngpaste
+    terminal-notifier
+    rclone
+    eza
+    font-d2coding-nerd-font
+    font-d2coding
+    sevenzip
+    jq
+    poppler
+    imagemagick
+    gh
+    zsh-syntax-highlighting
+)
+
+# 경량(2) + 기본(1) 공통 Casks
+casks_common=(
+    visual-studio-code
+    zed
+    font-hack-nerd-font
+    font-symbols-only-nerd-font
+)
+
+# 기본(1)에만 추가되는 Casks
+casks_extra=(
+    # 브라우저
+    google-chrome
+    brave-browser
+    vivaldi
+    # microsoft-edge   # 미사용
+    # min              # 미사용
+
+    # 에디터 / 개발
+    cursor
+    vscodium
+    claude-code
+    github
+
+    # 터미널
+    warp
+    # wezterm          # 미사용 (warp 사용 중)
+    ghostty
+
+    # 자동화 / 런처
+    hammerspoon
+    karabiner-elements
+    bettertouchtool
+    keyboard-maestro
+    raycast
+    popclip
+    alt-tab
+
+    # 노트 / 문서
+    obsidian
+    typora
+    capacities
+    readdle-spark
+
+    # 파일 / 클라우드
+    keka
+    mountain-duck
+    onedrive
+    daisydisk
+
+    # 유틸리티
+    shottr
+    cleanshot
+    dockdoor
+    bitwarden
+    tailscale
+    localsend
+    iina
+    figma
+    spotify
+    telegram
+    kakaotalk
+    blip
+    adguard
+    jump-desktop
+    neovide
+    virtualbuddy
+    # hiddenbar        # 미사용
+
+    # 폰트
+    font-d2coding-nerd-font
+    font-d2coding
+)
+
+# 기본(1)에만 설치되는 pip 패키지
+pip_pkgs=(
+    boto3
+    pillow
+    pync
+    pyobjc
+    requests
+    mistune
+    watchdog
+    pyperclip
+    plyer
+    PyQt5
+    b2sdk
+    cloudinary
+    pynput
+    pygments
+    dropbox
+    pandas
+    tabulate
+    oauth2client
+    gspread
+    google-api-python-client
+)
 # ============================================================
 
 # ============================================================
@@ -156,10 +306,71 @@ if [ "$TARGET" -ne 3 ]; then
   echo "OK Keychain 주입 완료"
 fi
 
-# TARGET=0: 복구 후 종료
-if [ "$TARGET" -eq 0 ]; then
+# TARGET=4: 복구 후 종료
+if [ "$TARGET" -eq 4 ]; then
   echo ""
-  echo "OK 복구 완료 (TARGET=0)"
+  echo "========== 복구 시작 =========="
+
+  # 시크릿 파일 삭제
+  files_to_remove=(
+      "$HOME/.zshrc_secrets"
+      "$HOME/.ssh/id_ed25519"
+      "$HOME/.ssh/main_ssh_key"
+      "$HOME/.ssh/main_ssh_key.pub"
+      "$HOME/.aws/config"
+      "$HOME/.aws/credentials"
+      "$HOME/.backblaze/backblazeapi"
+      "$HOME/.git-credentials"
+      "$HOME/.config/rclone/rclone.conf"
+  )
+  for f in "${files_to_remove[@]}"; do
+      if [ -f "$f" ]; then
+          rm -f "$f"
+          echo "OK 파일 삭제: $f"
+      else
+          echo "SKIP 파일 없음: $f"
+      fi
+  done
+
+  # Keychain 시크릿 삭제
+  keychain_keys=(
+      "tailscale_authkey"
+      "gistup_md_manual_srzst"
+      "token_gist_sndzin"
+      "token_gist_srzst"
+  )
+  for key in "${keychain_keys[@]}"; do
+      security delete-generic-password -a "$USER" -s "$key" 2>/dev/null \
+          && echo "OK Keychain 삭제: $key" \
+          || echo "SKIP Keychain 없음: $key"
+  done
+
+  # SSH config에서 main_ssh_key / github.com 블록 제거
+  if [ -f "$HOME/.ssh/config" ]; then
+      sed -i '' '/# Master Infrastructure Management Key/,/StrictHostKeyChecking no/d' "$HOME/.ssh/config" 2>/dev/null
+      sed -i '' '/Host github\.com/,/IdentityFile.*id_ed25519/d' "$HOME/.ssh/config" 2>/dev/null
+      echo "OK SSH config 정리 완료"
+  fi
+
+  # known_hosts에서 github.com 제거
+  if [ -f "$HOME/.ssh/known_hosts" ]; then
+      sed -i '' '/github\.com/d' "$HOME/.ssh/known_hosts"
+      echo "OK known_hosts github.com 제거 완료"
+  fi
+
+  # Git 글로벌 설정 제거
+  git config --global --unset credential.helper 2>/dev/null
+  git config --global --unset core.excludesfile 2>/dev/null
+  echo "OK Git credential.helper, core.excludesfile 제거"
+
+  # .gitignore_global에서 *_secrets* 항목 제거
+  if [ -f "$HOME/.gitignore_global" ]; then
+      grep -v '\*_secrets\*' "$HOME/.gitignore_global" > /tmp/gitignore_tmp && mv /tmp/gitignore_tmp "$HOME/.gitignore_global"
+      echo "OK .gitignore_global *_secrets* 항목 제거"
+  fi
+
+  echo ""
+  echo "OK 복구 완료 (TARGET=4)"
   exit 0
 fi
 # ============================================================
@@ -365,25 +576,11 @@ echo "Homebrew 앱 설치 중 (TARGET=$TARGET)..."
 export HOMEBREW_NO_AUTO_UPDATE=1
 
 if [ "$TARGET" -eq 1 ]; then
-    # Formulae 리스트
-    apps=(
-        git python python-tk node ffmpeg yt-dlp pngpaste wget 
-        terminal-notifier pipx rclone neovim lazygit eza 
-        font-d2coding-nerd-font font-d2coding yazi sevenzip 
-        jq poppler fd ripgrep fzf zoxide imagemagick gh
-    )
-    # Casks 리스트
-    casks=(
-        google-chrome brave-browser microsoft-edge 
-        visual-studio-code cursor zed claude-code
-        github hammerspoon karabiner-elements 
-        obsidian tabby shottr mountain-duck wezterm
-        popclip keka dockdoor raycast hiddenbar alt-tab 
-        font-hack-nerd-font font-symbols-only-nerd-font
-    )
+    apps=("${apps_common[@]}" "${apps_extra[@]}")
+    casks=("${casks_common[@]}" "${casks_extra[@]}")
 elif [ "$TARGET" -eq 2 ]; then
-    apps=(git python node wget pipx neovim lazygit zsh-syntax-highlighting yazi fd ripgrep fzf zoxide)
-    casks=(visual-studio-code zed font-hack-nerd-font font-symbols-only-nerd-font)
+    apps=("${apps_common[@]}")
+    casks=("${casks_common[@]}")
 elif [ "$TARGET" -eq 3 ]; then
     apps=(git python wget neovim)
     casks=()
@@ -424,11 +621,7 @@ fi
 if [ "$TARGET" -eq 1 ]; then
   echo ""
   echo "pip 패키지 설치 중..."
-  pip3 install \
-    boto3 pillow pync pyobjc requests mistune \
-    watchdog pyperclip plyer PyQt5 b2sdk cloudinary \
-    pynput pygments dropbox pandas tabulate \
-    oauth2client gspread google-api-python-client
+  pip3 install "${pip_pkgs[@]}"
   echo "OK pip 패키지 설치 완료"
 
   npm install -g electron
@@ -525,3 +718,16 @@ echo "OK LazyVim 초기화 완료"
 echo ""
 echo "OK Mac 설치 완료 (TARGET=$TARGET, MODE=$MODE)"
 echo "INFO 재시작 후 모든 설정이 적용됩니다."
+echo ""
+echo "INFO 수동 설치 필요 항목:"
+echo "    UpNote        - https://getupnote.com"
+echo "    SnapView      - App Store"
+echo "    Right Click   - App Store"
+echo "    AdGuard Safari- App Store"
+echo "    WireGuard     - App Store"
+echo "    Logitech Opts - https://www.logitech.com/ko-kr/software/logi-options-plus.html"
+echo "    Raindrop.io   - https://raindrop.io/download"
+echo "    PhotoScape X  - App Store"
+echo "    KakaoTalk     - App Store (또는 brew: kakaotalk)"
+echo "    Whale         - https://whale.naver.com/ko/download"
+echo "    Jump Desktop  - App Store (또는 brew: jump-desktop)"

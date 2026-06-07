@@ -3,8 +3,25 @@
 # ============================================================
 # CONFIG
 # ============================================================
-$TARGET = 1  # 0: 복구  1: 기본  2: 경량  3: 임시
-$MODE   = 2  # 1: install  2: bootstrap
+$MODE = 2  # 1: install  2: bootstrap
+
+Write-Host ""
+Write-Host "============================================================"
+Write-Host " 설치 유형을 선택하세요"
+Write-Host "============================================================"
+Write-Host " 1) 기본  - 전체 앱/패키지 설치 + 설정 완전 적용"
+Write-Host " 2) 경량  - 핵심 패키지만 설치 (winget 앱 제외)"
+Write-Host " 3) 임시  - 시크릿/토큰 설정만 (패키지 설치 없음)"
+Write-Host " 4) 복구  - SSH 키 · 자격증명 · 환경변수 초기화"
+Write-Host "------------------------------------------------------------"
+$targetInput = Read-Host " 선택 (1-4)"
+$TARGET = [int]$targetInput
+if ($TARGET -lt 1 -or $TARGET -gt 4)
+{
+    Write-Host "오류: 올바른 번호를 선택하세요."
+    exit 1
+}
+Write-Host "OK TARGET=$TARGET 선택 완료"
 
 $BOOTSTRAP_TOKEN_URL  = "https://dl.srz.st/t.enc"
 $INFISICAL_PROJECT_ID = "bc893247-af3f-4118-a8ec-bcb429338acb"
@@ -12,6 +29,102 @@ $INFISICAL_ENV        = "dev"
 $REPO                 = "$HOME\.dotfiles"
 $FOLDERS              = "$HOME\.dotfolders"
 $MACHINE_TYPE         = "main"
+
+# ============================================================
+# 앱 목록 CONFIG
+# ============================================================
+# 경량(2) + 기본(1) 공통 Scoop 패키지
+$scoopPkgs = @(
+    "gsudo"
+    "vim"
+    "curl"
+    "rclone"
+    "copyq"
+    "googlechrome"
+    "honeyview"
+    "Hack-NF"
+    "Hack-NF-Mono"
+    "autohotkey1.1"
+    "python"
+    "nodejs"
+    "neovim"
+    "neovide"
+    "gh"
+    "lazygit"
+    "tree-sitter"
+    "yazi"
+    "ffmpeg"
+    "7zip"
+    "jq"
+    "poppler"
+    "fd"
+    "ripgrep"
+    "fzf"
+    "zoxide"
+    "imagemagick"
+    "tabby"
+    "tectonic"
+    "pipx"
+)
+
+# 기본(1)에만 설치되는 winget 패키지 (--scope user)
+$wingetApps = @(
+    "Microsoft.VisualStudioCode"
+    "Anysphere.Cursor"
+    "Brave.Brave"
+    "Vivaldi.Vivaldi"
+    "Bitwarden.Bitwarden"
+    "GitHub.GitHubDesktop"
+    "Microsoft.PowerToys"
+    "Microsoft.PowerShell"
+    "Obsidian.Obsidian"
+    "Logseq.Logseq"
+    "appmakes.Typora"
+    "Iterate.MountainDuck"
+    "Figma.Figma"
+    "Wez.WezTerm"
+    "LocalSend.LocalSend"
+)
+
+# 기본(1)에만 설치되는 winget 패키지 (--ignore-security-hash)
+$wingetAppsNoScope = @(
+    "ZedIndustries.Zed"
+    "Bandisoft.Bandizip"
+    "Kakao.KakaoTalk"
+    # "Google.Chrome"
+)
+
+# 기본(1)에만 설치되는 pip 패키지
+$pipPkgs = @(
+    "urllib3<2.0.0"
+    "pyperclip"
+    "regex"
+    "requests"
+    "mistune"
+    "boto3"
+    "clipboard"
+    "pillow"
+    "win10toast"
+    "pywin32"
+    "plyer"
+    "b2sdk"
+    "pynput"
+    "watchdog"
+    "send2trash"
+    "PyQt5"
+    "pygments"
+    "pandas"
+    "tabulate"
+    "oauth2client"
+    "gspread"
+    "google-api-python-client"
+    "langdetect"
+    "pyautogui"
+    "dropbox"
+    "pyinstaller"
+    "cloudinary==1.26.0"
+    "pyimgur"
+)
 # ============================================================
 
 # ============================================================
@@ -66,7 +179,7 @@ function Get-InfisicalSecret
 # PART 0 - 복구
 # ============================================================
 # ============================================================
-if ($TARGET -eq 0)
+if ($TARGET -eq 4)
 {
     Write-Log "========== 복구 시작 =========="
 
@@ -134,7 +247,7 @@ if ($TARGET -eq 0)
     }
 
     Write-Host ""
-    Write-Log "========== 복구 완료 =========="
+    Write-Log "========== 복구 완료 (TARGET=4) =========="
     Write-Log "로그 파일 위치: $LOG_FILE"
     exit 0
 }
@@ -555,19 +668,18 @@ Write-LogOK "Git 글로벌 attributes 연결 완료"
 # ============================================================
 try
 {
-    scoop install gsudo vim curl rclone copyq googlechrome honeyview
     scoop bucket add extras
     scoop bucket add nerd-fonts
     scoop bucket add versions
     scoop update
-    scoop install Hack-NF Hack-NF-Mono
-    scoop install autohotkey1.1
+    foreach ($pkg in $scoopPkgs)
+    {
+        scoop install $pkg
+    }
     $ahkExe = "$HOME\scoop\apps\autohotkey1.1\current\AutoHotkeyU64.exe"
     cmd /c "assoc .ahk=AutoHotkeyScript" 2>&1 | Out-Null
     cmd /c "ftype AutoHotkeyScript=`"$ahkExe`" `"%1`" %*" 2>&1 | Out-Null
     Write-LogOK ".ahk 파일 연결 등록 완료"
-    scoop install python nodejs
-    scoop install neovim neovide gh lazygit tree-sitter yazi ffmpeg 7zip jq poppler fd ripgrep fzf zoxide imagemagick tabby tectonic pipx
     winget install --id=BrechtSanders.WinLibs.POSIX.UCRT -e --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
     Write-LogOK "Scoop 패키지 설치 완료"
 } catch
@@ -678,23 +790,6 @@ try
     Write-LogWarn "winget 업그레이드 중 오류 (무시하고 계속): $_"
 }
 
-$wingetApps = @(
-    "Microsoft.VisualStudioCode",
-    "Anysphere.Cursor",
-    "Brave.Brave",
-    "Vivaldi.Vivaldi",
-    "Bitwarden.Bitwarden",
-    "GitHub.GitHubDesktop",
-    "Microsoft.PowerToys",
-    "Microsoft.PowerShell",
-    "Obsidian.Obsidian",
-    "Logseq.Logseq",
-    "appmakes.Typora",
-    "Iterate.MountainDuck",
-    "Figma.Figma",
-    "Wez.WezTerm",
-    "LocalSend.LocalSend"
-)
 foreach ($app in $wingetApps)
 {
     try
@@ -714,12 +809,6 @@ foreach ($app in $wingetApps)
         Write-LogErr "winget 예외 발생: $app : $_"
     }
 }
-$wingetAppsNoScope = @(
-    "ZedIndustries.Zed",
-    "Bandisoft.Bandizip",
-    "Kakao.KakaoTalk",
-    # "Google.Chrome"
-)
 foreach ($app in $wingetAppsNoScope)
 {
     try
@@ -759,12 +848,7 @@ if (Get-AppxPackage -Name "*Raycast*" -ErrorAction SilentlyContinue)
 # ============================================================
 try
 {
-    python -m pip install "urllib3<2.0.0" | Tee-Object -Append -FilePath $LOG_FILE
-    python -m pip install `
-        pyperclip regex requests mistune boto3 clipboard pillow win10toast pywin32 plyer `
-        b2sdk pynput watchdog send2trash PyQt5 pygments pandas tabulate oauth2client gspread `
-        google-api-python-client langdetect pyautogui dropbox pyinstaller cloudinary==1.26.0 pyimgur `
-    | Tee-Object -Append -FilePath $LOG_FILE
+    python -m pip install $pipPkgs | Tee-Object -Append -FilePath $LOG_FILE
     Write-LogOK "pip 패키지 설치 완료"
 } catch
 {
