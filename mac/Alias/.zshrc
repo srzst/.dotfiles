@@ -160,7 +160,15 @@ cf() {
 # ============================================================
 u() {
     echo "=== System Update (Homebrew) ==="
-    brew update && brew upgrade && brew upgrade --cask && brew cleanup
+    sudo -v
+    while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+    local _sudo_pid=$!
+
+    brew update && brew upgrade
+    HOMEBREW_NO_INTERACTIVE=1 brew upgrade --cask --greedy
+    brew cleanup
+
+    kill "$_sudo_pid" 2>/dev/null
     echo "=== Update Completed ==="
 }
 alias uu='u'
