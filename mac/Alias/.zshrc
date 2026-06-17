@@ -164,10 +164,15 @@ u() {
     while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
     local _sudo_pid=$!
 
-    brew update && brew upgrade
-    HOMEBREW_NO_INTERACTIVE=1 brew upgrade --cask --greedy
+    export HOMEBREW_NO_INTERACTIVE=1
+    export HOMEBREW_NO_ENV_HINTS=1
+
+    brew update
+    brew upgrade
+    brew upgrade --cask --greedy
     brew cleanup
 
+    unset HOMEBREW_NO_INTERACTIVE
     kill "$_sudo_pid" 2>/dev/null
     echo "=== Update Completed ==="
 }
