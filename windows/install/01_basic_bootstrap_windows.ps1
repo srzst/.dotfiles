@@ -70,7 +70,7 @@ $scoopPkgs = @(
 # 기본(1)에만 설치되는 winget 패키지 (--scope user)
 $wingetApps = @(
     "Microsoft.VisualStudioCode"
-    "Anysphere.Cursor"
+    # "Anysphere.Cursor"
     "Brave.Brave"
     "Vivaldi.Vivaldi"
     "Bitwarden.Bitwarden"
@@ -78,17 +78,17 @@ $wingetApps = @(
     "Microsoft.PowerToys"
     "Microsoft.PowerShell"
     "Obsidian.Obsidian"
-    "Logseq.Logseq"
+    # "Logseq.Logseq"
     "appmakes.Typora"
     "Iterate.MountainDuck"
     "Figma.Figma"
     "Wez.WezTerm"
-    "LocalSend.LocalSend"
+    # "LocalSend.LocalSend"
 )
 
 # 기본(1)에만 설치되는 winget 패키지 (--ignore-security-hash)
 $wingetAppsNoScope = @(
-    "ZedIndustries.Zed"
+    # "ZedIndustries.Zed"
     "Bandisoft.Bandizip"
     "Kakao.KakaoTalk"
     # "Google.Chrome"
