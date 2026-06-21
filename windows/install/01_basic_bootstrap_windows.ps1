@@ -830,18 +830,18 @@ foreach ($app in $wingetAppsNoScope)
 }
 
 # Raycast
-$raycastExe = "$FOLDERS\windows\Raycast\Raycast Installer.exe"
-if (Get-AppxPackage -Name "*Raycast*" -ErrorAction SilentlyContinue)
-{
-    Write-LogOK "Raycast 이미 설치됨 (스킵)"
-} elseif (Test-Path $raycastExe)
-{
-    Start-Process $raycastExe -Wait
-    Write-LogOK "Raycast 설치 완료"
-} else
-{
-    Write-LogWarn "Raycast 설치 파일 없음 → $raycastExe 확인 또는 https://raycast.com/windows 수동 설치"
-}
+# $RAYCASTeXE = "$folders\WINDOWS\rAYCAST\rAYCAST iNSTALLER.EXE"
+# IF (gET-aPPXpACKAGE -nAME "*rAYCAST*" -eRRORaCTION sILENTLYcONTINUE)
+# {
+#     wRITE-lOGok "rAYCAST 이미 설치됨 (스킵)"
+# } ELSEIF (tEST-pATH $RAYCASTeXE)
+# {
+#     sTART-pROCESS $RAYCASTeXE -wAIT
+#     wRITE-lOGok "rAYCAST 설치 완료"
+# } ELSE
+# {
+#     wRITE-lOGwARN "rAYCAST 설치 파일 없음 → $RAYCASTeXE 확인 또는 HTTPS://RAYCAST.COM/WINDOWS 수동 설치"
+# }
 
 # ============================================================
 # pip / npm 패키지
@@ -1185,10 +1185,10 @@ Write-Host "    Zoho Mail Desktop - https://zoho.com/mail/desktop-app.html"
 Write-Host "    Blip              - https://www.blip.com"
 Write-Host "    NAVER Whale       - https://whale.naver.com/ko/download"
 Write-Host ""
-Write-Log "INFO Raycast 튜토리얼 완료 후 아래 명령 실행:"
-Write-Host "    Stop-Process -Name 'Raycast' -Force -ErrorAction SilentlyContinue"
-Write-Host "    Copy-Item `"$FOLDERS\windows\Raycast\settings.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
-Write-Host "    Copy-Item `"$FOLDERS\windows\Raycast\settings_v2.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
+# Write-Log "INFO Raycast 튜토리얼 완료 후 아래 명령 실행:"
+# Write-Host "    Stop-Process -Name 'Raycast' -Force -ErrorAction SilentlyContinue"
+# Write-Host "    Copy-Item `"$FOLDERS\windows\Raycast\settings.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
+# Write-Host "    Copy-Item `"$FOLDERS\windows\Raycast\settings_v2.db`" `"$env:LOCALAPPDATA\Raycast\`" -Force"
 # ============================================================
 # 최종 요약
 # ============================================================
