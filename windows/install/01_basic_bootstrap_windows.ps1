@@ -626,7 +626,17 @@ function New-Symlink
         Write-LogOK "심볼릭 링크: $LinkPath → $TargetPath"
     } catch
     {
-        Write-LogErr "심볼릭 링크 실패: $LinkPath → $TargetPath : $_"
+        # 심볼릭 링크 실패 시 .ps1 파일은 dot-source 폴백으로 동작 보장
+        if ($LinkPath -like "*.ps1" -and $TargetPath -like "*.ps1")
+        {
+            $forwardPath = $TargetPath -replace '\\', '/'
+            New-Item -ItemType Directory -Force -Path (Split-Path $LinkPath) | Out-Null
+            Set-Content -Path $LinkPath -Value ". $forwardPath" -Encoding UTF8
+            Write-LogOK "심볼릭 링크 실패 → dot-source 폴백: $LinkPath"
+        } else
+        {
+            Write-LogErr "심볼릭 링크 실패: $LinkPath → $TargetPath : $_"
+        }
     }
 }
 
