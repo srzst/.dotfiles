@@ -39,7 +39,7 @@ $scoopPkgs = @(
     "vim"
     "curl"
     "rclone"
-    "copyq"
+    # "copyq"
     "googlechrome"
     "honeyview"
     "Hack-NF"
@@ -54,7 +54,7 @@ $scoopPkgs = @(
     "tree-sitter"
     "yazi"
     "ffmpeg"
-    "7zip"
+    # "7zip"
     "jq"
     "poppler"
     "fd"
@@ -126,6 +126,7 @@ $pipPkgs = @(
     "pyinstaller"
     "cloudinary==1.26.0"
     "pyimgur"
+    "paramiko"
 )
 # ============================================================
 
