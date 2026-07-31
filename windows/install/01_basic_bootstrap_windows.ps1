@@ -65,6 +65,8 @@ $scoopPkgs = @(
     "tabby"
     "tectonic"
     "pipx"
+    "eza"
+    "JetBrainsMono-NF"
 )
 
 # 기본(1)에만 설치되는 winget 패키지 (--scope user)
