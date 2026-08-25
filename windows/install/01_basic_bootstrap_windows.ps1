@@ -84,7 +84,7 @@ $wingetApps = @(
     "appmakes.Typora"
     "Iterate.MountainDuck"
     "Figma.Figma"
-    "Wez.WezTerm"
+    "wez.wezterm"
     # "LocalSend.LocalSend"
 )
 
