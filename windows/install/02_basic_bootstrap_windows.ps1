@@ -35,9 +35,9 @@ $MACHINE_TYPE         = "main"
 # ============================================================
 # 경량(2) + 기본(1) 공통 Scoop 패키지
 $scoopPkgs = @(
-    # "gsudo"
+    "gsudo"
     # "vim"
-    # "curl"
+    "curl"
     # "rclone"
     # "copyq"
     "googlechrome"
@@ -63,7 +63,7 @@ $scoopPkgs = @(
     # "zoxide"
     "imagemagick"
     # "tabby"
-    # "tectonic"
+    "tectonic"
     "pipx"
     # "eza"
     "JetBrainsMono-NF"
@@ -71,7 +71,7 @@ $scoopPkgs = @(
 
 # 기본(1)에만 설치되는 winget 패키지 (--scope user)
 $wingetApps = @(
-    "Microsoft.VisualStudioCode"
+    # "Microsoft.VisualStudioCode"
     # "Anysphere.Cursor"
     # "Brave.Brave"
     # "Vivaldi.Vivaldi"
