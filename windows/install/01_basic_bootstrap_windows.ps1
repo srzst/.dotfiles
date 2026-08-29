@@ -987,6 +987,24 @@ if (Test-Path $fscTarget)
     Write-LogWarn "FastStone Capture 설치 파일 없음 (스킵): $fscInstaller"
 }
 
+# # ============================================================
+# # 시작 프로그램 및 스케줄 작업 등록
+# # ============================================================
+# $startupScript = "$FOLDERS\windows\ps1\startup_register.ps1"
+# if (Test-Path $startupScript)
+# {
+#     try
+#     {
+#         & $startupScript -MACHINE_TYPE $MACHINE_TYPE 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
+#         Write-LogOK "시작 프로그램 및 스케줄 작업 등록 완료"
+#     } catch
+#     {
+#         Write-LogErr "startup_register.ps1 실행 실패: $_"
+#     }
+# } else
+# {
+#     Write-LogWarn "startup_register.ps1 없음 (스킵): $startupScript"
+# }
 # ============================================================
 # 시작 프로그램 및 스케줄 작업 등록
 # ============================================================
@@ -997,6 +1015,9 @@ if (Test-Path $startupScript)
     {
         & $startupScript -MACHINE_TYPE $MACHINE_TYPE 2>&1 | Tee-Object -Append -FilePath $LOG_FILE
         Write-LogOK "시작 프로그램 및 스케줄 작업 등록 완료"
+
+        Get-ScheduledTask -TaskPath "\" | ForEach-Object { $task = $_; $task.Settings.DisallowStartIfOnBatteries = $false; $task.Settings.StopIfGoingOnBatteries = $false; Set-ScheduledTask -InputObject $task }
+        Write-LogOK "스케줄 작업 전원 제한 옵션 일괄 해제 완료"
     } catch
     {
         Write-LogErr "startup_register.ps1 실행 실패: $_"
