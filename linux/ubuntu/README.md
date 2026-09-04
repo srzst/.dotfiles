@@ -1,6 +1,6 @@
 <!-- Linux\Ubuntu\README.md -->
 
-# Ubuntu 설치 가이드
+# Ubuntu 기본 설치 가이드
 
 https://srz.st/qiP
 
