@@ -73,3 +73,9 @@ GitHub 웹훅 추가 등록 불필요. shorten 이 알아서 포함해서 sync.
 | `/github`   | `github_webhook_secret`    |
 | `/telegram` | `telegram_bot_token_srzst` |
 | `/telegram` | `chat_id_srzst`            |
+
+앞으로 telegram_bot_token_srzst 또는 chat_id_srzst를 변경하면 shorten의 webhook 서비스 재시작이 필요합니다.
+
+```sh
+sudo systemctl restart webhook
+```
