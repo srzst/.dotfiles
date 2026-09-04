@@ -41,12 +41,12 @@ Service         : http://localhost:9000
 - 기존 W1~W5 PHP 웹훅 URL **제거**
 - shorten URL 로 새로 등록
 
-| 항목 | 값 |
-|---|---|
-| Payload URL | `https://mywebhook.도메인` |
-| Content type | `application/json` |
-| Secret | infisical `/webhook/github_webhook_secret` |
-| Events | Push event 만 |
+| 항목         | 값                                         |
+| ------------ | ------------------------------------------ |
+| Payload URL  | `https://mywebhook.도메인`                 |
+| Content type | `application/json`                         |
+| Secret       | infisical `/webhook/github_webhook_secret` |
+| Events       | Push event 만                              |
 
 ---
 
@@ -68,8 +68,8 @@ GitHub 웹훅 추가 등록 불필요. shorten 이 알아서 포함해서 sync.
 
 ## Infisical 시크릿
 
-| 경로 | 키 |
-|---|---|
-| `/github` | `github_webhook_secret` |
-| `/telegram` | `telegram_bot_token_evervz` |
-| `/telegram` | `chat_id_evervz` |
+| 경로        | 키                         |
+| ----------- | -------------------------- |
+| `/github`   | `github_webhook_secret`    |
+| `/telegram` | `telegram_bot_token_srzst` |
+| `/telegram` | `chat_id_srzst`            |

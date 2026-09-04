@@ -29,8 +29,8 @@ def _infisical(key: str, path: str) -> str:
 
 def load_secrets() -> dict:
     return {
-        "tg_token":   _infisical("telegram_bot_token_evervz", "/telegram"),
-        "tg_chat_id": _infisical("chat_id_evervz",            "/telegram"),
+        "tg_token":   _infisical("telegram_bot_token_srzst", "/telegram"),
+        "tg_chat_id": _infisical("chat_id_srzst",            "/telegram"),
     }
 
 
