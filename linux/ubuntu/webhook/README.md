@@ -5,7 +5,7 @@ shorten 서버 단독 운영, Tailscale SSH 로 각 서버에 sync 명령 전달
 
 ---
 
-## 구조
+## 기본 구조
 
 ```
 GitHub push
