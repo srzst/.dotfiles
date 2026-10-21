@@ -89,7 +89,6 @@ casks_extra=(
     # vscodium
     claude-code
     github
-
     # 터미널
     warp
     # wezterm          # 미사용 (warp 사용 중)
@@ -109,6 +108,7 @@ casks_extra=(
     typora
     capacities
     readdle-spark
+    craft
 
     # 파일 / 클라우드
     # keka
