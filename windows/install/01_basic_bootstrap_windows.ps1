@@ -85,6 +85,7 @@ $wingetApps = @(
     "Iterate.MountainDuck"
     "Figma.Figma"
     "wez.wezterm"
+    "LukiLabs.Craft"
     # "LocalSend.LocalSend"
 )
 
